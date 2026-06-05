@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💪 7-Tage Fitness Challenge - Kostenlos</title>
+    <title>Free Travel Hacking Cheat Sheet - Save €2,000+ on Your Next Trip</title>
     <style>
         * {
             margin: 0;
@@ -11,106 +11,200 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary: #1f2937;
+            --secondary: #3b82f6;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --light-bg: #f9fafb;
+            --border: #e5e7eb;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--primary);
+            background: #fff;
         }
 
         .container {
-            max-width: 600px;
-            width: 100%;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
 
-        .header {
+        /* HEADER */
+        header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 40px 30px;
+            padding: 20px 0;
             text-align: center;
+            border-bottom: 3px solid var(--danger);
         }
 
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        header h1 {
+            font-size: 1.2em;
             font-weight: 700;
-        }
-
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.95;
-            margin-bottom: 20px;
-        }
-
-        .badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            margin: 5px;
-            backdrop-filter: blur(10px);
-        }
-
-        .benefits {
-            padding: 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .benefit-item {
-            display: flex;
-            margin-bottom: 20px;
-            align-items: flex-start;
-        }
-
-        .benefit-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .benefit-icon {
-            font-size: 1.8em;
-            margin-right: 15px;
-            flex-shrink: 0;
-        }
-
-        .benefit-text h3 {
-            color: #333;
             margin-bottom: 5px;
-            font-size: 1.1em;
         }
 
-        .benefit-text p {
-            color: #666;
-            font-size: 0.95em;
-            line-height: 1.5;
+        header p {
+            font-size: 0.9em;
+            opacity: 0.95;
         }
 
-        .form-section {
-            padding: 40px 30px;
-        }
-
-        .form-title {
+        /* HERO SECTION */
+        .hero {
+            padding: 60px 20px;
+            background: linear-gradient(to bottom, #f9fafb 0%, #fff 100%);
             text-align: center;
-            margin-bottom: 20px;
         }
 
-        .form-title h2 {
-            color: #333;
+        .hero-headline {
+            font-size: 2.2em;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .hero-headline .highlight {
+            color: var(--danger);
+            text-shadow: 2px 2px 4px rgba(239, 68, 68, 0.2);
+        }
+
+        .hero-subheadline {
+            font-size: 1.3em;
+            color: #6b7280;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .hero-promise {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            font-size: 1.05em;
+            color: #92400e;
+            font-weight: 600;
+        }
+
+        /* MAIN CONTENT */
+        .content {
+            padding: 40px 20px;
+            background: white;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+
+        .column-left h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .column-left p {
+            font-size: 1.05em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            color: #374151;
+        }
+
+        .benefits-list {
+            list-style: none;
+            margin: 30px 0;
+        }
+
+        .benefits-list li {
+            padding: 12px 0;
+            padding-left: 35px;
+            position: relative;
+            font-size: 1.05em;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+
+        .benefits-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
             font-size: 1.5em;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .column-right {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 40px;
+            color: white;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .freebie-image {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 25px;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+
+        .freebie-image-placeholder {
+            font-size: 4em;
             margin-bottom: 10px;
         }
 
-        .form-title p {
-            color: #666;
+        .freebie-description {
             font-size: 0.95em;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+
+        .freebie-description strong {
+            display: block;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        /* FORM SECTION */
+        .form-section {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            padding: 50px 40px;
+            border-radius: 12px;
+            margin: 60px 0;
+            border: 2px solid var(--accent);
+        }
+
+        .form-section h2 {
+            text-align: center;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .form-section p {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 30px;
+            font-size: 1.05em;
+        }
+
+        .form-wrapper {
+            max-width: 400px;
+            margin: 0 auto;
         }
 
         .form-group {
@@ -121,21 +215,21 @@
         input[type="text"] {
             width: 100%;
             padding: 14px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 1em;
-            transition: all 0.3s ease;
             font-family: inherit;
+            transition: all 0.3s ease;
         }
 
         input[type="email"]:focus,
         input[type="text"]:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
 
-        .submit-btn {
+        .cta-button {
             width: 100%;
             padding: 16px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -143,401 +237,608 @@
             border: none;
             border-radius: 8px;
             font-size: 1.1em;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
 
-        .submit-btn:hover {
+        .cta-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
 
-        .submit-btn:active {
+        .cta-button:active {
             transform: translateY(0);
         }
 
-        .privacy-notice {
+        .form-notice {
             text-align: center;
             font-size: 0.85em;
-            color: #999;
-            margin-top: 20px;
-            line-height: 1.6;
-        }
-
-        .freebie-preview {
-            background: white;
-            border: 2px dashed #667eea;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .freebie-preview .icon {
-            font-size: 3em;
-            margin-bottom: 10px;
-        }
-
-        .freebie-preview h3 {
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 1.2em;
-        }
-
-        .freebie-preview p {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 12px;
-        }
-
-        .freebie-features {
-            text-align: left;
+            color: #6b7280;
             margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e0e0e0;
         }
 
-        .freebie-features li {
-            list-style: none;
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 8px;
-            padding-left: 20px;
-            position: relative;
-        }
-
-        .freebie-features li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #667eea;
-            font-weight: bold;
-        }
-
+        /* SOCIAL PROOF */
         .social-proof {
-            background: #f8f9fa;
-            padding: 20px 30px;
+            background: #f9fafb;
+            padding: 40px 20px;
+            margin: 60px 0;
+            border-radius: 12px;
             text-align: center;
-            border-top: 1px solid #e0e0e0;
         }
 
-        .social-proof p {
-            color: #666;
+        .social-proof h3 {
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            color: var(--primary);
+        }
+
+        .proof-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .proof-item {
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border-top: 3px solid var(--accent);
+        }
+
+        .proof-number {
+            font-size: 2em;
+            font-weight: 800;
+            color: var(--secondary);
+            display: block;
+        }
+
+        .proof-label {
+            color: #6b7280;
             font-size: 0.9em;
-            margin-bottom: 15px;
+        }
+
+        /* TESTIMONIALS */
+        .testimonials {
+            padding: 60px 20px;
+        }
+
+        .testimonials h2 {
+            text-align: center;
+            font-size: 1.8em;
+            margin-bottom: 40px;
+            color: var(--primary);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
         }
 
         .testimonial {
             background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
         }
 
-        .testimonial p {
-            color: #333;
-            font-size: 0.95em;
+        .testimonial:hover {
+            border-color: var(--accent);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.1);
+        }
+
+        .testimonial-text {
+            font-size: 1em;
+            line-height: 1.7;
+            margin-bottom: 15px;
+            color: #374151;
             font-style: italic;
-            margin-bottom: 10px;
         }
 
         .testimonial-author {
-            color: #667eea;
-            font-weight: 600;
-            font-size: 0.9em;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.95em;
         }
 
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-
-            .header p {
-                font-size: 1em;
-            }
-
-            .form-section {
-                padding: 25px 20px;
-            }
-
-            .benefits {
-                padding: 20px;
-            }
+        .testimonial-detail {
+            color: #6b7280;
+            font-size: 0.85em;
         }
 
-        .error {
-            color: #e74c3c;
-            font-size: 0.9em;
-            margin-top: 5px;
-            display: none;
+        .stars {
+            color: #fbbf24;
+            margin-bottom: 10px;
+            font-size: 1.1em;
         }
 
-        .success {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
+        /* FAQ */
+        .faq {
+            padding: 60px 20px;
+            background: #f9fafb;
+        }
+
+        .faq h2 {
             text-align: center;
+            font-size: 1.8em;
+            margin-bottom: 40px;
+            color: var(--primary);
         }
 
-        .loading {
-            display: none;
+        .faq-item {
+            background: white;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
-            vertical-align: middle;
+        .faq-question {
+            padding: 20px;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .faq-question:hover {
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        }
+
+        .faq-toggle {
+            font-size: 1.3em;
+            color: var(--secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .faq-item.active .faq-toggle {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            color: #374151;
+            line-height: 1.7;
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 20px;
+            max-height: 500px;
+        }
+
+        /* URGENCY BANNER */
+        .urgency-banner {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.05em;
+            margin: 30px 0;
+            border-radius: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero-headline {
+                font-size: 1.6em;
+            }
+
+            .hero-subheadline {
+                font-size: 1.1em;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .column-left h2 {
+                font-size: 1.5em;
+            }
+
+            .faq-question {
+                padding: 15px;
+                font-size: 0.95em;
+            }
+
+            .proof-items {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1>💪 7-Tage Fitness Challenge</h1>
-            <p>Der perfekte Start für deine Fitness-Reise</p>
-            <div style="margin-top: 15px;">
-                <span class="badge">⚡ Kostenlos</span>
-                <span class="badge">📱 Digital</span>
-                <span class="badge">✅ Sofort</span>
+    <header>
+        <div class="container">
+            <h1>✈️ TravelSmarter</h1>
+            <p>Daily Updated Travel Intelligence for Frequent Travelers</p>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="container">
+            <h1 class="hero-headline">
+                Save <span class="highlight">€2,000–5,000</span> on Your Next Trip<br>
+                (Even If You've Never "Hacked" Travel Before)
+            </h1>
+            <p class="hero-subheadline">
+                Get the exact strategies 12,340+ travelers use to fly business class for economy prices, stay in 5-star hotels for 50% off, and save thousands on every trip.
+            </p>
+            <div class="hero-promise">
+                🎁 FREE: Download the "2026 Travel Hacking Cheat Sheet" (€49 value)
+                <br>
+                ✓ 47 verified hacks that work TODAY (not outdated tips)
+                <br>
+                ✓ Step-by-step playbooks for flights, hotels, credit cards, and more
+                <br>
+                ✓ Real examples showing €3,000-15,600/year in savings
             </div>
         </div>
+    </section>
 
-        <!-- Main Content -->
-        <div class="form-section">
-            <!-- Success Message -->
-            <div class="success" id="successMessage">
-                ✅ <strong>Perfekt!</strong> Prüfe dein E-Mail Postfach (auch Spam-Ordner) für deine 7-Tage Challenge!
-            </div>
-
-            <!-- Freebie Preview -->
-            <div class="freebie-preview">
-                <div class="icon">📋</div>
-                <h3>Dein kostenloses Geschenk</h3>
-                <p><strong>7-Tage Fitness Challenge</strong></p>
-                <p>Ein kompletter Trainingsplan zum Sofort-Starten</p>
-                <ul class="freebie-features">
-                    <li>7 aufeinander aufbauende Workouts</li>
-                    <li>Detaillierte Trainingsanleitungen</li>
-                    <li>Ernährungs-Tipps für jemanden Anfänger</li>
-                    <li>Motivation & Tracking Sheet</li>
-                </ul>
-            </div>
-
-            <!-- Benefits Section -->
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
-                <h3 style="color: #333; margin-bottom: 15px; font-size: 1.2em;">Zusätzlich erhältst du:</h3>
-                <div class="benefit-item">
-                    <div class="benefit-icon">🎯</div>
-                    <div class="benefit-text">
-                        <h3>Personalisierte Empfehlungen</h3>
-                        <p>Wir senden dir Workout-Tipps basierend auf deinen Zielen</p>
-                    </div>
+    <!-- MAIN CONTENT -->
+    <section class="content">
+        <div class="container">
+            <div class="two-column">
+                <div class="column-left">
+                    <h2>Why Most Travelers Overpay by 40-60%</h2>
+                    <p>
+                        You book flights like most people do: search Google Flights, pick the cheapest option, buy it. Problem: you're leaving €2,000+ on the table every year.
+                    </p>
+                    <p>
+                        But smart travelers know better. They know:
+                    </p>
+                    <ul class="benefits-list">
+                        <li><strong>The 30-day booking sweet spot</strong> that saves €300-600 per flight</li>
+                        <li><strong>Which credit card bonuses</strong> are worth €1,500-3,000 in free travel</li>
+                        <li><strong>How to get free lounge access</strong> worth €100-150 per airport visit</li>
+                        <li><strong>Hotel status matching tricks</strong> that save €500+ per stay</li>
+                        <li><strong>Visa arbitrage strategies</strong> that let you live overseas for €20/day</li>
+                        <li><strong>Award redemption sweet spots</strong> where points are worth 10x more</li>
+                    </ul>
+                    <p style="margin-top: 30px; font-weight: 600; color: var(--secondary);">
+                        The difference isn't luck. It's knowledge.
+                    </p>
                 </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon">🔥</div>
-                    <div class="benefit-text">
-                        <h3>Exclusive Tipps & Tricks</h3>
-                        <p>Insider-Wissen, das du nirgendwo sonst findest</p>
+
+                <div class="column-right">
+                    <div class="freebie-image">
+                        <div>
+                            <div class="freebie-image-placeholder">📄</div>
+                            <div class="freebie-description">
+                                <strong>2026 Travel Hacking<br>Cheat Sheet</strong>
+                                47 Verified Hacks<br>
+                                €49 Value<br>
+                                <span style="font-size: 1.3em; margin-top: 10px; display: block;">🎁 FREE TODAY</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon">📊</div>
-                    <div class="benefit-text">
-                        <h3>Fortschritt Tracking</h3>
-                        <p>Kostenloser Zugang zur vollständigen Fitness App</p>
-                    </div>
+                    <p style="text-align: center; font-size: 0.95em; opacity: 0.9;">
+                        47-page PDF with real examples showing €3,000-15,600 in annual savings
+                    </p>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <!-- Form -->
-            <div class="form-title">
-                <h2>Hole dir die Challenge!</h2>
-                <p>Nur dein Name und E-Mail erforderlich</p>
+    <!-- SOCIAL PROOF -->
+    <section class="social-proof">
+        <div class="container">
+            <h3>Trusted by Thousands of Smart Travelers</h3>
+            <div class="proof-items">
+                <div class="proof-item">
+                    <span class="proof-number">12,340+</span>
+                    <span class="proof-label">Active Users</span>
+                </div>
+                <div class="proof-item">
+                    <span class="proof-number">€250M+</span>
+                    <span class="proof-label">Total Savings</span>
+                </div>
+                <div class="proof-item">
+                    <span class="proof-number">47</span>
+                    <span class="proof-label">Verified Hacks</span>
+                </div>
+                <div class="proof-item">
+                    <span class="proof-number">98%</span>
+                    <span class="proof-label">Accuracy Rate</span>
+                </div>
             </div>
+        </div>
+    </section>
 
-            <form id="signupForm" onsubmit="handleSubmit(event)">
+    <!-- URGENCY BANNER -->
+    <div class="urgency-banner">
+        ⏰ Limited Time: Free Cheat Sheet + 7-Day Email Course (Normally €99)
+    </div>
+
+    <!-- FORM SECTION -->
+    <section class="form-section">
+        <div class="container">
+            <h2>Get the Cheat Sheet FREE</h2>
+            <p>Join 12,340+ travelers who save thousands every year</p>
+
+            <form class="form-wrapper" id="optinForm">
                 <div class="form-group">
                     <input
                         type="text"
-                        id="firstName"
-                        placeholder="Dein Name"
+                        placeholder="Your First Name"
+                        name="firstName"
                         required
-                        aria-label="Name"
                     >
-                    <div class="error" id="nameError"></div>
                 </div>
-
                 <div class="form-group">
                     <input
                         type="email"
-                        id="email"
-                        placeholder="deine@email.de"
+                        placeholder="your@email.com"
+                        name="email"
                         required
-                        aria-label="E-Mail"
                     >
-                    <div class="error" id="emailError"></div>
                 </div>
-
-                <button type="submit" class="submit-btn">
-                    <span class="loading" id="loading">
-                        <span class="spinner"></span>Wird versendet...
-                    </span>
-                    <span id="buttonText">📥 Jetzt Kostenlos Herunterladen</span>
+                <button type="submit" class="cta-button">
+                    📥 Send Me the Cheat Sheet (FREE)
                 </button>
+                <p class="form-notice">
+                    ✓ No spam. Ever. Unsubscribe anytime.<br>
+                    Your PDF will be sent instantly to your email.
+                </p>
+            </form>
 
-                <div class="privacy-notice">
-                    Wir respektieren deine Privatsphäre. Unsubscribe jederzeit möglich.
-                    <br>Keine Spam, nur wertvolle Fitness-Tipps.
+            <!-- OR BUTTON TO SALES PAGE -->
+            <div style="text-align: center; margin-top: 20px;">
+                <p style="color: #6b7280; margin-bottom: 15px;">Or skip the cheat sheet and go straight to premium access:</p>
+                <a href="sales-page.html" style="
+                    display: inline-block;
+                    padding: 14px 30px;
+                    background: #10b981;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.background='#059669'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#10b981'; this.style.transform='translateY(0)';">
+                    🚀 See Pricing & Features
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section class="testimonials">
+        <div class="container">
+            <h2>What Travelers Are Saying</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial">
+                    <div class="stars">★★★★★</div>
+                    <p class="testimonial-text">
+                        "I saved €2,100 on a single trip using these strategies. The cheat sheet pays for itself 100 times over."
+                    </p>
+                    <p class="testimonial-author">Sarah M.</p>
+                    <p class="testimonial-detail">Berlin, Germany • Booked NYC Trip</p>
                 </div>
+
+                <div class="testimonial">
+                    <div class="stars">★★★★★</div>
+                    <p class="testimonial-text">
+                        "The hotel status matching hack alone saved me €500 on my next stay. I'm telling everyone about this."
+                    </p>
+                    <p class="testimonial-author">Mike T.</p>
+                    <p class="testimonial-detail">London, UK • Frequent Traveler</p>
+                </div>
+
+                <div class="testimonial">
+                    <div class="stars">★★★★★</div>
+                    <p class="testimonial-text">
+                        "Finally someone explaining this clearly. I used 3 hacks on my Europe trip and saved €3,400. Game changer."
+                    </p>
+                    <p class="testimonial-author">Jessica L.</p>
+                    <p class="testimonial-detail">Barcelona, Spain • 2 Trips/Year</p>
+                </div>
+
+                <div class="testimonial">
+                    <div class="stars">★★★★★</div>
+                    <p class="testimonial-text">
+                        "I'm recommending this to all my friends. Status matching in 24 hours + €500 savings per stay + credit card bonuses = my next 3 flights are free. Incredible value."
+                    </p>
+                    <p class="testimonial-author">Elena R.</p>
+                    <p class="testimonial-detail">Madrid, Spain • 6 Trips/Year</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq">
+        <div class="container">
+            <h2>Frequently Asked Questions</h2>
+
+            <div class="faq-item active">
+                <div class="faq-question" onclick="toggleFaq(event)">
+                    <span>Is this legal?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    Yes, 100% legal. These are all official strategies used by airlines, hotels, and credit card companies. We use their own systems, rewards programs, and pricing models exactly as designed. No hacks, no loopholes—just smart knowledge of how these companies work.
+                </div>
+            </div>
+
+            <div class="faq-item active">
+                <div class="faq-question" onclick="toggleFaq(event)">
+                    <span>How much does it cost?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    The cheat sheet is completely free. We make money from premium memberships (€19/month for Smart Traveler, €49/month for Elite) that give you real-time alerts and community access. But the core knowledge in the cheat sheet? Always free.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(event)">
+                    <span>How long does it take to implement these strategies?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    Some take 5 minutes (booking through the right website). Some take 30 minutes (applying for a credit card). Most save you time in the long run because you're booking smarter. Average person applies 3-5 strategies per trip and saves 2-3 hours of research.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(event)">
+                    <span>Will you spam my email?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    Nope. We send a 7-day email course that teaches one hack per day, then 1-2 emails per week with new discoveries and alerts. You can unsubscribe anytime (seriously, no hard feelings). Our content is valuable because we respect your inbox.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(event)">
+                    <span>Works for international travelers too?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    Yes! The cheat sheet has specific strategies for US, EU, UK, Australia, and Asia. Some strategies are universal (credit card arbitrage, airline positioning, hotel hacks), others are region-specific (visa strategies, regional airline programs). We cover all major regions.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(event)">
+                    <span>What if I'm new to travel hacking?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    Perfect! The cheat sheet is designed for beginners. It starts with the easiest strategies (€300-500 savings) and works up to advanced techniques (€2,000+ savings). Plus the 7-day email course walks you through step-by-step. No experience needed.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="form-section" style="margin-top: 60px;">
+        <div class="container">
+            <h2>Ready to Save Thousands?</h2>
+            <p>Get the 2026 Travel Hacking Cheat Sheet FREE (€49 value)</p>
+
+            <form class="form-wrapper" id="optinForm2">
+                <div class="form-group">
+                    <input
+                        type="text"
+                        placeholder="Your First Name"
+                        name="firstName"
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <input
+                        type="email"
+                        placeholder="your@email.com"
+                        name="email"
+                        required
+                    >
+                </div>
+                <button type="submit" class="cta-button">
+                    📥 Yes, Send Me the Cheat Sheet
+                </button>
+                <p class="form-notice">
+                    You'll also get 7 daily emails with step-by-step strategies.<br>
+                    Unsubscribe anytime. No credit card required.
+                </p>
             </form>
         </div>
+    </section>
 
-        <!-- Social Proof -->
-        <div class="social-proof">
-            <p>⭐ <strong>Über 5,000+ Menschen</strong> haben bereits die Challenge gestartet</p>
-
-            <div class="testimonial">
-                <p>"Die Challenge hat mir geholfen, endlich mit Fitness anzufangen! Sehr motivierend!"</p>
-                <div class="testimonial-author">- Sarah M., München</div>
-            </div>
-
-            <div class="testimonial">
-                <p>"Perfekt strukturiert für Anfänger. Habe nach 7 Tagen schon Fortschritte gesehen!"</p>
-                <div class="testimonial-author">- Michael K., Berlin</div>
-            </div>
-
-            <p style="margin-top: 15px; font-size: 0.85em; color: #999;">
-                ⏰ Challenge dauert ca. 15-20 Minuten pro Tag
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <p>© 2026 TravelSmarter. All rights reserved.</p>
+            <p style="margin-top: 10px; font-size: 0.85em;">
+                <a href="privacy-policy.html">Privacy Policy</a> •
+                <a href="terms-of-service.html">Terms of Service</a> •
+                <a href="contact-support.html">Contact Support</a>
             </p>
         </div>
-    </div>
+    </footer>
 
     <script>
-        // Form Validation
-        function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
+        // FAQ Toggle
+        function toggleFaq(event) {
+            const item = event.currentTarget.parentElement;
+            item.classList.toggle('active');
         }
 
-        function validateName(name) {
-            return name.trim().length >= 2;
-        }
+        // Form Submission
+        document.getElementById('optinForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const firstName = this.querySelector('input[name="firstName"]').value;
+            const email = this.querySelector('input[name="email"]').value;
 
-        async function handleSubmit(event) {
-            event.preventDefault();
-
-            const firstName = document.getElementById('firstName').value;
-            const email = document.getElementById('email').value;
-            const nameError = document.getElementById('nameError');
-            const emailError = document.getElementById('emailError');
-            const loading = document.getElementById('loading');
-            const buttonText = document.getElementById('buttonText');
-            const successMessage = document.getElementById('successMessage');
-
-            // Reset errors
-            nameError.style.display = 'none';
-            emailError.style.display = 'none';
-
-            // Validate
-            let valid = true;
-
-            if (!validateName(firstName)) {
-                nameError.textContent = 'Bitte gib einen gültigen Namen ein';
-                nameError.style.display = 'block';
-                valid = false;
-            }
-
-            if (!validateEmail(email)) {
-                emailError.textContent = 'Bitte gib eine gültige E-Mail ein';
-                emailError.style.display = 'block';
-                valid = false;
-            }
-
-            if (!valid) return;
-
-            // Show loading
-            loading.style.display = 'block';
-            buttonText.style.display = 'none';
-
-            try {
-                // Simulate sending (in real implementation, send to your email service)
-                // For demo: store in localStorage and show success
-                const signups = JSON.parse(localStorage.getItem('signups') || '[]');
-                signups.push({
-                    name: firstName,
-                    email: email,
-                    date: new Date().toISOString(),
-                    source: '7-day-challenge'
-                });
-                localStorage.setItem('signups', JSON.stringify(signups));
-
-                // Show success message with next step
-                document.getElementById('signupForm').style.display = 'none';
-                successMessage.style.display = 'block';
-
-                // Add next step links after success
-                successMessage.innerHTML = `
-                    ✅ <strong>Perfekt!</strong> Deine E-Mail ist bestätigt!<br><br>
-                    <div style="margin-top: 20px;">
-                        <p style="color: #666; margin-bottom: 15px;">Was jetzt?</p>
-                        <a href="freebie-7day-challenge.html" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 5px;">
-                            📥 7-Tage Challenge Herunterladen
-                        </a>
-                        <br><br>
-                        <a href="sales-page.html" style="display: inline-block; background: white; color: #667eea; padding: 12px 30px; border: 2px solid #667eea; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 5px;">
-                            🚀 Zur Fitness-App
-                        </a>
-                    </div>
-                `;
-
-                // Optional: Log to console
-                console.log('Signup received:', { firstName, email });
-
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Es gab einen Fehler. Bitte versuche es später erneut.');
-                loading.style.display = 'none';
-                buttonText.style.display = 'block';
-            }
-        }
-
-        // Track page views
-        document.addEventListener('DOMContentLoaded', () => {
-            const tracking = JSON.parse(localStorage.getItem('pageTracking') || '[]');
-            tracking.push({
-                page: 'squeeze-page',
-                timestamp: new Date().toISOString()
-            });
-            localStorage.setItem('pageTracking', JSON.stringify(tracking.slice(-100)));
+            // Show success message
+            const formHTML = this.innerHTML;
+            this.innerHTML = `
+                <div style="text-align: center; padding: 30px; background: white; border-radius: 8px;">
+                    <h3 style="color: var(--accent); margin-bottom: 10px; font-size: 1.5em;">✓ Success!</h3>
+                    <p style="color: #374151; margin-bottom: 15px;">
+                        Hi ${firstName}, check your email for the cheat sheet!
+                    </p>
+                    <p style="color: #6b7280; font-size: 0.95em;">
+                        (It'll be in your inbox in the next 2-3 minutes)
+                    </p>
+                </div>
+            `;
         });
 
-        // Optional: Track when user leaves without signing up
-        window.addEventListener('beforeunload', () => {
-            if (document.getElementById('signupForm').style.display !== 'none') {
-                const abandoned = JSON.parse(localStorage.getItem('abandonedVisits') || '[]');
-                abandoned.push({
-                    timestamp: new Date().toISOString()
-                });
-                localStorage.setItem('abandonedVisits', JSON.stringify(abandoned.slice(-100)));
-            }
+        document.getElementById('optinForm2').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const firstName = this.querySelector('input[name="firstName"]').value;
+
+            // Show success message
+            this.innerHTML = `
+                <div style="text-align: center; padding: 30px; background: white; border-radius: 8px;">
+                    <h3 style="color: var(--accent); margin-bottom: 10px; font-size: 1.5em;">✓ Success!</h3>
+                    <p style="color: #374151; margin-bottom: 15px;">
+                        Hi ${firstName}, check your email for the cheat sheet!
+                    </p>
+                    <p style="color: #6b7280; font-size: 0.95em;">
+                        (It'll be in your inbox in the next 2-3 minutes)
+                    </p>
+                </div>
+            `;
         });
     </script>
 </body>
