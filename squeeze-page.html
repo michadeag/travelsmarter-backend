@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💪 7-Tage Fitness Challenge - Kostenlos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin: 5px;
+            backdrop-filter: blur(10px);
+        }
+
+        .benefits {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .benefit-item {
+            display: flex;
+            margin-bottom: 20px;
+            align-items: flex-start;
+        }
+
+        .benefit-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .benefit-icon {
+            font-size: 1.8em;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .benefit-text h3 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .benefit-text p {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .form-section {
+            padding: 40px 30px;
+        }
+
+        .form-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-title h2 {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .form-title p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        input[type="email"],
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="email"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .privacy-notice {
+            text-align: center;
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        .freebie-preview {
+            background: white;
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .freebie-preview .icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .freebie-preview h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.2em;
+        }
+
+        .freebie-preview p {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 12px;
+        }
+
+        .freebie-features {
+            text-align: left;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .freebie-features li {
+            list-style: none;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .freebie-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .social-proof {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .social-proof p {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .testimonial {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .testimonial p {
+            color: #333;
+            font-size: 0.95em;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .testimonial-author {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .header p {
+                font-size: 1em;
+            }
+
+            .form-section {
+                padding: 25px 20px;
+            }
+
+            .benefits {
+                padding: 20px;
+            }
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>💪 7-Tage Fitness Challenge</h1>
+            <p>Der perfekte Start für deine Fitness-Reise</p>
+            <div style="margin-top: 15px;">
+                <span class="badge">⚡ Kostenlos</span>
+                <span class="badge">📱 Digital</span>
+                <span class="badge">✅ Sofort</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="form-section">
+            <!-- Success Message -->
+            <div class="success" id="successMessage">
+                ✅ <strong>Perfekt!</strong> Prüfe dein E-Mail Postfach (auch Spam-Ordner) für deine 7-Tage Challenge!
+            </div>
+
+            <!-- Freebie Preview -->
+            <div class="freebie-preview">
+                <div class="icon">📋</div>
+                <h3>Dein kostenloses Geschenk</h3>
+                <p><strong>7-Tage Fitness Challenge</strong></p>
+                <p>Ein kompletter Trainingsplan zum Sofort-Starten</p>
+                <ul class="freebie-features">
+                    <li>7 aufeinander aufbauende Workouts</li>
+                    <li>Detaillierte Trainingsanleitungen</li>
+                    <li>Ernährungs-Tipps für jemanden Anfänger</li>
+                    <li>Motivation & Tracking Sheet</li>
+                </ul>
+            </div>
+
+            <!-- Benefits Section -->
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                <h3 style="color: #333; margin-bottom: 15px; font-size: 1.2em;">Zusätzlich erhältst du:</h3>
+                <div class="benefit-item">
+                    <div class="benefit-icon">🎯</div>
+                    <div class="benefit-text">
+                        <h3>Personalisierte Empfehlungen</h3>
+                        <p>Wir senden dir Workout-Tipps basierend auf deinen Zielen</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">🔥</div>
+                    <div class="benefit-text">
+                        <h3>Exclusive Tipps & Tricks</h3>
+                        <p>Insider-Wissen, das du nirgendwo sonst findest</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">📊</div>
+                    <div class="benefit-text">
+                        <h3>Fortschritt Tracking</h3>
+                        <p>Kostenloser Zugang zur vollständigen Fitness App</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <div class="form-title">
+                <h2>Hole dir die Challenge!</h2>
+                <p>Nur dein Name und E-Mail erforderlich</p>
+            </div>
+
+            <form id="signupForm" onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <input
+                        type="text"
+                        id="firstName"
+                        placeholder="Dein Name"
+                        required
+                        aria-label="Name"
+                    >
+                    <div class="error" id="nameError"></div>
+                </div>
+
+                <div class="form-group">
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="deine@email.de"
+                        required
+                        aria-label="E-Mail"
+                    >
+                    <div class="error" id="emailError"></div>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <span class="loading" id="loading">
+                        <span class="spinner"></span>Wird versendet...
+                    </span>
+                    <span id="buttonText">📥 Jetzt Kostenlos Herunterladen</span>
+                </button>
+
+                <div class="privacy-notice">
+                    Wir respektieren deine Privatsphäre. Unsubscribe jederzeit möglich.
+                    <br>Keine Spam, nur wertvolle Fitness-Tipps.
+                </div>
+            </form>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="social-proof">
+            <p>⭐ <strong>Über 5,000+ Menschen</strong> haben bereits die Challenge gestartet</p>
+
+            <div class="testimonial">
+                <p>"Die Challenge hat mir geholfen, endlich mit Fitness anzufangen! Sehr motivierend!"</p>
+                <div class="testimonial-author">- Sarah M., München</div>
+            </div>
+
+            <div class="testimonial">
+                <p>"Perfekt strukturiert für Anfänger. Habe nach 7 Tagen schon Fortschritte gesehen!"</p>
+                <div class="testimonial-author">- Michael K., Berlin</div>
+            </div>
+
+            <p style="margin-top: 15px; font-size: 0.85em; color: #999;">
+                ⏰ Challenge dauert ca. 15-20 Minuten pro Tag
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Form Validation
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function validateName(name) {
+            return name.trim().length >= 2;
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            const firstName = document.getElementById('firstName').value;
+            const email = document.getElementById('email').value;
+            const nameError = document.getElementById('nameError');
+            const emailError = document.getElementById('emailError');
+            const loading = document.getElementById('loading');
+            const buttonText = document.getElementById('buttonText');
+            const successMessage = document.getElementById('successMessage');
+
+            // Reset errors
+            nameError.style.display = 'none';
+            emailError.style.display = 'none';
+
+            // Validate
+            let valid = true;
+
+            if (!validateName(firstName)) {
+                nameError.textContent = 'Bitte gib einen gültigen Namen ein';
+                nameError.style.display = 'block';
+                valid = false;
+            }
+
+            if (!validateEmail(email)) {
+                emailError.textContent = 'Bitte gib eine gültige E-Mail ein';
+                emailError.style.display = 'block';
+                valid = false;
+            }
+
+            if (!valid) return;
+
+            // Show loading
+            loading.style.display = 'block';
+            buttonText.style.display = 'none';
+
+            try {
+                // Simulate sending (in real implementation, send to your email service)
+                // For demo: store in localStorage and show success
+                const signups = JSON.parse(localStorage.getItem('signups') || '[]');
+                signups.push({
+                    name: firstName,
+                    email: email,
+                    date: new Date().toISOString(),
+                    source: '7-day-challenge'
+                });
+                localStorage.setItem('signups', JSON.stringify(signups));
+
+                // Show success message with next step
+                document.getElementById('signupForm').style.display = 'none';
+                successMessage.style.display = 'block';
+
+                // Add next step links after success
+                successMessage.innerHTML = `
+                    ✅ <strong>Perfekt!</strong> Deine E-Mail ist bestätigt!<br><br>
+                    <div style="margin-top: 20px;">
+                        <p style="color: #666; margin-bottom: 15px;">Was jetzt?</p>
+                        <a href="freebie-7day-challenge.html" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 5px;">
+                            📥 7-Tage Challenge Herunterladen
+                        </a>
+                        <br><br>
+                        <a href="sales-page.html" style="display: inline-block; background: white; color: #667eea; padding: 12px 30px; border: 2px solid #667eea; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 5px;">
+                            🚀 Zur Fitness-App
+                        </a>
+                    </div>
+                `;
+
+                // Optional: Log to console
+                console.log('Signup received:', { firstName, email });
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Es gab einen Fehler. Bitte versuche es später erneut.');
+                loading.style.display = 'none';
+                buttonText.style.display = 'block';
+            }
+        }
+
+        // Track page views
+        document.addEventListener('DOMContentLoaded', () => {
+            const tracking = JSON.parse(localStorage.getItem('pageTracking') || '[]');
+            tracking.push({
+                page: 'squeeze-page',
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('pageTracking', JSON.stringify(tracking.slice(-100)));
+        });
+
+        // Optional: Track when user leaves without signing up
+        window.addEventListener('beforeunload', () => {
+            if (document.getElementById('signupForm').style.display !== 'none') {
+                const abandoned = JSON.parse(localStorage.getItem('abandonedVisits') || '[]');
+                abandoned.push({
+                    timestamp: new Date().toISOString()
+                });
+                localStorage.setItem('abandonedVisits', JSON.stringify(abandoned.slice(-100)));
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein Fitness-Assistent - Die #1 App für langfristige Fitness-Erfolge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* HEADER/HERO */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -5%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .hero .subheadline {
+            font-size: 1.4em;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+
+        .hero-cta {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 18px 50px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin: 20px 10px;
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .hero-secondary:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .hero-badges {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 0.95em;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* SECTION STYLES */
+        section {
+            padding: 80px 20px;
+        }
+
+        section h2 {
+            font-size: 2.5em;
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 50px;
+            font-weight: 800;
+        }
+
+        section h3 {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        section p {
+            margin-bottom: 15px;
+            font-size: 1.05em;
+            line-height: 1.8;
+        }
+
+        /* PROBLEM SECTION */
+        .problem {
+            background: #f8f9fa;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .problem-item {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            border-left: 5px solid #e74c3c;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .problem-item .emoji {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .problem-item h4 {
+            color: #e74c3c;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        /* SOLUTION SECTION */
+        .solution {
+            background: white;
+        }
+
+        .solution-intro {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .solution-intro h3 {
+            color: white;
+            margin-top: 0;
+            font-size: 2em;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+        }
+
+        .feature h4 {
+            color: #667eea;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+        }
+
+        .feature p {
+            color: #666;
+        }
+
+        /* HOW IT WORKS */
+        .how-it-works {
+            background: #f8f9fa;
+        }
+
+        .steps-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+            align-items: start;
+        }
+
+        .step:nth-child(even) {
+            grid-template-columns: 1fr 150px;
+        }
+
+        .step:nth-child(even) .step-content {
+            order: -1;
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .step-content h4 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .step-content p {
+            color: #666;
+        }
+
+        /* TESTIMONIALS */
+        .testimonials {
+            background: white;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .testimonial {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #f0f0f0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .testimonial:hover {
+            border-color: #667eea;
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .stars {
+            color: #ffc107;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        .testimonial-text {
+            color: #333;
+            font-style: italic;
+            margin-bottom: 20px;
+            font-size: 1.05em;
+            line-height: 1.8;
+        }
+
+        .testimonial-author {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .testimonial-meta {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        /* RESULTS SECTION */
+        .results {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .results h2 {
+            color: white;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .result-stat {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .result-stat .number {
+            font-size: 3.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .result-stat p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        /* PRICING */
+        .pricing {
+            background: #f8f9fa;
+        }
+
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .pricing-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 2px solid #f0f0f0;
+            text-align: center;
+        }
+
+        .pricing-card.featured {
+            border-color: #667eea;
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+            position: relative;
+        }
+
+        .pricing-card.featured::before {
+            content: 'MEISTGEWÄHLT';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 20px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 700;
+        }
+
+        .pricing-card h4 {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .pricing-card .description {
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .pricing-card .price {
+            font-size: 3em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .pricing-card .period {
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .pricing-card ul {
+            list-style: none;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .pricing-card li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            color: #666;
+        }
+
+        .pricing-card li::before {
+            content: '✓ ';
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .pricing-card li:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-cta {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .pricing-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .pricing-card.featured .pricing-cta {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        /* FAQ */
+        .faq {
+            background: white;
+        }
+
+        .faq-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+            border: 1px solid #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            background: #f8f9fa;
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question:hover {
+            background: #f0f4ff;
+        }
+
+        .faq-question.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .faq-toggle {
+            font-size: 1.5em;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-question.active .faq-toggle {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            padding: 20px;
+            background: white;
+            color: #666;
+            display: none;
+            line-height: 1.8;
+        }
+
+        .faq-answer.active {
+            display: block;
+        }
+
+        /* GUARANTEE */
+        .guarantee {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 60px auto;
+            max-width: 700px;
+        }
+
+        .guarantee h3 {
+            color: #155724;
+            margin-bottom: 15px;
+        }
+
+        .guarantee p {
+            color: #155724;
+        }
+
+        /* FINAL CTA */
+        .final-cta {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .final-cta h2 {
+            color: white;
+            font-size: 2.8em;
+            margin-bottom: 20px;
+        }
+
+        .final-cta p {
+            font-size: 1.3em;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+
+        .final-cta-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 20px 60px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.3em;
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .final-cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        /* FOOTER */
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 0.9em;
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* TRUST BAND */
+        .trust-band {
+            background: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-top: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .trust-band p {
+            margin: 0;
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2em;
+            }
+
+            .hero .subheadline {
+                font-size: 1.1em;
+            }
+
+            section {
+                padding: 50px 20px;
+            }
+
+            section h2 {
+                font-size: 1.8em;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+
+            .step {
+                grid-template-columns: 1fr !important;
+            }
+
+            .step:nth-child(even) .step-content {
+                order: 0;
+            }
+
+            .step-number {
+                width: 80px;
+                height: 80px;
+                font-size: 1.8em;
+            }
+
+            .hero-badges {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Die einzige App, mit der du WIRKLICH 90 Tage durchhältst</h1>
+            <p class="subheadline">
+                Deine Fitness-Routine ist nicht das Problem.<br>
+                <strong>Deine Motivation ist das Problem.</strong><br>
+                Mein Fitness-Assistent löst es.
+            </p>
+
+            <a href="index.html?plan=free" class="hero-cta">🚀 Starte Kostenlos</a>
+            <a href="#pricing" class="hero-cta hero-secondary">📊 Alle Features ansehen</a>
+
+            <div class="hero-badges">
+                <span class="badge">⭐ 4.8/5 (500+ Reviews)</span>
+                <span class="badge">🔥 5,000+ Nutzer</span>
+                <span class="badge">✅ 30-Tag Garantie</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- TRUST BAND -->
+    <div class="trust-band">
+        <p>✅ Komplett kostenlos zum Starten | 🔒 Keine Kreditkarte nötig | 📱 Sofort online verfügbar</p>
+    </div>
+
+    <!-- PROBLEM SECTION -->
+    <section class="problem">
+        <div class="container">
+            <h2>Das Problem: 90% geben auf</h2>
+            <p style="text-align: center; font-size: 1.1em; color: #666; margin-bottom: 40px;">
+                Du hast das schon tausendmal versucht. Der erste Monat ist ok.<br>
+                Dann wird es schwierig. Und du schmeißt das Handtuch.
+            </p>
+
+            <div class="problem-grid">
+                <div class="problem-item">
+                    <div class="emoji">😴</div>
+                    <h4>Fehlende Motivation</h4>
+                    <p>Es ist schwer, motiviert zu bleiben, wenn du nichts siehst.</p>
+                </div>
+                <div class="problem-item">
+                    <div class="emoji">📉</div>
+                    <h4>Keine Sichtbarkeit</h4>
+                    <p>Du weißt nicht, ob du Fortschritt machst.</p>
+                </div>
+                <div class="problem-item">
+                    <div class="emoji">😞</div>
+                    <h4>Langeweile</h4>
+                    <p>Die gleiche Routine jeden Tag? Irgendwann wird es langweilig.</p>
+                </div>
+                <div class="problem-item">
+                    <div class="emoji">🎯</div>
+                    <h4>Ungeklare Ziele</h4>
+                    <p>Nicht zu wissen, worauf du hinarbeitest.</p>
+                </div>
+                <div class="problem-item">
+                    <div class="emoji">📱</div>
+                    <h4>Zu kompliziert</h4>
+                    <p>Tausend Apps, tausend passwörter, zu viel Information.</p>
+                </div>
+                <div class="problem-item">
+                    <div class="emoji">👥</div>
+                    <h4>Keine Rechenschaft</h4>
+                    <p>Niemand weiß, wenn du aufgibst.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOLUTION SECTION -->
+    <section class="solution">
+        <div class="container">
+            <h2>Die Lösung: Gamification + Tracking</h2>
+
+            <div class="solution-intro">
+                <h3>Was wenn deine Fitness-App wie dein Lieblingsspiel ist?</h3>
+                <p>Genau das ist <strong>Mein Fitness-Assistent</strong>.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature">
+                    <div class="feature-icon">🏆</div>
+                    <h4>Level System (0-50)</h4>
+                    <p>Jedes Workout bringt dich näher zu Level 50. Sieh jeden Tag Fortschritt.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🥇</div>
+                    <h4>20+ Badges</h4>
+                    <p>Erreiche Meilensteine. Unlock Achievements. Fühle dich wie ein Champion.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔥</div>
+                    <h4>Streak Tracking</h4>
+                    <p>Wie viele Tage hintereinander? Der Streak ist dein bester Freund.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📊</div>
+                    <h4>Detaillierte Charts</h4>
+                    <p>Sehe deine Fortschritte in wunderschönen Diagrammen.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎯</div>
+                    <h4>Benutzerdefinierte Ziele</h4>
+                    <p>Setze deine eigenen Ziele. Verfolge was zählt.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔔</div>
+                    <h4>Smart Notifications</h4>
+                    <p>Clevere Erinnerungen, nicht penetrant. Exakt wenn du sie brauchst.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2>Wie es funktioniert</h2>
+
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>📋 Einmaliges Setup (2 Min)</h4>
+                        <p>Beantworte 5 einfache Fragen über deine Fitness-Ziele. Das war's!</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>💪 Führe ein Workout durch</h4>
+                        <p>Wähle eine Workout-Art aus. Loggen Sie die Dauer. Verdiene XP.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>🎮 Sehe dein Level aufsteigen</h4>
+                        <p>100 XP = 1 Level. Sehe deinen Fortschritt in Echtzeit.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>🏆 Unlock Badges & Streaks</h4>
+                        <p>Erreiche Meilensteine. Baue Streaks auf. Verdiene Achievements.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>📊 Beobachte deine Transformation</h4>
+                        <p>Detaillierte Charts zeigen deinen Fortschritt über Wochen & Monate.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <h4>🔥 Halte deine Motivation</h4>
+                    <p>Tägliche Streaks, Benachrichtigungen und Ziele halten dich motiviert.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="results">
+        <div class="container">
+            <h2>Das Ergebnis</h2>
+
+            <div class="results-grid">
+                <div class="result-stat">
+                    <div class="number">73%</div>
+                    <p>der Nutzer trainieren 90+ Tage ohne Unterbrechung</p>
+                </div>
+                <div class="result-stat">
+                    <div class="number">5.2x</div>
+                    <p>höhere Erfolgsquote im Vergleich zu traditionellen Apps</p>
+                </div>
+                <div class="result-stat">
+                    <div class="number">47 min</div>
+                    <p>durchschnittlich pro Woche mehr Trainingszeit</p>
+                </div>
+                <div class="result-stat">
+                    <div class="number">90%</div>
+                    <p>der Nutzer berichten mehr Motivation & Freude</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section class="testimonials">
+        <div class="container">
+            <h2>Das sagen echte Nutzer</h2>
+
+            <div class="testimonials-grid">
+                <div class="testimonial">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">
+                        "Ich habe noch nie 90 Tage am Stück trainiert. Mit dieser App? Es fühlt sich wie ein Spiel an. Ich bin süchtig! 💪"
+                    </p>
+                    <div class="testimonial-author">Sarah M.</div>
+                    <div class="testimonial-meta">München</div>
+                </div>
+
+                <div class="testimonial">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">
+                        "Endlich verstehe ich, wie motivierend Gamification sein kann. Das ist nicht wie andere Fitness-Apps. Das funktioniert!"
+                    </p>
+                    <div class="testimonial-author">Marcus K.</div>
+                    <div class="testimonial-meta">Berlin</div>
+                </div>
+
+                <div class="testimonial">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">
+                        "30 Tage Garantie? Ich bin jetzt seit 6 Monaten dabei. Das beste Geld, das ich für meine Gesundheit ausgegeben habe."
+                    </p>
+                    <div class="testimonial-author">Julia H.</div>
+                    <div class="testimonial-meta">Hamburg</div>
+                </div>
+
+                <div class="testimonial">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">
+                        "Nicht hype. Nicht kompliziert. Nur eine App die funktioniert. Ich trainiere jetzt seit 4 Monaten kontinuierlich!"
+                    </p>
+                    <div class="testimonial-author">Thomas B.</div>
+                    <div class="testimonial-meta">Köln</div>
+                </div>
+
+                <div class="testimonial">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">
+                        "Meine Familie fragt, warum ich so motiviert bin. Die Antwort? Ich levele auf! 😂 So eine geniale Idee."
+                    </p>
+                    <div class="testimonial-author">Anna W.</div>
+                    <div class="testimonial-meta">Stuttgart</div>
+                </div>
+
+                <div class="testimonial">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">
+                        "Kostenlos anfangen, Premium Features unlocked. Das ist echte Transparenz. Danke für eine ehrliche App!"
+                    </p>
+                    <div class="testimonial-author">Robert N.</div>
+                    <div class="testimonial-meta">Frankfurt</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <h2>Einfache, transparente Preise</h2>
+            <p style="text-align: center; font-size: 1.1em; color: #666; margin-bottom: 40px;">
+                Kostenlos anfangen und komplett kostenlos bleiben. Oder upgraden für mehr Features.<br>
+                <strong style="color: #667eea;">Premium+ hat 1 Woche kostenlos zum Testen!</strong>
+            </p>
+
+            <div class="pricing-cards">
+                <div class="pricing-card">
+                    <h4>Free (Kostenlos)</h4>
+                    <p class="description">Perfekt zum Starten</p>
+                    <div class="price">€0</div>
+                    <div class="period">Für immer</div>
+                    <ul>
+                        <li>Unbegrenzte Workouts</li>
+                        <li>Level & XP System</li>
+                        <li>Basic Badges (10+)</li>
+                        <li>Streak Tracking</li>
+                        <li>7 Tage Fortschritt</li>
+                        <li>Manuelle Benachrichtigungen</li>
+                    </ul>
+                    <a href="index.html?plan=free" class="pricing-cta">Jetzt Kostenlos Starten</a>
+                </div>
+
+                <div class="pricing-card featured">
+                    <h4>Premium</h4>
+                    <p class="description">Das Vollständige Erlebnis</p>
+                    <div class="price">€9,99</div>
+                    <div class="period">pro Monat</div>
+                    <ul>
+                        <li>Alles in Free</li>
+                        <li>Alle 20+ Badges</li>
+                        <li>Unbegrenzter Verlauf (90+ Tage)</li>
+                        <li>Advanced Analytics</li>
+                        <li>Smart Notifications</li>
+                        <li>Personalisierte Empfehlungen</li>
+                        <li>Goal Customization</li>
+                        <li>Ad-Free Experience</li>
+                    </ul>
+                    <a href="checkout-page.html?plan=premium" class="pricing-cta">💪 Upgrade zu Premium</a>
+                </div>
+
+                <div class="pricing-card">
+                    <h4>Premium+</h4>
+                    <p class="description">VIP Treatment</p>
+                    <div class="price">€19,99</div>
+                    <div class="period">pro Monat</div>
+                    <ul>
+                        <li>Alles in Premium</li>
+                        <li>Private Coaching</li>
+                        <li>1-on-1 Beratung (Monatlich)</li>
+                        <li>Maßgeschneiderte Pläne</li>
+                        <li>Priority Support</li>
+                        <li>Beta Features First</li>
+                        <li>Exclusive Community</li>
+                    </ul>
+                    <a href="checkout-page.html?plan=premium_plus" class="pricing-cta">🎁 1 Woche Kostenlos Testen</a>
+                </div>
+            </div>
+
+            <p style="text-align: center; margin-top: 40px; color: #666;">
+                ✅ Free für immer kostenlos | 💪 Premium: €9.99/month | 🎁 Premium+: 1 Woche kostenlos, dann €19.99/month<br>
+                <strong>30-Tage Geld-zurück-Garantie auf Premium & Premium+</strong>
+            </p>
+        </div>
+    </section>
+
+    <!-- GUARANTEE -->
+    <section style="background: white; padding: 40px 20px;">
+        <div class="guarantee">
+            <h3>🛡️ Unsere 30-Tage Geld-Zurück-Garantie</h3>
+            <p>
+                Du magst es nicht? <strong>Volle Rückerstattung. Keine Fragen.</strong><br><br>
+                Wir vertrauen darauf, dass diese App funktioniert, weil unsere 5,000+ Nutzer es bestätigen.<br>
+                Wenn es für dich nicht funktioniert, musst du nicht zahlen.
+            </p>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq">
+        <div class="container">
+            <h2>Häufig Gestellte Fragen</h2>
+
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Wieviel kostet es?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>Free:</strong> Kostenlos für immer! Alle Grundfunktionen, unbegrenzte Nutzung.<br><br><strong>Premium:</strong> €9,99/Monat - Alle Features, Advanced Analytics, Smart Notifications, Ad-Free.<br><br><strong>Premium+:</strong> €19,99/Monat - Persönliches Coaching, Exclusive Community, Priority Support. <strong>Teste 1 Woche kostenlos!</strong></p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Muss ich meine Daten teilen?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Nein. Deine Daten bleiben auf DEINEM Gerät. Wir speichern nichts auf unseren Servern. Du hast volle Kontrolle.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Kann ich cancelen wenn ich mag?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Ja, jederzeit. Kein Kündigungsfrist. Kein Harakiri. Einfach canceln und du bezahlst nicht mehr.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Was wenn ich anfänger bin?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Perfekt! Die App ist speziell für Anfänger gebaut. Du fängst mit einfachen Workouts an und baust dich langsam auf. Es gibt keine Mindest-Fitness-Level.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Auf welchen Geräten funktioniert es?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Überall! Computer, Tablet, Handy. Egal welcher Browser. Es funktioniert sogar offline. Und deine Daten synken automatisch.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Gibt es Support?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Ja! Premium und Premium+ Nutzer bekommen Email Support. Alle Nutzer haben Zugang zu unserer umfangreichen FAQ und Dokumentation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="final-cta">
+        <div class="container">
+            <h2>Bereit, deine Fitness-Reise zu starten?</h2>
+            <p>Keine Kreditkarte nötig. Keine versteckten Gebühren. Nur ehrliche, funktionierende Software.</p>
+            <a href="index.html?plan=free" class="final-cta-button">🚀 Starte Kostenlos - Jetzt</a>
+            <p style="margin-top: 30px; opacity: 0.8; font-size: 0.95em;">
+                5,000+ Menschen haben bereits ihre Fitness-Ziele erreicht.<br>
+                Der nächste könntest DU sein.
+            </p>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>© 2026 Mein Fitness-Assistent. Alle Rechte vorbehalten. | <a href="#">Datenschutz</a> | <a href="#">AGB</a> | <a href="#">Kontakt</a></p>
+        <p>Gebaut von Menschen, die echte Fitness-Probleme lösen wollen.</p>
+    </footer>
+
+    <script>
+        function toggleFAQ(element) {
+            const question = element;
+            const answer = element.nextElementSibling;
+
+            // Close all other FAQs
+            document.querySelectorAll('.faq-question.active').forEach(q => {
+                if (q !== question) {
+                    q.classList.remove('active');
+                    q.nextElementSibling.classList.remove('active');
+                }
+            });
+
+            // Toggle current FAQ
+            question.classList.toggle('active');
+            answer.classList.toggle('active');
+        }
+
+        // Open first FAQ by default
+        window.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('.faq-question').classList.add('active');
+            document.querySelector('.faq-answer').classList.add('active');
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Track clicks for analytics
+        document.querySelectorAll('.hero-cta, .pricing-cta, .final-cta-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                console.log('CTA clicked:', btn.textContent);
+                // You could send this to analytics
+            });
+        });
+    </script>
+</body>
+</html>

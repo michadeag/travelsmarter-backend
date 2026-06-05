@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutzungsbedingungen - Fitness-App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .back-link:hover {
+            opacity: 1;
+        }
+
+        .content {
+            padding: 50px 40px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .content h2 {
+            color: #667eea;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .content h3 {
+            color: #764ba2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-size: 1.15em;
+        }
+
+        .content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .content ul, .content ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        .content li {
+            margin-bottom: 8px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .last-updated {
+            color: #999;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 30px 40px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 15px;
+            transition: color 0.3s;
+        }
+
+        .footer a:hover {
+            color: #764ba2;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .content h2 {
+                font-size: 1.3em;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-link">← Zurück zur App</a>
+            <h1>⚖️ Nutzungsbedingungen</h1>
+            <p>Workout-App - Fitness & Gamification</p>
+        </div>
+
+        <div class="content">
+            <p class="last-updated">Zuletzt aktualisiert: 4. Juni 2026</p>
+
+            <!-- 1. Geltungsbereich -->
+            <div class="section">
+                <h2>1. Geltungsbereich und Vertragsparteien</h2>
+                <p>Diese Nutzungsbedingungen regeln die Nutzung der Fitness-App (nachfolgend "App" genannt), ein digitales Fitness- und Gamification-Tool.</p>
+                <h3>Vertragsparteien:</h3>
+                <ul>
+                    <li><strong>Anbieter:</strong> [Dein Name/Unternehmensname], [Deine Adresse], Deutschland</li>
+                    <li><strong>Nutzer:</strong> Jede Person, die die App nutzt</li>
+                </ul>
+                <p>Durch die Nutzung der App akzeptierst du diese Nutzungsbedingungen in ihrer Gesamtheit.</p>
+            </div>
+
+            <!-- 2. Leistungsumfang -->
+            <div class="section">
+                <h2>2. Leistungsumfang der App</h2>
+                <p>Die App bietet:</p>
+                <ul>
+                    <li>Workout-Tracking und -Planung</li>
+                    <li>Gamification-System (Levels, XP, Badges, Streaks)</li>
+                    <li>Progress-Dashboard mit Statistiken</li>
+                    <li>Push-Benachrichtigungen und Erinnerungen</li>
+                    <li>Lokale Datenspeicherung (Browser localStorage)</li>
+                </ul>
+                <p><strong>Wichtig:</strong> Die App ist KEIN Ersatz für professionelle medizinische oder Trainingsberatung. Konsultiere vor Beginn eines Trainingsprogramms einen Arzt oder qualifizierten Trainer.</p>
+            </div>
+
+            <!-- 3. Registrierung und Account -->
+            <div class="section">
+                <h2>3. Registrierung und Nutzer-Account</h2>
+                <h3>3.1 Registrierungsvoraussetzungen</h3>
+                <ul>
+                    <li>Du musst mindestens 18 Jahre alt sein</li>
+                    <li>Du musst wahre und vollständige Informationen angeben</li>
+                    <li>Du darfst maximal einen Account pro Person haben</li>
+                </ul>
+
+                <h3>3.2 Passwort und Sicherheit</h3>
+                <ul>
+                    <li>Du bist verantwortlich für die Geheimhaltung deines Passworts</li>
+                    <li>Du bist verantwortlich für alle Aktivitäten unter deinem Account</li>
+                    <li>Melde verdächtige Aktivitäten sofort</li>
+                </ul>
+            </div>
+
+            <!-- 4. Nutzerrechte und -pflichten -->
+            <div class="section">
+                <h2>4. Nutzerrechte und -pflichten</h2>
+                <h3>4.1 Was du darfst:</h3>
+                <ul>
+                    <li>✅ Die App für private, persönliche Nutzung verwenden</li>
+                    <li>✅ Deine Daten exportieren und herunterladen</li>
+                    <li>✅ Deinen Account jederzeit löschen</li>
+                    <li>✅ Auf deine Datenschutzrechte bestehen</li>
+                </ul>
+
+                <h3>4.2 Was du NICHT darfst:</h3>
+                <ul>
+                    <li>❌ Die App kommerziell weitergeben oder verkaufen</li>
+                    <li>❌ Die App hacken oder manipulieren</li>
+                    <li>❌ Malware oder Viren in die App einschleusen</li>
+                    <li>❌ Andere Nutzer belästigen oder bedrohen</li>
+                    <li>❌ Spam oder Werbung versenden</li>
+                    <li>❌ Urheberrechte verletzen</li>
+                </ul>
+            </div>
+
+            <!-- 5. Zahlung und Abos -->
+            <div class="section">
+                <h2>5. Zahlungs- und Abonnement-Bedingungen</h2>
+                <h3>5.1 Pricing</h3>
+                <ul>
+                    <li><strong>Free Plan:</strong> Kostenlos für immer</li>
+                    <li><strong>Premium:</strong> €9,99/Monat</li>
+                    <li><strong>Premium+:</strong> €19,99/Monat (1 Woche kostenlos)</li>
+                </ul>
+
+                <h3>5.2 Zahlungsmethoden</h3>
+                <ul>
+                    <li>Stripe (Kreditkarte)</li>
+                    <li>PayPal (PayPal-Konto)</li>
+                </ul>
+
+                <h3>5.3 Automatische Verlängerung</h3>
+                <p>Abonnements verlängern sich automatisch jeden Monat. Du kannst jederzeit kündigen:</p>
+                <ul>
+                    <li>Im Account-Bereich</li>
+                    <li>Via Email an support@[deinedomain].de</li>
+                    <li>Die Kündigung ist sofort wirksam</li>
+                </ul>
+
+                <h3>5.4 30-Tage Geld-zurück-Garantie</h3>
+                <p>Falls du mit Premium nicht zufrieden bist:</p>
+                <ul>
+                    <li>Volle Rückerstattung innerhalb von 30 Tagen</li>
+                    <li>Keine Fragen gestellt</li>
+                    <li>Kontaktiere: support@[deinedomain].de</li>
+                </ul>
+
+                <h3>5.5 Rechnungen</h3>
+                <p>Rechnungen werden digital versendet. Du kannst diese jederzeit herunterladen.</p>
+            </div>
+
+            <!-- 6. Geistiges Eigentum -->
+            <div class="section">
+                <h2>6. Geistiges Eigentum und Lizenzen</h2>
+                <h3>6.1 App-Inhalte</h3>
+                <p>Alle Inhalte der App (Design, Text, Grafiken, Code) sind Eigentum des Anbieters und urheberrechtlich geschützt.</p>
+
+                <h3>6.2 Deine Inhalte</h3>
+                <p>Inhalte, die du in der App erstellst (Workouts, Notizen, Fortschritte) bleiben dein Eigentum. Du gewährst dem Anbieter eine Lizenz zur Speicherung und Anzeige.</p>
+
+                <h3>6.3 Feedback</h3>
+                <p>Feedback, das du dem Anbieter gibst, kann frei verwendet werden.</p>
+            </div>
+
+            <!-- 7. Haftung -->
+            <div class="section">
+                <h2>7. Haftung und Gewährleistung</h2>
+                <h3>7.1 Haftungsbeschränkung</h3>
+                <p>Der Anbieter haftet NICHT für:</p>
+                <ul>
+                    <li>❌ Datenverlust durch technische Fehler</li>
+                    <li>❌ Indirekte Schäden oder Verluste</li>
+                    <li>❌ Gesundheitsschäden durch falsch durchgeführte Workouts</li>
+                    <li>❌ Unterbrechungen oder Ausfallzeiten</li>
+                </ul>
+
+                <h3>7.2 "AS-IS" Garantie</h3>
+                <p>Die App wird "wie sie ist" bereitgestellt. Es gibt keine Garantie auf Fehlerfreiheit.</p>
+
+                <h3>7.3 Deine Verantwortung</h3>
+                <p>Du bist selbst verantwortlich für:</p>
+                <ul>
+                    <li>Die Sicherheit deiner Geräte</li>
+                    <li>Die Sicherung deiner Daten</li>
+                    <li>Die sichere Ausführung von Übungen</li>
+                    <li>Die Konsultation von Fachleuten vor intensivem Training</li>
+                </ul>
+            </div>
+
+            <!-- 8. Datenschutz -->
+            <div class="section">
+                <h2>8. Datenschutz</h2>
+                <p>Die Verarbeitung deiner Daten erfolgt gemäß unserer <a href="privacy-policy.html" style="color: #667eea;">Datenschutzerklärung</a>.</p>
+                <p><strong>Wichtig:</strong> Die meisten Daten werden lokal auf deinem Gerät gespeichert, NICHT auf unseren Servern.</p>
+            </div>
+
+            <!-- 9. Kündigung und Kontolöschung -->
+            <div class="section">
+                <h2>9. Kündigung und Kontolöschung</h2>
+                <h3>9.1 Kündigung eines Abos</h3>
+                <p>Du kannst dein Abonnement jederzeit kündigen. Die Kündigung ist sofort wirksam.</p>
+
+                <h3>9.2 Kontolöschung</h3>
+                <p>Du kannst deinen Account jederzeit löschen:</p>
+                <ul>
+                    <li>In den Account-Einstellungen</li>
+                    <li>Via Email</li>
+                    <li>Alle deine Daten werden gelöscht</li>
+                    <li>Diese Aktion kann NICHT rückgängig gemacht werden</li>
+                </ul>
+
+                <h3>9.3 Kontolöschung durch Anbieter</h3>
+                <p>Der Anbieter kann deinen Account löschen, wenn du:</p>
+                <ul>
+                    <li>Diese Nutzungsbedingungen verletzt</li>
+                    <li>Rechnungen nicht bezahlst</li>
+                    <li>Andere Nutzer belästigst</li>
+                </ul>
+            </div>
+
+            <!-- 10. Änderungen der Bedingungen -->
+            <div class="section">
+                <h2>10. Änderungen dieser Nutzungsbedingungen</h2>
+                <p>Der Anbieter kann diese Bedingungen jederzeit ändern. Du wirst per Email benachrichtigt.</p>
+                <p>Die weitere Nutzung der App nach einer Änderung bedeutet Zustimmung.</p>
+            </div>
+
+            <!-- 11. Anwendbares Recht -->
+            <div class="section">
+                <h2>11. Anwendbares Recht und Gerichtsstand</h2>
+                <ul>
+                    <li><strong>Anwendbares Recht:</strong> Deutsches Recht</li>
+                    <li><strong>Gerichtsstand:</strong> [Deine Stadt], Deutschland</li>
+                </ul>
+            </div>
+
+            <!-- 12. Kontakt -->
+            <div class="section">
+                <h2>12. Kontakt und Support</h2>
+                <p>Bei Fragen zu diesen Nutzungsbedingungen:</p>
+                <ul>
+                    <li><strong>Email:</strong> support@[deinedomain].de</li>
+                    <li><strong>Adresse:</strong> [Deine Adresse]</li>
+                    <li><strong>Telefon:</strong> [Deine Nummer] (optional)</li>
+                </ul>
+            </div>
+
+            <!-- 13. Gesamte Vereinbarung -->
+            <div class="section">
+                <h2>13. Gesamte Vereinbarung</h2>
+                <p>Diese Nutzungsbedingungen bilden die gesamte Vereinbarung zwischen dir und dem Anbieter bezüglich der Nutzung der App.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <a href="index.html">← Zurück zur App</a>
+            <a href="privacy-policy.html">Datenschutzerklärung</a>
+            <a href="checkout-page.html">Zur Checkout</a>
+        </div>
+    </div>
+</body>
+</html>

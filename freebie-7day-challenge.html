@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7-Tage Fitness Challenge - Kostenloser Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: #f8f9fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 60px 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .header .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin: 5px;
+        }
+
+        .intro-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+        }
+
+        .intro-section h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .intro-section p {
+            margin-bottom: 15px;
+            font-size: 1.05em;
+            line-height: 1.8;
+        }
+
+        .intro-section ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .intro-section li {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .intro-section li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        h3 {
+            color: #333;
+            font-size: 1.4em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .day-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-left: 5px solid #667eea;
+            margin-bottom: 25px;
+            border-radius: 5px;
+        }
+
+        .day-title {
+            color: #667eea;
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .day-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .workout-info {
+            margin: 15px 0;
+            padding: 12px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+
+        .workout-info strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .workout-info p {
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .tips {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .tips strong {
+            color: #856404;
+        }
+
+        .tips p {
+            color: #856404;
+            margin: 0;
+        }
+
+        .nutrition-section {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .nutrition-section strong {
+            color: #0c5460;
+        }
+
+        .nutrition-section p {
+            color: #0c5460;
+            margin: 0;
+        }
+
+        .progress-tracker {
+            margin: 40px 0;
+            padding: 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+        }
+
+        .progress-tracker h3 {
+            margin-top: 0;
+        }
+
+        .tracker-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tracker-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tracker-day:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .tracker-day.completed {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .success-criteria {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .success-criteria strong {
+            color: #155724;
+        }
+
+        .success-criteria p {
+            color: #155724;
+            margin: 0;
+        }
+
+        .bonus-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 40px 0;
+        }
+
+        .bonus-section h2 {
+            color: white;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            margin-top: 0;
+        }
+
+        .bonus-section h3 {
+            color: white;
+        }
+
+        .bonus-item {
+            margin: 15px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .bonus-item:before {
+            content: "🎁";
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist li {
+            padding: 12px;
+            margin: 8px 0;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checklist li:hover {
+            background: #f0f4ff;
+        }
+
+        .checklist li:before {
+            content: "☐ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .checklist li.completed {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .checklist li.completed:before {
+            content: "☑ ";
+            color: #28a745;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+            color: #666;
+        }
+
+        .footer p {
+            margin: 10px 0;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .container {
+                box-shadow: none;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .tracker-row {
+                grid-template-columns: repeat(7, 1fr);
+            }
+
+            h2 {
+                font-size: 1.5em;
+            }
+
+            h3 {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>💪 7-Tage Fitness Challenge</h1>
+            <p>Dein perfekter Einstieg in ein fitness Leben</p>
+            <span class="badge">🎯 Kostenlos</span>
+            <span class="badge">✅ Für Anfänger geeignet</span>
+            <span class="badge">⏱️ 15-20 Min/Tag</span>
+        </div>
+
+        <!-- Intro -->
+        <div class="intro-section">
+            <h2>Willkommen zu deiner 7-Tage Fitness Challenge! 🚀</h2>
+            <p>Du wolltest schon lange mit Fitness anfangen, weißt aber nicht, wie du starten sollst?</p>
+            <p>Diese Challenge ist perfekt für dich! In nur 7 Tagen werden wir:</p>
+            <ul>
+                <li>Deine Fitness-Grundlagen aufbauen</li>
+                <li>Eine tägliche Trainingsroutine etablieren</li>
+                <li>Deine Ausdauer und Kraft steigern</li>
+                <li>Positive Gewohnheiten entwickeln</li>
+                <li>Dir zeigen, wie einfach Fitness sein kann</li>
+            </ul>
+            <p><strong>Das Beste:</strong> Du benötigst keine Ausrüstung! Alles funktioniert mit deinem Körpergewicht.</p>
+        </div>
+
+        <!-- Day 1 -->
+        <div class="day-section">
+            <div class="day-title">
+                <div class="day-number">1</div>
+                <span>Tag 1: Sanft beginnen - Die Basis aufbauen</span>
+            </div>
+            <p><strong>Motto:</strong> "Willkommen! Lass uns anfangen." 👋</p>
+
+            <div class="workout-info">
+                <strong>🏋️ Heutiges Workout (15 Minuten)</strong>
+                <p>Warm-up (2 min): Leichte Bewegungen, Arme kreisen, Beine lockern</p>
+                <p>Haupttraining (10 min):</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>10x Squats (Kniebeugen) - langsam, kontrolliert</li>
+                    <li>8x Push-ups (gegen Wand oder auf Knien)</li>
+                    <li>15x Lunges (Ausfallschritte) - pro Seite</li>
+                    <li>30 Sekunden Plank (oder an der Wand)</li>
+                </ul>
+                <p style="margin-top: 10px;">Wiederhole diese Runde 3x mit 1 Minute Pause dazwischen</p>
+                <p>Cool-down (3 min): Langsame Dehnungen, tiefe Atemzüge</p>
+            </div>
+
+            <div class="tips">
+                <strong>💡 Pro-Tipps für Tag 1:</strong>
+                <p>✓ Fokus auf gute Form, nicht Geschwindigkeit<br>
+                ✓ Atme aus wenn du die Anstrengung machst, ein wenn du dich entspannst<br>
+                ✓ Es ist OK, Modifikationen zu verwenden - das macht dich nicht schwächer!<br>
+                ✓ Höre auf deinen Körper - leichte Anstrengung ist das Ziel</p>
+            </div>
+
+            <div class="nutrition-section">
+                <strong>🥗 Ernährungs-Tipp Tag 1:</strong>
+                <p>Trinke viel Wasser! Mindestens 2-3 Liter heute. Essen: Normal, aber achte darauf, dass du genug Gemüse und Protein hast.</p>
+            </div>
+
+            <div class="success-criteria">
+                <strong>✅ Erfolg heute bedeutet:</strong>
+                <p>Du hast das Workout abgeschlossen, unabhängig davon wie anstrengend es war. Das ist schon ein großer Erfolg!</p>
+            </div>
+        </div>
+
+        <!-- Day 2 -->
+        <div class="day-section">
+            <div class="day-title">
+                <div class="day-number">2</div>
+                <span>Tag 2: Momentum aufbauen - Du schaffst das!</span>
+            </div>
+            <p><strong>Motto:</strong> "Der zweite Tag ist immer der Schwierigste - aber du machst das!" 💪</p>
+
+            <div class="workout-info">
+                <strong>🏋️ Heutiges Workout (18 Minuten)</strong>
+                <p>Warm-up (2 min): Leichtes Joggen auf der Stelle, Arme bewegen</p>
+                <p>Haupttraining (13 min):</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>12x Squats (etwas schneller als gestern)</li>
+                    <li>10x Push-ups (versuche ein paar weniger auf Knien)</li>
+                    <li>12x Lunges (pro Seite)</li>
+                    <li>45 Sekunden Plank</li>
+                    <li>NEU: 15x Crunches (Bauchtraining)</li>
+                </ul>
+                <p style="margin-top: 10px;">3 Runden mit 1 Min 30 Sek Pause</p>
+                <p>Cool-down (3 min): Ausgiebiges Dehnen aller Muskelgruppen</p>
+            </div>
+
+            <div class="tips">
+                <strong>💡 Pro-Tipps für Tag 2:</strong>
+                <p>✓ Du wirst heute wahrscheinlich etwas Muskelkater haben - das ist NORMAL und positiv!<br>
+                ✓ Der Kater bedeutet, dass deine Muskeln arbeiten<br>
+                ✓ Leichte Bewegung hilft gegen Muskelkater<br>
+                ✓ Noch 5 Tage bis zum Ende - du schaffst das!</p>
+            </div>
+
+            <div class="nutrition-section">
+                <strong>🥗 Ernährungs-Tipp Tag 2:</strong>
+                <p>Erhöhe dein Protein! Nach dem Workout ein Protein-reicher Snack (Joghurt, Nüsse, Huhn, Ei). Das hilft bei der Muskelregeneration.</p>
+            </div>
+        </div>
+
+        <!-- Day 3 -->
+        <div class="day-section">
+            <div class="day-title">
+                <div class="day-number">3</div>
+                <span>Tag 3: Deine neue Routine - Du findest Rhythm</span>
+            </div>
+            <p><strong>Motto:</strong> "Und plötzlich wird es zur Routine!" ⚙️</p>
+
+            <div class="workout-info">
+                <strong>🏋️ Heutiges Workout (20 Minuten)</strong>
+                <p>Warm-up (2 min): Dynamische Dehnungen</p>
+                <p>Haupttraining (15 min):</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>15x Squats</li>
+                    <li>12x Push-ups</li>
+                    <li>15x Lunges (pro Seite)</li>
+                    <li>1 Minute Plank (3x 20 Sekunden mit Pause)</li>
+                    <li>20x Crunches</li>
+                    <li>NEU: 10x Burpees (Anfängerversion ist OK!)</li>
+                </ul>
+                <p style="margin-top: 10px;">3 Runden, aber schneller durchziehen</p>
+                <p>Cool-down (3 min): Yoga-ähnliches Dehnen</p>
+            </div>
+
+            <div class="tips">
+                <strong>💡 Pro-Tipps für Tag 3:</strong>
+                <p>✓ Du merkst wahrscheinlich schon, dass die erste Runde leichter fällt<br>
+                ✓ Das ist DEIN Fortschritt! Zelebriere es!<br>
+                ✓ Notiere heute eine kleine Verbesserung auf - wird später wichtig<br>
+                ✓ Mindset: "Ich trainiere jetzt regelmäßig" (nicht mehr "Ich versuche zu trainieren")</p>
+            </div>
+
+            <div class="nutrition-section">
+                <strong>🥗 Ernährungs-Tipp Tag 3:</strong>
+                <p>Komplexe Kohlenhydrate! Vollkorn, Hafer, süßkartoffel für Energie. Du brauchst das Fuel für die nächsten 4 Tage!</p>
+            </div>
+        </div>
+
+        <!-- Day 4 -->
+        <div class="day-section">
+            <div class="day-title">
+                <div class="day-number">4</div>
+                <span>Tag 4: Der Halbzeit-Sprint - Du bist über den Berg!</span>
+            </div>
+            <p><strong>Motto:</strong> "Halbzeit! Die schwierigsten Tage sind vorbei!" 🏁</p>
+
+            <div class="workout-info">
+                <strong>🏋️ Heutiges Workout (20 Minuten)</strong>
+                <p>Warm-up (2 min): Mit Energie wärmen</p>
+                <p>Haupttraining (15 min):</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>20x Squats</li>
+                    <li>15x Push-ups (versuche weniger auf Knien)</li>
+                    <li>20x Lunges (pro Seite)</li>
+                    <li>1 Min 30 Sek Plank (3 Sets)</li>
+                    <li>25x Crunches</li>
+                    <li>15x Burpees</li>
+                    <li>NEU: 30 Sekunden Jump Jacks</li>
+                </ul>
+                <p style="margin-top: 10px;">3 Runden, Push dich selbst!</p>
+                <p>Cool-down (3 min): Ausgiebig dehnen - dein Körper verdient es!</p>
+            </div>
+
+            <div class="tips">
+                <strong>💡 Pro-Tipps für Tag 4:</strong>
+                <p>✓ Du bist jetzt OFFIZIEL über dem schwierigsten Punkt<br>
+                ✓ Wenn du bis hierher kommst, wirst du die Challenge auch beenden<br>
+                ✓ Du schuldest dir selbst 3 weitere Tage<br>
+                ✓ Wie fühlst du dich? Notiere die Gefühle für später!</p>
+            </div>
+
+            <div class="nutrition-section">
+                <strong>🥗 Ernährungs-Tipp Tag 4:</strong>
+                <p>Balance ist wichtig! Iss weiterhin gesund, aber gönne dir auch eine kleine Freude. Dein Körper arbeitet hart.</p>
+            </div>
+        </div>
+
+        <!-- Day 5 -->
+        <div class="day-section">
+            <div class="day-title">
+                <div class="day-number">5</div>
+                <span>Tag 5: Der Durchbruch - Du merkst echten Fortschritt!</span>
+            </div>
+            <p><strong>Motto:</strong> "Diese Workouts sind schon viel einfacher - das ist DEIN Fortschritt!" 📈</p>
+
+            <div class="workout-info">
+                <strong>🏋️ Heutiges Workout (22 Minuten)</strong>
+                <p>Warm-up (2 min): Energisch wärmen</p>
+                <p>Haupttraining (17 min):</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>25x Squats</li>
+                    <li>18x Push-ups</li>
+                    <li>25x Lunges (pro Seite)</li>
+                    <li>2 Minuten Plank (4x 30 Sekunden mit Pause)</li>
+                    <li>30x Crunches</li>
+                    <li>20x Burpees</li>
+                    <li>45 Sekunden Jump Jacks</li>
+                </ul>
+                <p style="margin-top: 10px;">3 Runden + 1 Speed Round (schneller, weniger Reps)</p>
+                <p>Cool-down (3 min): Deep stretching</p>
+            </div>
+
+            <div class="tips">
+                <strong>💡 Pro-Tipps für Tag 5:</strong>
+                <p>✓ Du wirst heute merken, dass es LEICHTER wird<br>
+                ✓ Das ist das magische Gefühl von Fitness-Fortschritt<br>
+                ✓ Noch 2 Tage - gib alles, dann hast du die Challenge abgeschlossen!<br>
+                ✓ Teile deinen Fortschritt mit einem Freund!</p>
+            </div>
+
+            <div class="nutrition-section">
+                <strong>🥗 Ernährungs-Tipp Tag 5:</strong>
+                <p>Antioxidantien! Beeren, grüner Tee, Gemüse. Dein Körper braucht das zum Erholen zwischen den Workouts.</p>
+            </div>
+        </div>
+
+        <!-- Day 6 -->
+        <div class="day-section">
+            <div class="day-title">
+                <div class="day-number">6</div>
+                <span>Tag 6: Die Zielgerade - Du bist fast da!</span>
+            </div>
+            <p><strong>Motto:</strong> "Ein letztes Workout vor dem großen Finale!" 🎯</p>
+
+            <div class="workout-info">
+                <strong>🏋️ Heutiges Workout (25 Minuten)</strong>
+                <p>Warm-up (3 min): Mit voller Energie wärmen</p>
+                <p>Haupttraining (19 min):</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>30x Squats</li>
+                    <li>20x Push-ups</li>
+                    <li>30x Lunges (pro Seite)</li>
+                    <li>2 Min 30 Sek Plank (mehrere Sets)</li>
+                    <li>35x Crunches</li>
+                    <li>25x Burpees</li>
+                    <li>1 Minute Jump Jacks</li>
+                    <li>NEU: Mountain Climbers (30 Sekunden)</li>
+                </ul>
+                <p style="margin-top: 10px;">Challenge dich selbst! 4 Runden mit Intensität</p>
+                <p>Cool-down (3 min): Entspannendes Dehnen</p>
+            </div>
+
+            <div class="tips">
+                <strong>💡 Pro-Tipps für Tag 6:</strong>
+                <p>✓ Morgen ist der letzte Tag - dein Körper wird es dir danken<br>
+                ✓ Heute "stellst du sicher", dass du das Finale schaffst<br>
+                ✓ Denke daran, wie es sich anfühlte am Tag 1<br>
+                ✓ Die Veränderung ist bereits passiert - nicht nur körperlich!</p>
+            </div>
+
+            <div class="nutrition-section">
+                <strong>🥗 Ernährungs-Tipp Tag 6:</strong>
+                <p>Feiern ohne zu übertreiben! Du hast 6 Tage hart gearbeitet. Gönne dir etwas Besonderes, aber bleibe verantwortungsvoll.</p>
+            </div>
+        </div>
+
+        <!-- Day 7 -->
+        <div class="day-section">
+            <div class="day-title">
+                <div class="day-number">7</div>
+                <span>Tag 7: Der Finale - Du hast die Challenge geschafft! 🎉</span>
+            </div>
+            <p><strong>Motto:</strong> "Das ist DEIN Moment! Du hast es gemacht!" 🏆</p>
+
+            <div class="workout-info">
+                <strong>🏋️ Das große Finale (25-30 Minuten)</strong>
+                <p>Warm-up (3 min): Mit Stolz wärmen</p>
+                <p>Finale-Workout (20 min) - Gib dein Bestes!:</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>35x Squats</li>
+                    <li>25x Push-ups (wenn möglich, ohne Knies!)</li>
+                    <li>35x Lunges (pro Seite)</li>
+                    <li>3 Minuten Plank (beliebig aufgeteilt)</li>
+                    <li>40x Crunches</li>
+                    <li>30x Burpees</li>
+                    <li>1 Min 30 Sek Jump Jacks</li>
+                    <li>1 Minute Mountain Climbers</li>
+                    <li>BONUS: Was war am schwierigsten? 20x davon!</li>
+                </ul>
+                <p style="margin-top: 10px;">Do 3-4 Runden - Du wirst Dich danach SO GUT fühlen!</p>
+                <p>Cool-down (5 min): Langsame, dankbare Dehnungen</p>
+            </div>
+
+            <div class="tips">
+                <strong>💡 Pro-Tipps für Tag 7:</strong>
+                <p>✓ Dies ist DEIN Tag! Feiere, was du erreicht hast<br>
+                ✓ Du hast dich selbst bewiesen, dass du es KANNST<br>
+                ✓ Die nächsten 7 Tage werden noch leichter - aber die Routine bleibt<br>
+                ✓ Teile diesen Moment mit jemandem, der dich unterstützt</p>
+            </div>
+
+            <div class="nutrition-section">
+                <strong>🥗 Ernährungs-Tipp Tag 7:</strong>
+                <p>FEIERE DICH! Healthy Celebration Meal mit Protein und Gemüse. Du hast es verdient!</p>
+            </div>
+
+            <div class="success-criteria">
+                <strong>✅ Du hast die Challenge BEENDET!</strong>
+                <p>Gratuliere dir selbst. Diese 7 Tage haben dein Leben verändert. Du hast jetzt die Gewohnheit. Du hast jetzt das Vertrauen. Du hast jetzt den Schwung. Was kommt als nächstes?</p>
+            </div>
+        </div>
+
+        <!-- Progress Tracker -->
+        <div class="progress-tracker">
+            <h3>📊 Dein Progress Tracker - Drucke & Fülle aus!</h3>
+            <p>Markiere jeden Tag, den du abschließt. Sichtbarkeit ist motivierend!</p>
+            <div class="tracker-row">
+                <div class="tracker-day">Tag 1</div>
+                <div class="tracker-day">Tag 2</div>
+                <div class="tracker-day">Tag 3</div>
+                <div class="tracker-day">Tag 4</div>
+                <div class="tracker-day">Tag 5</div>
+                <div class="tracker-day">Tag 6</div>
+                <div class="tracker-day">Tag 7</div>
+            </div>
+            <p style="text-align: center; color: #666;">Klicke auf die Tage um zu markieren (oder drucke aus und kreuze an!)</p>
+        </div>
+
+        <!-- Daily Checklist -->
+        <h2>🎯 Tägliche Checkliste</h2>
+        <p>Verwende diese Checkliste jeden Tag:</p>
+        <ul class="checklist">
+            <li>Ich habe mein Workout für heute abgeschlossen ✓</li>
+            <li>Ich habe mindestens 2-3 Liter Wasser getrunken ✓</li>
+            <li>Ich habe nach meinem Workout dehnt ✓</li>
+            <li>Ich habe gesund gegessen ✓</li>
+            <li>Ich bin stolz auf mich selbst ✓</li>
+        </ul>
+
+        <!-- Bonus Content -->
+        <div class="bonus-section">
+            <h2>🎁 BONUS: Was machst du nach der Challenge?</h2>
+
+            <h3>Die nächsten Schritte für Langzeit-Erfolg</h3>
+
+            <div class="bonus-item">
+                <strong>Woche 2-4: Festigen der Routine</strong>
+                <p>Wiederhole das gleiche Workout 3x pro Woche. Die Gewohnheit wird stärker. Dein Körper wird stärker.</p>
+            </div>
+
+            <div class="bonus-item">
+                <strong>Monat 2: Variation einführen</strong>
+                <p>Wenn die Challenge zu leicht wird, variiere die Übungen. Versuche schneller zu sein, mehr Reps zu machen, oder andere Variationen.</p>
+            </div>
+
+            <div class="bonus-item">
+                <strong>Monat 3+: Langzeit-Tracking</strong>
+                <p>Nutze eine Fitness-App wie "Mein Fitness-Assistent" um deinen Fortschritt zu tracken, Ziele zu setzen, und motiviert zu bleiben.</p>
+            </div>
+
+            <div class="bonus-item">
+                <strong>Das Mindset-Ding</strong>
+                <p>Du bist nicht mehr jemand, der "versucht zu trainieren". Du bist jemand, der trainiert. Das ist die wichtigste Veränderung.</p>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <h2>❓ Häufig gestellte Fragen</h2>
+
+        <h3>Was wenn ich einen Tag verpasse?</h3>
+        <p>Das passiert! Wenn du einen Tag verpasst, mache das Workout einfach am nächsten Tag. Keine Schuldgefühle, nur weitermachen. Die Challenge ist nicht ruiniert.</p>
+
+        <h3>Kann ich die Intensität ändern?</h3>
+        <p>Ja, absolutely! Wenn dir etwas zu schwierig ist, mache weniger Reps oder nimm eine leichtere Variation. Wenn es zu leicht ist, mache mehr Reps oder schneller.</p>
+
+        <h3>Ich habe Schmerzen - soll ich stoppen?</h3>
+        <p>Leichte Anstrengung und Muskelkater sind normal. Scharfer Schmerz ist nicht. Höre auf deinen Körper. Wenn etwas schmerzt, konsultiere einen Arzt.</p>
+
+        <h3>Brauche ich Equipment?</h3>
+        <p>Nein! Diese ganze Challenge braucht nur deinen Körper. Keine Hanteln, keine Maschinen. Nur du.</p>
+
+        <h3>Wann sollte ich trainieren?</h3>
+        <p>Morgens? Mittags? Abends? Die beste Zeit ist die Zeit, in der du es TATSÄCHLICH machst. Finde deine beste Zeit und mache sie zur Routine.</p>
+
+        <!-- Final CTA -->
+        <div style="text-align: center; margin: 50px 0; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px;">
+            <h2 style="margin-top: 0; color: white;">🚀 Bist du bereit, dein Leben zu verändern?</h2>
+            <p style="font-size: 1.1em;">Nach dieser Challenge kommt die beste Part - die vollständige Fitness-App!</p>
+
+            <div style="margin: 25px 0;">
+                <a href="sales-page.html" style="display: inline-block; background: white; color: #667eea; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 1.05em; margin: 10px;">
+                    🚀 Zur Fitness-App (Kostenlos)
+                </a>
+            </div>
+
+            <p style="color: rgba(255, 255, 255, 0.9);">Schreibe das Datum auf, wenn du anfängst: _______________</p>
+            <p style="color: rgba(255, 255, 255, 0.95); font-weight: 600; font-size: 1.05em;">Du schaffst das! 💪</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>🎉 Glückwunsch!</strong> Du hast soeben deine erste große Investition in deine Gesundheit gemacht.</p>
+            <p>Diese 7-Tage Challenge ist der Anfang. Die nächsten 30, 90, 365 Tage werden noch besser.</p>
+            <p style="margin-top: 30px; color: #999; font-size: 0.9em;">
+                Erstellt mit ❤️ um dir zu helfen, deine Fitness-Ziele zu erreichen.<br>
+                Weitere Workouts und Tracking-Tools finden Sie in der Fitness-App.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Make tracker interactive
+        document.querySelectorAll('.tracker-day').forEach((day, index) => {
+            day.addEventListener('click', function() {
+                this.classList.toggle('completed');
+                // Save to localStorage
+                const completed = Array.from(document.querySelectorAll('.tracker-day.completed')).length;
+                localStorage.setItem('challengeProgress', completed);
+            });
+        });
+
+        // Make checklist interactive
+        document.querySelectorAll('.checklist li').forEach(item => {
+            item.addEventListener('click', function() {
+                this.classList.toggle('completed');
+            });
+        });
+
+        // Load progress on page load
+        window.addEventListener('load', () => {
+            const progress = localStorage.getItem('challengeProgress') || 0;
+            const days = document.querySelectorAll('.tracker-day');
+            for (let i = 0; i < progress; i++) {
+                days[i].classList.add('completed');
+            }
+        });
+    </script>
+</body>
+</html>
