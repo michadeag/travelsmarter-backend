@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
 const { generateToken } = require('../middleware/auth');
+const emailService = require('../services/emailService');
 
 // @desc Register user
 // @route POST /api/auth/signup
@@ -53,6 +54,12 @@ exports.signup = async (req, res) => {
        VALUES ($1)`,
       [user.id]
     );
+
+    // Send welcome email (non-blocking)
+    emailService.sendWelcomeEmail({
+      email: user.email,
+      firstName: user.first_name
+    }).catch(err => console.error('Failed to send welcome email:', err));
 
     res.status(201).json({
       success: true,

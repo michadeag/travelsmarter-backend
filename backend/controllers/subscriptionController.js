@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const emailService = require('../services/emailService');
 
 // Pricing configuration
 const PRICING = {
@@ -201,38 +202,68 @@ async function handleCheckoutSessionCompleted(session) {
   const tier = session.metadata.tier;
   const subscriptionId = session.subscription;
 
-  // Update user subscription
-  await pool.query(
-    `UPDATE users
-     SET subscription_tier = $1, subscription_status = 'active', stripe_subscription_id = $2
-     WHERE id = $3`,
-    [tier, subscriptionId, userId]
-  );
-
-  // Create subscription record
-  await pool.query(
-    `INSERT INTO subscriptions (user_id, tier, status, price_monthly, stripe_subscription_id)
-     VALUES ($1, $2, 'active', $3, $4)`,
-    [userId, tier, PRICING[tier].priceMonthly, subscriptionId]
-  );
-
-  // Log payment
-  await pool.query(
-    `INSERT INTO payment_history (user_id, stripe_payment_intent_id, amount, status, subscription_tier)
-     VALUES ($1, $2, $3, 'completed', $4)`,
-    [userId, session.payment_intent, PRICING[tier].priceMonthly, tier]
-  );
-
-  // Update promo code usage if applicable
-  if (session.metadata.promoCode) {
-    await pool.query(
-      `UPDATE promo_codes SET current_uses = current_uses + 1
-       WHERE code = $1`,
-      [session.metadata.promoCode.toUpperCase()]
+  try {
+    // Get user details for email
+    const userResult = await pool.query(
+      'SELECT id, email, first_name FROM users WHERE id = $1',
+      [userId]
     );
-  }
 
-  console.log(`✅ Subscription activated for user ${userId} - tier ${tier}`);
+    if (userResult.rows.length === 0) {
+      console.error(`User not found: ${userId}`);
+      return;
+    }
+
+    const user = userResult.rows[0];
+
+    // Update user subscription
+    await pool.query(
+      `UPDATE users
+       SET subscription_tier = $1, subscription_status = 'active', stripe_subscription_id = $2
+       WHERE id = $3`,
+      [tier, subscriptionId, userId]
+    );
+
+    // Create subscription record
+    const subscriptionResult = await pool.query(
+      `INSERT INTO subscriptions (user_id, tier, status, price_monthly, stripe_subscription_id)
+       VALUES ($1, $2, 'active', $3, $4)
+       RETURNING current_period_end`,
+      [userId, tier, PRICING[tier].priceMonthly, subscriptionId]
+    );
+
+    const nextBillingDate = subscriptionResult.rows[0].current_period_end;
+
+    // Log payment
+    await pool.query(
+      `INSERT INTO payment_history (user_id, stripe_payment_intent_id, amount, status, subscription_tier)
+       VALUES ($1, $2, $3, 'completed', $4)`,
+      [userId, session.payment_intent, PRICING[tier].priceMonthly, tier]
+    );
+
+    // Update promo code usage if applicable
+    if (session.metadata.promoCode) {
+      await pool.query(
+        `UPDATE promo_codes SET current_uses = current_uses + 1
+         WHERE code = $1`,
+        [session.metadata.promoCode.toUpperCase()]
+      );
+    }
+
+    // Send subscription confirmation email
+    await emailService.sendSubscriptionConfirmation(
+      {
+        email: user.email,
+        firstName: user.first_name
+      },
+      tier,
+      nextBillingDate
+    );
+
+    console.log(`✅ Subscription activated for user ${userId} - tier ${tier}`);
+  } catch (error) {
+    console.error(`Error in handleCheckoutSessionCompleted for user ${userId}:`, error);
+  }
 }
 
 async function handleSubscriptionUpdated(subscription) {
@@ -260,54 +291,108 @@ async function handleSubscriptionUpdated(subscription) {
 async function handleSubscriptionDeleted(subscription) {
   const customerId = subscription.customer;
 
-  // Find user by Stripe customer ID
-  const userResult = await pool.query(
-    'SELECT id FROM users WHERE stripe_customer_id = $1',
-    [customerId]
-  );
+  try {
+    // Find user by Stripe customer ID
+    const userResult = await pool.query(
+      'SELECT id, email, first_name FROM users WHERE stripe_customer_id = $1',
+      [customerId]
+    );
 
-  if (userResult.rows.length === 0) return;
+    if (userResult.rows.length === 0) return;
 
-  const userId = userResult.rows[0].id;
+    const user = userResult.rows[0];
+    const userId = user.id;
 
-  // Downgrade to free tier
-  await pool.query(
-    `UPDATE users SET subscription_tier = 'free', subscription_status = 'inactive' WHERE id = $1`,
-    [userId]
-  );
+    // Downgrade to free tier
+    await pool.query(
+      `UPDATE users SET subscription_tier = 'free', subscription_status = 'inactive' WHERE id = $1`,
+      [userId]
+    );
 
-  console.log(`❌ Subscription cancelled for user ${userId}`);
+    // Send subscription cancellation email
+    await emailService.sendSubscriptionCancelled({
+      email: user.email,
+      firstName: user.first_name
+    });
+
+    console.log(`❌ Subscription cancelled for user ${userId}`);
+  } catch (error) {
+    console.error(`Error in handleSubscriptionDeleted:`, error);
+  }
 }
 
 async function handlePaymentSucceeded(invoice) {
   const customerId = invoice.customer;
 
-  const userResult = await pool.query(
-    'SELECT id FROM users WHERE stripe_customer_id = $1',
-    [customerId]
-  );
+  try {
+    const userResult = await pool.query(
+      'SELECT id, email, first_name, subscription_tier FROM users WHERE stripe_customer_id = $1',
+      [customerId]
+    );
 
-  if (userResult.rows.length === 0) return;
+    if (userResult.rows.length === 0) return;
 
-  const userId = userResult.rows[0].id;
+    const user = userResult.rows[0];
+    const userId = user.id;
 
-  console.log(`💰 Payment succeeded for user ${userId}`);
+    // Log payment
+    await pool.query(
+      `INSERT INTO payment_history (user_id, stripe_payment_intent_id, amount, status, subscription_tier)
+       VALUES ($1, $2, $3, 'completed', $4)`,
+      [userId, invoice.payment_intent, invoice.amount_paid / 100, user.subscription_tier]
+    );
+
+    // Send payment success email
+    await emailService.sendPaymentSuccessful(
+      {
+        email: user.email,
+        firstName: user.first_name
+      },
+      invoice.amount_paid,
+      user.subscription_tier
+    );
+
+    console.log(`💰 Payment succeeded for user ${userId}`);
+  } catch (error) {
+    console.error(`Error in handlePaymentSucceeded:`, error);
+  }
 }
 
 async function handlePaymentFailed(invoice) {
   const customerId = invoice.customer;
 
-  const userResult = await pool.query(
-    'SELECT id FROM users WHERE stripe_customer_id = $1',
-    [customerId]
-  );
+  try {
+    const userResult = await pool.query(
+      'SELECT id, email, first_name, subscription_tier FROM users WHERE stripe_customer_id = $1',
+      [customerId]
+    );
 
-  if (userResult.rows.length === 0) return;
+    if (userResult.rows.length === 0) return;
 
-  const userId = userResult.rows[0].id;
+    const user = userResult.rows[0];
+    const userId = user.id;
 
-  console.log(`⚠️ Payment failed for user ${userId}`);
-  // Here you could send an email notification
+    // Log failed payment
+    await pool.query(
+      `INSERT INTO payment_history (user_id, stripe_payment_intent_id, amount, status, subscription_tier)
+       VALUES ($1, $2, $3, 'failed', $4)`,
+      [userId, invoice.payment_intent, invoice.amount_paid / 100, user.subscription_tier]
+    );
+
+    // Send payment failed email
+    await emailService.sendPaymentFailed(
+      {
+        email: user.email,
+        firstName: user.first_name
+      },
+      invoice.amount_paid,
+      user.subscription_tier
+    );
+
+    console.log(`⚠️ Payment failed for user ${userId}`);
+  } catch (error) {
+    console.error(`Error in handlePaymentFailed:`, error);
+  }
 }
 
 // @desc Get user subscription
