@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout | TravelSmarter</title>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-470B6E2DKF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-470B6E2DKF');
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -757,6 +767,18 @@
                 console.log('Selected plan:', selectedPlan);
                 console.log('User token:', userToken ? 'present' : 'missing');
 
+                // Track plan selection with Google Analytics
+                const planPrice = selectedPlan === 'elite' ? 49 : 19;
+                gtag('event', 'view_item', {
+                    value: planPrice,
+                    currency: 'EUR',
+                    items: [{
+                        item_id: selectedPlan,
+                        item_name: selectedPlan === 'elite' ? 'Elite' : 'Smart Traveler',
+                        price: planPrice
+                    }]
+                });
+
                 // Validate user is logged in
                 if (!userToken) {
                     document.getElementById('card-errors').textContent = 'Please log in to complete your purchase';
@@ -793,6 +815,18 @@
                 console.log('Response data:', data);
 
                 if (data.success && data.url) {
+                    // Track checkout initiation with Google Analytics
+                    const planPrice = selectedPlan === 'elite' ? 49 : 19;
+                    gtag('event', 'begin_checkout', {
+                        value: planPrice,
+                        currency: 'EUR',
+                        items: [{
+                            item_id: selectedPlan,
+                            item_name: selectedPlan === 'elite' ? 'Elite' : 'Smart Traveler',
+                            price: planPrice
+                        }]
+                    });
+
                     // Redirect to Stripe Checkout (hosted page)
                     console.log('Redirecting to Stripe checkout:', data.url);
                     window.location.href = data.url;
