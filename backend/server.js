@@ -306,10 +306,10 @@ async function initializeApp() {
     await SettingsController.initializeDefaults();
     console.log('✅ Settings initialized');
 
-    // Seed email templates from the service (after tables are created)
-    await emailSequenceService.seedEmailSequence().catch(err => {
-      console.warn('⚠️ Error seeding email templates:', err.message);
-    });
+    // NOTE: Email seeding disabled for now - focus on API endpoints first
+    // await emailSequenceService.seedEmailSequence().catch(err => {
+    //   console.warn('⚠️ Error seeding email templates:', err.message);
+    // });
 
     console.log('✅ App initialization complete');
   } catch (error) {
@@ -331,20 +331,16 @@ initializeApp().then(() => {
 ╚════════════════════════════════════════╝
     `);
 
-    // Start email sequence scheduler
-    // Runs every hour to check for pending emails
-    console.log('📧 Email sequence scheduler started (runs every hour)');
-    setInterval(async () => {
-      try {
-        await emailSequenceService.sendPendingEmails();
-      } catch (error) {
-        console.error('❌ Error in email sequence scheduler:', error);
-      }
-    }, 60 * 60 * 1000); // Run every hour
-
-    // Don't run email scheduler on startup - wait for first scheduled interval
-    // This prevents errors if tables aren't created yet
-    console.log('⏳ Email scheduler will start on first interval (1 hour)');
+    // NOTE: Email sequence scheduler disabled for now
+    // Will be re-enabled once table creation is fixed
+    // console.log('📧 Email sequence scheduler started (runs every hour)');
+    // setInterval(async () => {
+    //   try {
+    //     await emailSequenceService.sendPendingEmails();
+    //   } catch (error) {
+    //     console.error('❌ Error in email sequence scheduler:', error);
+    //   }
+    // }, 60 * 60 * 1000);
   });
 }).catch(error => {
   console.error('Failed to initialize app:', error);
