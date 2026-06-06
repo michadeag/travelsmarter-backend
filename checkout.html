@@ -713,7 +713,18 @@
 
         // Update Price
         function updatePrice() {
-            const selectedPlan = document.querySelector('input[name="plan"]:checked').value;
+            const checkedInput = document.querySelector('input[name="plan"]:checked');
+
+            // Safety check - if no radio button is selected, default to smart traveler
+            if (!checkedInput) {
+                const smartInput = document.querySelector('input[value="smart"]');
+                if (smartInput) {
+                    smartInput.checked = true;
+                }
+                return; // Exit and try again after selection
+            }
+
+            const selectedPlan = checkedInput.value;
             const price = selectedPlan === 'elite' ? 49 : 19;
 
             document.getElementById('subtotal').textContent = price;
@@ -878,7 +889,11 @@
             }
         });
 
-        // Update button price on load
+        // Ensure a plan is selected and update price on load
+        const smartInput = document.querySelector('input[value="smart"]');
+        if (smartInput && !document.querySelector('input[name="plan"]:checked')) {
+            smartInput.checked = true;
+        }
         updatePrice();
     </script>
 </body>
