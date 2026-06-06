@@ -401,7 +401,7 @@ function displaySubscriptions(subscriptions) {
     const tbody = document.getElementById('subscriptions-table');
 
     if (subscriptions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No subscriptions found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No subscriptions found</td></tr>';
         return;
     }
 
@@ -751,9 +751,10 @@ function displayPromos(promos) {
     tbody.innerHTML = promos.map(promo => `
         <tr>
             <td><strong>${promo.code}</strong></td>
-            <td>${promo.discount_percent}%</td>
-            <td>${promo.current_uses}/${promo.max_uses || '∞'}</td>
-            <td>${formatDate(promo.valid_until)}</td>
+            <td>${promo.discount_percent || promo.discount_amount}${promo.discount_percent ? '%' : '€'}</td>
+            <td>${promo.current_uses || '0'}</td>
+            <td>${promo.max_uses || '∞'}</td>
+            <td>${promo.valid_until ? formatDate(promo.valid_until) : 'No expiry'}</td>
             <td><span class="badge badge-${promo.is_active ? 'success' : 'danger'}">${promo.is_active ? 'Active' : 'Inactive'}</span></td>
             <td>
                 <div class="actions">
@@ -900,13 +901,10 @@ function displayHacks(modules) {
     tbody.innerHTML = modules.map(module => `
         <tr>
             <td><strong>${module.title}</strong></td>
-            <td>Module ID: ${module.id}</td>
-            <td>Hacks Content</td>
-            <td>
-                <div class="actions">
-                    <button class="btn btn-sm btn-primary" onclick="editHack('${module.id}')">Manage</button>
-                </div>
-            </td>
+            <td>${module.hack_count || '0'}</td>
+            <td>${module.save_count || '0'}</td>
+            <td>€${module.avg_value || '0'}</td>
+            <td><span class="badge badge-success">Active</span></td>
         </tr>
     `).join('');
 }
