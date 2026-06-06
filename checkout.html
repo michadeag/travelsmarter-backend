@@ -440,7 +440,7 @@
                     <label style="font-weight: 700; margin-bottom: 15px; display: block;">Select Your Plan:</label>
 
                     <div class="plan-option selected" onclick="selectPlan('smart')">
-                        <input type="radio" name="plan" value="smart" checked onchange="updatePrice()">
+                        <input type="radio" name="plan" value="smart" onchange="updatePrice()">
                         <div class="plan-details">
                             <div class="plan-name">Smart Traveler</div>
                             <div class="plan-desc">For occasional travelers</div>
@@ -670,24 +670,50 @@
         function initializePlanFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             const tier = urlParams.get('tier');
+            console.log('Tier from URL:', tier);
 
             if (tier === 'elite') {
+                console.log('Setting Elite plan');
                 // Pre-select Elite plan
-                document.querySelector('input[value="elite"]').checked = true;
-                document.querySelectorAll('.plan-option').forEach(opt => opt.classList.remove('selected'));
-                document.querySelectorAll('.plan-option')[1].classList.add('selected');
-                updatePrice();
+                const eliteInput = document.querySelector('input[value="elite"]');
+                if (eliteInput) {
+                    eliteInput.checked = true;
+                    // Update visual selection
+                    const planOptions = document.querySelectorAll('.plan-option');
+                    planOptions.forEach(opt => opt.classList.remove('selected'));
+                    if (planOptions[1]) {
+                        planOptions[1].classList.add('selected');
+                    }
+                    updatePrice();
+                }
             } else if (tier === 'smart_traveler') {
+                console.log('Setting Smart Traveler plan');
                 // Pre-select Smart Traveler plan
-                document.querySelector('input[value="smart"]').checked = true;
-                document.querySelectorAll('.plan-option').forEach(opt => opt.classList.remove('selected'));
-                document.querySelectorAll('.plan-option')[0].classList.add('selected');
-                updatePrice();
+                const smartInput = document.querySelector('input[value="smart"]');
+                if (smartInput) {
+                    smartInput.checked = true;
+                    // Update visual selection
+                    const planOptions = document.querySelectorAll('.plan-option');
+                    planOptions.forEach(opt => opt.classList.remove('selected'));
+                    if (planOptions[0]) {
+                        planOptions[0].classList.add('selected');
+                    }
+                    updatePrice();
+                }
             }
         }
 
-        // Call on page load
-        window.addEventListener('load', initializePlanFromUrl);
+        // Call on DOMContentLoaded to ensure DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initializePlanFromUrl, 100);
+        });
+
+        // Also call immediately in case DOM is already loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePlanFromUrl);
+        } else {
+            setTimeout(initializePlanFromUrl, 100);
+        }
 
         // Apply Promo Code
         function applyPromoCode() {
