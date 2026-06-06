@@ -300,7 +300,7 @@
             page-break-before: always;
         }
 
-        /* TIER GATING */
+        /* TIER GATING - CSS ONLY (No JS overlay) */
         [data-tier-lock] {
             opacity: 0.6;
             filter: grayscale(100%);
@@ -308,22 +308,22 @@
 
         [data-tier-lock] .module-header {
             background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
-            position: relative;
         }
 
-        [data-tier-lock]::after {
-            content: "🔒 Unlock with Smart Traveler (€19/month)";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
+        /* Show upgrade badge on first locked module */
+        [data-tier-lock] > div:first-child .module-header::before {
+            content: "🔒 Modules 5-16 locked - Upgrade to Smart Traveler (€19/month)";
+            display: block;
+            background: rgba(0,0,0,0.7);
             color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
+            padding: 12px 20px;
             font-size: 0.9em;
-            white-space: nowrap;
-            z-index: 10;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            position: relative;
+            opacity: 1;
+            filter: none;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -1224,7 +1224,6 @@
         </div>
     </div>
 
-    <!-- Tier Gating System -->
-    <script src="tier-gating.js"></script>
+    <!-- Tier Gating: CSS-only (no JS overlay to preserve content visibility) -->
 </body>
 </html>
