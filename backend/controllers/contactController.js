@@ -1,6 +1,9 @@
 const sgMail = require('@sendgrid/mail');
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Only set API key if it exists
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 /**
  * Send contact form email
@@ -46,13 +49,17 @@ This message was sent from the TravelSmarter contact form.
 Reply to: ${email}
     `;
 
-    // Send email to support
-    await sgMail.send({
-      to: 'michael@reesin.com',
-      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com',
-      subject: `TravelSmarter Contact: ${topicLabel} - ${name}`,
-      text: emailContent,
-      html: `
+    // Send email to support (if SendGrid is configured)
+    if (!process.env.SENDGRID_API_KEY) {
+      console.warn('⚠️  SendGrid API key not configured. Skipping email send.');
+      // Don't fail - just log it
+    } else {
+      await sgMail.send({
+        to: 'michael@reesin.com',
+        from: process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com',
+        subject: `TravelSmarter Contact: ${topicLabel} - ${name}`,
+        text: emailContent,
+        html: `
         <h2>New Contact Form Submission</h2>
         <p><strong>Name:</strong> ${name}</p>
         <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
@@ -96,6 +103,7 @@ The TravelSmarter Team`,
     } catch (confirmError) {
       console.error('Error sending confirmation email:', confirmError);
       // Don't fail the request if confirmation email fails
+    }
     }
 
     res.status(200).json({
