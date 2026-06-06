@@ -14,15 +14,8 @@ const hacksRoutes = require('./routes/hacksRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const promoRoutes = require('./routes/promoRoutes');
 
-// Safely import email template routes
-let emailTemplateRoutes;
-try {
-  emailTemplateRoutes = require('./routes/emailTemplateRoutes');
-  console.log('✅ Email template routes loaded successfully');
-} catch (error) {
-  console.error('❌ Error loading email template routes:', error.message);
-  emailTemplateRoutes = null;
-}
+// Email template routes - commented out for now (deployment issues)
+// let emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 
 // Import controllers
 const SettingsController = require('./controllers/settingsController');
@@ -59,12 +52,8 @@ app.use('/api/hacks', hacksRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/promos', promoRoutes);
 
-// Only register email template routes if they loaded successfully
-if (emailTemplateRoutes) {
-  app.use('/api/email-templates', emailTemplateRoutes);
-} else {
-  console.warn('⚠️ Email template routes NOT registered due to load error');
-}
+// Email template routes - commented out for now
+// app.use('/api/email-templates', emailTemplateRoutes);
 
 // Test endpoint to verify routes are loading
 app.get('/api/promos/test', (req, res) => {
