@@ -13,7 +13,7 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
 
 console.log('Admin Dashboard using API:', API_URL);
 
-const API_TOKEN = localStorage.getItem('adminToken');
+const API_TOKEN = localStorage.getItem('userToken') || localStorage.getItem('adminToken');
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
