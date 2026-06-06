@@ -817,10 +817,15 @@
                         Hi ${firstName}, check your email for the cheat sheet!
                     </p>
                     <p style="color: #6b7280; font-size: 0.95em;">
-                        (It'll be in your inbox in the next 2-3 minutes)
+                        Redirecting you to the cheat sheet...
                     </p>
                 </div>
             `;
+
+            // Redirect to cheat sheet after 2 seconds
+            setTimeout(() => {
+                window.location.href = 'cheat-sheet.html';
+            }, 2000);
         });
 
         document.getElementById('optinForm2').addEventListener('submit', function(e) {
@@ -835,10 +840,15 @@
                         Hi ${firstName}, check your email for the cheat sheet!
                     </p>
                     <p style="color: #6b7280; font-size: 0.95em;">
-                        (It'll be in your inbox in the next 2-3 minutes)
+                        Redirecting you to the cheat sheet...
                     </p>
                 </div>
             `;
+
+            // Redirect to cheat sheet after 2 seconds
+            setTimeout(() => {
+                window.location.href = 'cheat-sheet.html';
+            }, 2000);
         });
     </script>
 </body>
