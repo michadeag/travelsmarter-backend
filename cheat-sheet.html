@@ -302,28 +302,42 @@
 
         /* TIER GATING - CSS ONLY (No JS overlay) */
         [data-tier-lock] {
+            position: relative;
+        }
+
+        /* Greyout only the actual module content, not the badge */
+        [data-tier-lock] > div {
             opacity: 0.6;
             filter: grayscale(100%);
         }
 
-        [data-tier-lock] .module-header {
-            background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
-        }
-
-        /* Show upgrade badge on first locked module */
-        [data-tier-lock] > div:first-child .module-header::before {
+        /* Upgrade badge - stands out with full visibility */
+        [data-tier-lock] > div:first-child::before {
             content: "🔒 Modules 5-16 locked - Upgrade to Smart Traveler (€19/month)";
             display: block;
-            background: rgba(0,0,0,0.7);
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
             color: white;
-            padding: 12px 20px;
-            font-size: 0.9em;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            position: relative;
-            opacity: 1;
-            filter: none;
-            font-weight: 600;
+            padding: 16px 24px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            opacity: 1 !important;
+            filter: none !important;
+        }
+
+        [data-tier-lock] > div:first-child::before:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+        }
+
+        [data-tier-lock] .module-header {
+            background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
         }
     </style>
 </head>
@@ -1224,6 +1238,43 @@
         </div>
     </div>
 
-    <!-- Tier Gating: CSS-only (no JS overlay to preserve content visibility) -->
+    <!-- Tier Gating: Make upgrade badge clickable -->
+    <script>
+        // Make the upgrade badge clickable
+        document.addEventListener('DOMContentLoaded', function() {
+            const lockedSections = document.querySelectorAll('[data-tier-lock] > div:first-child');
+            lockedSections.forEach(section => {
+                // Create a clickable wrapper for the ::before pseudo-element
+                const badge = document.createElement('div');
+                badge.style.cssText = `
+                    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+                    color: white;
+                    padding: 16px 24px;
+                    font-size: 1em;
+                    margin-bottom: 20px;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                    user-select: none;
+                `;
+                badge.textContent = '🔒 Modules 5-16 locked - Upgrade to Smart Traveler (€19/month)';
+                badge.onclick = () => window.location.href = '/pricing';
+                badge.onmouseover = function() {
+                    this.style.background = 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)';
+                    this.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
+                    this.style.transform = 'translateY(-2px)';
+                };
+                badge.onmouseout = function() {
+                    this.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)';
+                    this.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+                    this.style.transform = 'translateY(0)';
+                };
+                section.insertBefore(badge, section.firstChild);
+            });
+        });
+    </script>
 </body>
 </html>
