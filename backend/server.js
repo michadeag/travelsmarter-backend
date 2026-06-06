@@ -60,6 +60,15 @@ app.get('/api/promos/test', (req, res) => {
   });
 });
 
+// Test email templates route loading
+app.get('/api/email-templates/test', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Email templates route is loaded!',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
