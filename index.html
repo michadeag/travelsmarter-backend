@@ -477,7 +477,7 @@
             <div class="header-right">
                 <div class="user-status">🎯 Free Plan</div>
                 <p style="font-size: 0.85em; color: var(--text-light); margin-top: 5px;">3 hacks/month available</p>
-                <a href="frontend/auth.html" style="display: inline-block; margin-top: 10px; font-size: 0.85em; color: #667eea; text-decoration: none; font-weight: 600;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
+                <a href="#" onclick="performLogout(event)" style="display: inline-block; margin-top: 10px; font-size: 0.85em; color: #667eea; text-decoration: none; font-weight: 600; cursor: pointer;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
                     🚪 Logout
                 </a>
             </div>
@@ -5376,6 +5376,21 @@
                 }
             });
         });
+
+        // Logout functionality
+        function performLogout(event) {
+            event.preventDefault();
+
+            // Clear user session from localStorage
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userData');
+            localStorage.removeItem('stripePublishableKey');
+
+            console.log('✅ User logged out');
+
+            // Redirect to auth page
+            window.location.href = 'auth.html';
+        }
     </script>
 </body>
 </html>
