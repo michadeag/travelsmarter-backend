@@ -1187,6 +1187,31 @@
         </div>
     </div>
 
+    <!-- Hack Modal -->
+    <div id="hack-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Manage Hack Module</h3>
+                <button class="close-modal" onclick="closeHackModal()">✕</button>
+            </div>
+
+            <div class="form-group">
+                <label>Module Title</label>
+                <input type="text" id="modal-hack-title" placeholder="Module title" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Module Content</label>
+                <textarea id="modal-hack-content" placeholder="Module details and hacks..."></textarea>
+            </div>
+
+            <div class="actions" style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="saveHack()">Save Module</button>
+                <button class="btn btn-secondary" onclick="closeHackModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script src="dashboard.js"></script>
 </body>
 </html>
