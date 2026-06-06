@@ -279,17 +279,22 @@ async function initializeApp() {
     `;
 
     try {
-      // Execute tables creation - but split into sections to avoid FK constraint issues
+      // Execute tables creation
       await pool.query(createTablesSQL);
       console.log('✅ Database tables created/verified');
 
       // Verify critical tables exist
-      const tableCheck = await pool.query(
-        `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'scheduled_emails')`
-      );
-
-      if (!tableCheck.rows[0].exists) {
-        console.warn('⚠️ Warning: scheduled_emails table was not created');
+      const criticalTables = ['users', 'email_sequences', 'email_templates', 'scheduled_emails'];
+      for (const table of criticalTables) {
+        const check = await pool.query(
+          `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = $1)`,
+          [table]
+        );
+        if (check.rows[0].exists) {
+          console.log(`  ✅ ${table} table exists`);
+        } else {
+          console.warn(`  ⚠️ ${table} table NOT found`);
+        }
       }
     } catch (tableError) {
       console.error('❌ Error creating tables:', tableError.message);
@@ -337,10 +342,9 @@ initializeApp().then(() => {
       }
     }, 60 * 60 * 1000); // Run every hour
 
-    // Run immediately on startup to catch any emails that should have been sent
-    emailSequenceService.sendPendingEmails().catch(err => {
-      console.warn('⚠️ Warning on startup email check (tables may not exist yet):', err.message);
-    });
+    // Don't run email scheduler on startup - wait for first scheduled interval
+    // This prevents errors if tables aren't created yet
+    console.log('⏳ Email scheduler will start on first interval (1 hour)');
   });
 }).catch(error => {
   console.error('Failed to initialize app:', error);
