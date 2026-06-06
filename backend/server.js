@@ -75,11 +75,21 @@ app.get('/api/promos/test', (req, res) => {
   });
 });
 
-// Test email templates route loading
+// Test email templates endpoint (inline - to verify it works)
 app.get('/api/email-templates/test', (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'Email templates route is loaded!',
+    message: 'Email templates endpoint is working!',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Test sequences endpoint (inline - to verify it works)
+app.get('/api/email-templates/sequences-test', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Email sequences endpoint is working!',
+    data: [],
     timestamp: new Date().toISOString(),
   });
 });
