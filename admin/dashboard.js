@@ -564,6 +564,7 @@ function displayActivities(activities) {
 // SETTINGS
 async function loadSettings() {
     try {
+        // Try to fetch from backend API
         const response = await fetch(`${API_URL}/api/admin/settings`, {
             headers: { 'Authorization': `Bearer ${API_TOKEN}` }
         });
@@ -583,7 +584,6 @@ async function loadSettings() {
                 document.getElementById('stripe-key').value = settings.stripe_secret_key.value;
             }
             if (settings.stripe_publishable_key?.value) {
-                // Add a display field for publishable key
                 const pubKeyField = document.getElementById('stripe-pub-key');
                 if (pubKeyField) {
                     pubKeyField.value = settings.stripe_publishable_key.value;
@@ -607,9 +607,57 @@ async function loadSettings() {
             if (sendDigest) {
                 sendDigest.checked = settings.send_daily_digest?.value === 'true';
             }
+
+            console.log('✅ Settings loaded from backend');
+            return; // Success, don't need localStorage fallback
         }
     } catch (error) {
-        console.error('Error loading settings:', error);
+        console.warn('Backend API unavailable, trying localStorage fallback:', error.message);
+    }
+
+    // Fallback: Load from localStorage
+    try {
+        const stripePubKey = localStorage.getItem('stripePublishableKey');
+        const stripeSecret = localStorage.getItem('admin_stripe_secret');
+        const sendgridKey = localStorage.getItem('admin_sendgrid_key');
+        const senderEmail = localStorage.getItem('admin_sender_email');
+        const webhookSecret = localStorage.getItem('admin_webhook_secret');
+
+        if (stripePubKey) {
+            const pubKeyField = document.getElementById('stripe-pub-key');
+            if (pubKeyField) pubKeyField.value = stripePubKey;
+        }
+        if (stripeSecret) {
+            document.getElementById('stripe-key').value = stripeSecret;
+        }
+        if (sendgridKey) {
+            document.getElementById('sendgrid-key').value = sendgridKey;
+        }
+        if (senderEmail) {
+            document.getElementById('sender-email').value = senderEmail;
+        }
+        if (webhookSecret) {
+            document.getElementById('webhook-secret').value = webhookSecret;
+        }
+
+        // Load checkboxes from localStorage
+        const sendSignupEmail = document.getElementById('send-signup');
+        const sendSubEmail = document.getElementById('send-sub');
+        const sendDigest = document.getElementById('send-digest');
+
+        if (sendSignupEmail) {
+            sendSignupEmail.checked = localStorage.getItem('admin_send_signup_email') === 'true';
+        }
+        if (sendSubEmail) {
+            sendSubEmail.checked = localStorage.getItem('admin_send_sub_email') === 'true';
+        }
+        if (sendDigest) {
+            sendDigest.checked = localStorage.getItem('admin_send_digest') === 'true';
+        }
+
+        console.log('✅ Settings loaded from localStorage');
+    } catch (localStorageError) {
+        console.error('Error loading settings from localStorage:', localStorageError);
     }
 }
 
