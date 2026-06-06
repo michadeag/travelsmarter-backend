@@ -13,6 +13,7 @@ router.post('/sequences', authenticate, emailTemplateController.createSequence);
 router.put('/sequences/:sequenceId', authenticate, emailTemplateController.updateSequence);
 
 // Template routes
+router.get('/templates', authenticate, emailTemplateController.getTemplates);
 router.post('/templates', authenticate, emailTemplateController.createTemplate);
 router.put('/templates/:templateId', authenticate, emailTemplateController.updateTemplate);
 router.delete('/templates/:templateId', authenticate, emailTemplateController.deleteTemplate);

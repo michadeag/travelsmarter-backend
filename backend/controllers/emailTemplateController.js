@@ -1,6 +1,34 @@
 const pool = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 
+// @desc Get all email templates (across all sequences)
+// @route GET /api/email-templates/templates
+// @access Private (Admin)
+exports.getTemplates = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT et.id, et.sequence_id, et.day, et.subject, et.is_active,
+              es.name as sequence_name, et.created_at, et.updated_at
+       FROM email_templates et
+       LEFT JOIN email_sequences es ON et.sequence_id = es.id
+       ORDER BY es.name, et.day ASC`
+    );
+
+    res.status(200).json({
+      success: true,
+      data: result.rows,
+      count: result.rows.length
+    });
+  } catch (error) {
+    console.error('Get templates error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching templates',
+      error: error.message
+    });
+  }
+};
+
 // @desc Get all email sequences
 // @route GET /api/email-templates/sequences
 // @access Private (Admin)

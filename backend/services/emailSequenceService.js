@@ -81,11 +81,12 @@ async function seedEmailSequence() {
     }
 
     // Create the sequence
+    const sequenceId = uuidv4();
     const sequenceResult = await pool.query(
       `INSERT INTO email_sequences (id, name, description, is_active, trigger_event, created_at)
        VALUES ($1, $2, $3, true, 'signup', CURRENT_TIMESTAMP)
        RETURNING id`,
-      ['123e4567-e89b-12d3-a456-426614174000', 'Welcome Email Sequence', '10-day automated welcome sequence for new users']
+      [sequenceId, 'Welcome Email Sequence', '10-day automated welcome sequence for new users']
     );
 
     const sequenceId = sequenceResult.rows[0].id;

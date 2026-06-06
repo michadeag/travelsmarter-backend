@@ -103,12 +103,7 @@ async function initializeApp() {
   try {
     console.log('🔧 Initializing database...');
 
-    // Seed email templates from the service
-    await emailSequenceService.seedEmailSequence().catch(err => {
-      console.warn('⚠️ Error seeding email templates:', err.message);
-    });
-
-    // Create all required tables
+    // Create all required tables FIRST
     const createTablesSQL = `
       -- Users table
       CREATE TABLE IF NOT EXISTS users (
@@ -280,6 +275,13 @@ async function initializeApp() {
     // Initialize settings
     await SettingsController.initializeTable();
     await SettingsController.initializeDefaults();
+    console.log('✅ Settings initialized');
+
+    // Seed email templates from the service (after tables are created)
+    await emailSequenceService.seedEmailSequence().catch(err => {
+      console.warn('⚠️ Error seeding email templates:', err.message);
+    });
+
     console.log('✅ App initialization complete');
   } catch (error) {
     console.error('❌ Error during app initialization:', error);
