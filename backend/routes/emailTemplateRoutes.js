@@ -19,6 +19,6 @@ router.put('/templates/:templateId', protect, emailTemplateController.updateTemp
 router.delete('/templates/:templateId', protect, emailTemplateController.deleteTemplate);
 
 // Scheduled emails view
-router.get('/scheduled', authenticate, emailTemplateController.getScheduledEmails);
+router.get('/scheduled', protect, emailTemplateController.getScheduledEmails);
 
 module.exports = router;
