@@ -4,6 +4,7 @@ const { protect } = require('../middleware/auth');
 const {
   signup,
   login,
+  createUser,
   getMe,
   updateProfile,
   changePassword,
@@ -20,6 +21,7 @@ router.post('/login', login);
 // Admin routes (require authentication)
 router.get('/users', protect, getAllUsers);
 router.get('/users/count', protect, getUserCount);
+router.post('/users', protect, createUser);
 router.put('/users/:id', protect, updateUser);
 router.delete('/users/:id', protect, deleteUser);
 

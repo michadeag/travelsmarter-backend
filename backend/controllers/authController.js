@@ -83,6 +83,78 @@ exports.signup = async (req, res) => {
   }
 };
 
+// @desc Create user (admin only)
+// @route POST /api/auth/users
+// @access Private
+exports.createUser = async (req, res) => {
+  try {
+    const { email, firstName, lastName, subscriptionTier = 'free' } = req.body;
+
+    // Validate input
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Check if user already exists
+    const userExists = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email.toLowerCase()]
+    );
+
+    if (userExists.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already registered'
+      });
+    }
+
+    // Create a temporary password (user can change it later)
+    const tempPassword = Math.random().toString(36).slice(-8);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(tempPassword, salt);
+
+    // Create user
+    const newUser = await pool.query(
+      `INSERT INTO users (email, password_hash, first_name, last_name, subscription_tier)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, email, first_name, last_name, subscription_tier, created_at`,
+      [email.toLowerCase(), hashedPassword, firstName || '', lastName || '', subscriptionTier]
+    );
+
+    const user = newUser.rows[0];
+
+    // Create user preferences
+    await pool.query(
+      `INSERT INTO user_preferences (user_id)
+       VALUES ($1)`,
+      [user.id]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        subscriptionTier: user.subscription_tier,
+        createdAt: user.created_at
+      }
+    });
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating user',
+      error: error.message
+    });
+  }
+};
+
 // @desc Login user
 // @route POST /api/auth/login
 // @access Public

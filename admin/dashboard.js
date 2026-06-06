@@ -270,7 +270,7 @@ async function saveUser() {
     }
 
     try {
-        let url = `${API_URL}/api/users/create`;
+        let url = `${API_URL}/api/auth/users`;
         let method = 'POST';
 
         if (isEditing) {
