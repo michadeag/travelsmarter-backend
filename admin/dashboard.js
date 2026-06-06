@@ -39,6 +39,8 @@ function initDashboard() {
     loadUsers();
     loadSubscriptions();
     loadDeals();
+    loadHacks();
+    loadPromos();
     loadRecentActivities();
     loadSettings();
 
