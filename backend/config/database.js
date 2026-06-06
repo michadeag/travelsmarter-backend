@@ -7,9 +7,13 @@ let pool;
 if (process.env.DATABASE_URL) {
   // Use DATABASE_URL if available (standard PostgreSQL format)
   console.log('📡 Connecting using DATABASE_URL');
+  // Strip sslmode from connection string and handle via ssl option
+  const connString = process.env.DATABASE_URL.replace('?sslmode=require', '').replace('&sslmode=require', '');
   pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }, // DigitalOcean uses self-signed certs
+    connectionString: connString,
+    ssl: {
+      rejectUnauthorized: false // DigitalOcean uses self-signed certs
+    }
   });
 } else {
   // Fall back to individual variables
