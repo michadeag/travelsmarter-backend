@@ -125,6 +125,15 @@ app.use('/api/contact', contactRoutes);
 // Email template routes - commented out for now
 // app.use('/api/email-templates', emailTemplateRoutes);
 
+// Diagnostic endpoint - updated Jun 6 21:57
+app.get('/api/test/version', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Backend updated at 21:57',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Test endpoint to verify routes are loading
 app.get('/api/promos/test', (req, res) => {
   res.status(200).json({
