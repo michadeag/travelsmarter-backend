@@ -9,13 +9,15 @@ const {
   validatePromo
 } = require('../controllers/promoController');
 
+// Routes with specific paths FIRST (before parameter routes)
+router.get('/:code/validate', validatePromo);
+
 // Public routes
 router.get('/', getAllPromos);
-router.get('/:code/validate', validatePromo);
 router.get('/:code', getPromoByCode);
 
 // Admin routes (create, update, delete)
-// In production, add authentication middleware here
+// Specific paths before parameter routes
 router.post('/', createPromo);
 router.put('/:id', updatePromo);
 router.delete('/:id', deletePromo);
