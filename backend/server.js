@@ -32,7 +32,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Middleware - Body parser (except for webhook which needs raw body)
+// Middleware - Webhook raw body (MUST be before JSON parser)
+app.use('/api/subscriptions/webhook', express.raw({type: 'application/json'}));
+
+// Middleware - Body parser for all other routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
