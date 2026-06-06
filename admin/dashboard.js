@@ -1,7 +1,18 @@
 // Admin Dashboard JavaScript
 // Connects to backend API for data management
 
-const API_URL = localStorage.getItem('apiUrl') || 'http://localhost:5000';
+// Determine correct API URL based on current domain
+let API_URL;
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    // Local development
+    API_URL = 'http://localhost:5000';
+} else {
+    // Production - use your live backend API
+    API_URL = 'https://api.travelsmarterapp.com';
+}
+
+console.log('Admin Dashboard using API:', API_URL);
+
 const API_TOKEN = localStorage.getItem('adminToken');
 
 // Initialize dashboard
