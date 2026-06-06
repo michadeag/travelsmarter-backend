@@ -5,9 +5,21 @@
 
 class APIService {
     constructor() {
-        this.baseURL = localStorage.getItem('apiUrl') || 'http://localhost:5000/api';
+        // Determine API URL based on current domain
+        let defaultApiUrl;
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Local development
+            defaultApiUrl = 'http://localhost:5000/api';
+        } else {
+            // Production
+            defaultApiUrl = 'https://api.travelsmarterapp.com/api';
+        }
+
+        this.baseURL = localStorage.getItem('apiUrl') || defaultApiUrl;
         this.token = localStorage.getItem('userToken');
         this.user = JSON.parse(localStorage.getItem('userData') || '{}');
+
+        console.log('API Service initialized with URL:', this.baseURL);
     }
 
     /**
