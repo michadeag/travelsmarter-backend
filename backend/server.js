@@ -52,6 +52,74 @@ app.use('/api/deals', dealsRoutes);
 app.use('/api/hacks', hacksRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/promos', promoRoutes);
+
+// Contact routes - inline for now
+const sgMail = require('@sendgrid/mail');
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+app.post('/api/contact/send', async (req, res) => {
+  try {
+    const { name, email, topic, message } = req.body;
+
+    // Validation
+    if (!name || !email || !topic || !message) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: name, email, topic, message'
+      });
+    }
+
+    // Send email if configured
+    if (process.env.SENDGRID_API_KEY) {
+      const topicLabels = {
+        billing: 'Billing/Subscription Issue',
+        refund: 'Money-Back Guarantee Refund',
+        technical: 'Technical Issue/Bug',
+        account: 'Account Issue',
+        feature: 'Feature Request',
+        hack: 'Hack Verification Question',
+        other: 'Other'
+      };
+
+      const topicLabel = topicLabels[topic] || topic;
+
+      await sgMail.send({
+        to: 'michael@reesin.com',
+        from: process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com',
+        subject: `TravelSmarter Contact: ${topicLabel} - ${name}`,
+        text: `Name: ${name}\nEmail: ${email}\nTopic: ${topicLabel}\n\nMessage:\n${message}`
+      });
+
+      // Send confirmation to user
+      try {
+        await sgMail.send({
+          to: email,
+          from: process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com',
+          subject: 'We received your message - TravelSmarter Support',
+          text: `Hi ${name},\n\nThank you for contacting TravelSmarter! We received your message and will get back to you within 2-4 hours.\n\nBest regards,\nThe TravelSmarter Team`
+        });
+      } catch (confirmError) {
+        console.error('Error sending confirmation email:', confirmError);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Your message has been sent successfully. We will respond within 2-4 hours.'
+    });
+
+  } catch (error) {
+    console.error('Contact form error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error sending message. Please try again later.'
+    });
+  }
+});
+
+// Use the external contact routes as fallback
 app.use('/api/contact', contactRoutes);
 
 // Email template routes - commented out for now
