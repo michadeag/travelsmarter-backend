@@ -670,35 +670,53 @@
         function initializePlanFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             const tier = urlParams.get('tier');
+            console.log('Initializing checkout - Tier from URL:', tier);
 
             const planOptions = document.querySelectorAll('.plan-option');
             const smartInput = document.querySelector('input[value="smart"]');
             const eliteInput = document.querySelector('input[value="elite"]');
 
-            // Default to Smart Traveler
+            console.log('Plan options found:', planOptions.length);
+            console.log('Smart input found:', !!smartInput);
+            console.log('Elite input found:', !!eliteInput);
+
+            if (!smartInput || !eliteInput || planOptions.length < 2) {
+                console.error('ERROR: Could not find plan elements!');
+                return;
+            }
+
+            // Default to Smart Traveler unless Elite is specified
             if (tier === 'elite') {
-                // Select Elite plan
-                if (eliteInput) eliteInput.checked = true;
-                if (smartInput) smartInput.checked = false;
+                console.log('Setting Elite plan...');
+                eliteInput.checked = true;
+                smartInput.checked = false;
                 planOptions.forEach(opt => opt.classList.remove('selected'));
-                if (planOptions[1]) planOptions[1].classList.add('selected');
+                planOptions[1].classList.add('selected');
+                console.log('Elite plan set');
             } else {
-                // Select Smart Traveler (default)
-                if (smartInput) smartInput.checked = true;
-                if (eliteInput) eliteInput.checked = false;
+                console.log('Setting Smart Traveler plan...');
+                smartInput.checked = true;
+                eliteInput.checked = false;
                 planOptions.forEach(opt => opt.classList.remove('selected'));
-                if (planOptions[0]) planOptions[0].classList.add('selected');
+                planOptions[0].classList.add('selected');
+                console.log('Smart Traveler plan set');
             }
 
             // Update the price display
+            console.log('Updating price...');
             updatePrice();
+            console.log('Initialization complete');
         }
 
-        // Run immediately when script loads
-        initializePlanFromUrl();
+        // Run with a small delay to ensure DOM is ready
+        setTimeout(function() {
+            initializePlanFromUrl();
+        }, 50);
 
         // Also run after DOM is fully loaded (safety fallback)
-        document.addEventListener('DOMContentLoaded', initializePlanFromUrl);
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initializePlanFromUrl, 50);
+        });
 
         // Apply Promo Code
         function applyPromoCode() {
