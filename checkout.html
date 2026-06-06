@@ -799,6 +799,13 @@
                 const endpoint = `${backendUrl}/api/subscriptions/checkout`;
                 console.log('Creating checkout session at:', endpoint);
 
+                // Map frontend tier names to backend tier names
+                const tierMap = {
+                    'smart': 'smart_traveler',
+                    'elite': 'elite'
+                };
+                const backendTier = tierMap[selectedPlan] || selectedPlan;
+
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
@@ -806,7 +813,7 @@
                         'Authorization': `Bearer ${userToken}`
                     },
                     body: JSON.stringify({
-                        tier: selectedPlan
+                        tier: backendTier
                     })
                 });
 
