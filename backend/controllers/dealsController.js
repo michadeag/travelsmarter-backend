@@ -1,5 +1,27 @@
 const pool = require('../config/database');
 
+// @desc Get total count of deals
+// @route GET /api/deals/count
+// @access Public
+exports.getDealCount = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT COUNT(*) as count FROM deals WHERE is_active = true');
+    const count = parseInt(result.rows[0].count);
+
+    res.status(200).json({
+      success: true,
+      count: count
+    });
+  } catch (error) {
+    console.error('Get deal count error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching deal count',
+      error: error.message
+    });
+  }
+};
+
 // @desc Get all active deals
 // @route GET /api/deals
 // @access Public

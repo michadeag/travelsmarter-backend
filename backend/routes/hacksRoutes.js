@@ -14,20 +14,24 @@ const {
   deleteHack,
 } = require('../controllers/hacksController');
 
-// Public routes
+// Public routes - SPECIFIC routes BEFORE parameter routes
 router.get('/modules', getAllModules);
-router.get('/module/:moduleId', getHacksByModule);
 
-// Admin routes (hacks management)
+// Private routes - SPECIFIC routes BEFORE parameter routes
+router.post('/save', protect, saveHack);
+router.get('/saved', protect, getSavedHacks);
+
+// Admin routes
 router.get('/', protect, getHacks);
 router.post('/', protect, createHack);
+
+// Module hacks - parameter route
+router.get('/module/:moduleId', getHacksByModule);
+
+// Parameter routes LAST
+router.delete('/:hackId/remove', protect, removeHack);
+router.get('/:hackId/is-saved', protect, isHackSaved);
 router.put('/:id', protect, updateHack);
 router.delete('/:id', protect, deleteHack);
-
-// Private routes (user saving hacks)
-router.post('/save', protect, saveHack);
-router.delete('/:hackId/remove', protect, removeHack);
-router.get('/saved', protect, getSavedHacks);
-router.get('/:hackId/is-saved', protect, isHackSaved);
 
 module.exports = router;
