@@ -81,9 +81,107 @@ app.use((req, res) => {
   });
 });
 
-// Initialize settings table and defaults on startup
+// Initialize database tables and settings on startup
 async function initializeApp() {
   try {
+    console.log('🔧 Initializing database...');
+
+    // Create all required tables
+    const createTablesSQL = `
+      -- Users table
+      CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        subscription_tier VARCHAR(50) DEFAULT 'free',
+        subscription_status VARCHAR(50) DEFAULT 'inactive',
+        stripe_customer_id VARCHAR(255),
+        stripe_subscription_id VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_login TIMESTAMP,
+        is_active BOOLEAN DEFAULT true
+      );
+
+      -- Subscriptions table
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        tier VARCHAR(50) NOT NULL,
+        status VARCHAR(50) NOT NULL,
+        price_monthly DECIMAL(10, 2),
+        stripe_subscription_id VARCHAR(255) UNIQUE,
+        current_period_start TIMESTAMP,
+        current_period_end TIMESTAMP,
+        cancel_at_period_end BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- User preferences table
+      CREATE TABLE IF NOT EXISTS user_preferences (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        notification_email BOOLEAN DEFAULT true,
+        notification_sms BOOLEAN DEFAULT false,
+        notification_push BOOLEAN DEFAULT true,
+        deal_alert_categories TEXT[],
+        language VARCHAR(10) DEFAULT 'en',
+        timezone VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Saved hacks table
+      CREATE TABLE IF NOT EXISTS saved_hacks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        module_id INTEGER,
+        hack_id INTEGER,
+        hack_title VARCHAR(255),
+        hack_category VARCHAR(100),
+        saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, module_id, hack_id)
+      );
+
+      -- Deals table
+      CREATE TABLE IF NOT EXISTS deals (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        category VARCHAR(100),
+        deal_type VARCHAR(50),
+        value_amount DECIMAL(10, 2),
+        value_currency VARCHAR(10) DEFAULT 'EUR',
+        image_url VARCHAR(500),
+        source VARCHAR(100),
+        verified BOOLEAN DEFAULT false,
+        verification_count INTEGER DEFAULT 0,
+        upvote_count INTEGER DEFAULT 0,
+        expires_at TIMESTAMP,
+        is_active BOOLEAN DEFAULT true,
+        created_by UUID,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Deal interactions table
+      CREATE TABLE IF NOT EXISTS deal_interactions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        deal_id UUID NOT NULL REFERENCES deals(id) ON DELETE CASCADE,
+        interaction_type VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, deal_id, interaction_type)
+      );
+    `;
+
+    await pool.query(createTablesSQL);
+    console.log('✅ Database tables created/verified');
+
+    // Initialize settings
     await SettingsController.initializeTable();
     await SettingsController.initializeDefaults();
     console.log('✅ App initialization complete');
