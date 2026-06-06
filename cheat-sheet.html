@@ -1219,9 +1219,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const lockedSections = document.querySelectorAll('[data-tier-lock] > div:first-child');
 
-            // Only show on the first locked section (Module 5)
-            if (lockedSections.length > 0) {
-                const section = lockedSections[0];
+            // Show buttons on ALL locked sections (TOC and content)
+            lockedSections.forEach(function(section) {
 
                 // Container for both buttons
                 const container = document.createElement('div');
@@ -1291,7 +1290,7 @@
                 container.appendChild(smartButton);
                 container.appendChild(eliteButton);
                 section.insertBefore(container, section.firstChild);
-            }
+            });
         });
     </script>
 </body>
