@@ -11,6 +11,7 @@ const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const dealsRoutes = require('./routes/dealsRoutes');
 const hacksRoutes = require('./routes/hacksRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const promoRoutes = require('./routes/promoRoutes');
 
 // Import controllers
 const SettingsController = require('./controllers/settingsController');
@@ -45,6 +46,7 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/deals', dealsRoutes);
 app.use('/api/hacks', hacksRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/promos', promoRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -179,6 +181,40 @@ async function initializeApp() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(user_id, deal_id, interaction_type)
       );
+
+      -- Promo codes table
+      CREATE TABLE IF NOT EXISTS promo_codes (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        code VARCHAR(50) UNIQUE NOT NULL,
+        discount_percent DECIMAL(5, 2),
+        discount_amount DECIMAL(10, 2),
+        description TEXT,
+        is_active BOOLEAN DEFAULT true,
+        max_uses INTEGER,
+        current_uses INTEGER DEFAULT 0,
+        valid_from TIMESTAMP,
+        valid_until TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Create index for promo code lookups
+      CREATE INDEX IF NOT EXISTS idx_promo_codes_code ON promo_codes(code);
+
+      -- Payment history table
+      CREATE TABLE IF NOT EXISTS payment_history (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        stripe_payment_intent_id VARCHAR(255),
+        amount DECIMAL(10, 2) NOT NULL,
+        status VARCHAR(50) NOT NULL,
+        subscription_tier VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Create index for payment history lookups
+      CREATE INDEX IF NOT EXISTS idx_payment_history_user_id ON payment_history(user_id);
     `;
 
     await pool.query(createTablesSQL);
