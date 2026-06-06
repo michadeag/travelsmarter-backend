@@ -530,6 +530,11 @@ exports.getPricing = async (req, res) => {
 // @access Private
 exports.getSubscriptionStats = async (req, res) => {
   try {
+    // Get counts by subscription tier (from users table)
+    const tierResult = await pool.query(
+      `SELECT subscription_tier, COUNT(*) as count FROM users GROUP BY subscription_tier`
+    );
+
     // Get active subscriptions count
     const activeResult = await pool.query(
       `SELECT COUNT(*) as count FROM subscriptions WHERE status = 'active'`
@@ -540,19 +545,24 @@ exports.getSubscriptionStats = async (req, res) => {
       `SELECT SUM(price_monthly) as total_mrr FROM subscriptions WHERE status = 'active'`
     );
 
-    // Get subscriptions by tier
-    const tierResult = await pool.query(
-      `SELECT tier, COUNT(*) as count FROM subscriptions WHERE status = 'active' GROUP BY tier`
-    );
+    // Map tier results
+    let freeCount = 0;
+    let smartTravelerCount = 0;
+    let eliteCount = 0;
+
+    tierResult.rows.forEach(row => {
+      if (row.subscription_tier === 'free') freeCount = parseInt(row.count);
+      else if (row.subscription_tier === 'smart_traveler') smartTravelerCount = parseInt(row.count);
+      else if (row.subscription_tier === 'elite') eliteCount = parseInt(row.count);
+    });
 
     res.status(200).json({
       success: true,
-      activeSubscriptions: parseInt(activeResult.rows[0].count),
-      monthlyRevenue: parseFloat(mrrResult.rows[0].total_mrr) || 0,
-      byTier: tierResult.rows.map(row => ({
-        tier: row.tier,
-        count: parseInt(row.count)
-      }))
+      active: parseInt(activeResult.rows[0].count),
+      free: freeCount,
+      smartTraveler: smartTravelerCount,
+      elite: eliteCount,
+      monthlyRevenue: parseFloat(mrrResult.rows[0].total_mrr) || 0
     });
   } catch (error) {
     console.error('Get subscription stats error:', error);
