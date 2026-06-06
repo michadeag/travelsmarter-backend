@@ -13,6 +13,7 @@ const dealsRoutes = require('./routes/dealsRoutes');
 const hacksRoutes = require('./routes/hacksRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const promoRoutes = require('./routes/promoRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 // Email template routes - commented out for now (deployment issues)
 // let emailTemplateRoutes = require('./routes/emailTemplateRoutes');
@@ -51,6 +52,7 @@ app.use('/api/deals', dealsRoutes);
 app.use('/api/hacks', hacksRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/promos', promoRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Email template routes - commented out for now
 // app.use('/api/email-templates', emailTemplateRoutes);
