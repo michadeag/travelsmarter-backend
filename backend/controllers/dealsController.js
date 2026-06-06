@@ -380,3 +380,96 @@ exports.searchDeals = async (req, res) => {
     });
   }
 };
+
+// @desc Update deal (admin only)
+// @route PUT /api/deals/:id
+// @access Private
+exports.updateDeal = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, category, deal_type, value_amount, image_url, verified, is_active } = req.body;
+
+    // Check if deal exists
+    const existing = await pool.query(
+      'SELECT * FROM deals WHERE id = $1',
+      [id]
+    );
+
+    if (existing.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Deal not found'
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE deals
+       SET title = COALESCE($1, title),
+           description = COALESCE($2, description),
+           category = COALESCE($3, category),
+           deal_type = COALESCE($4, deal_type),
+           value_amount = COALESCE($5, value_amount),
+           image_url = COALESCE($6, image_url),
+           verified = COALESCE($7, verified),
+           is_active = COALESCE($8, is_active),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $9
+       RETURNING *`,
+      [title, description, category, deal_type, value_amount, image_url, verified, is_active, id]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Deal updated successfully',
+      deal: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Update deal error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating deal',
+      error: error.message
+    });
+  }
+};
+
+// @desc Delete deal (admin only)
+// @route DELETE /api/deals/:id
+// @access Private
+exports.deleteDeal = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if deal exists
+    const existing = await pool.query(
+      'SELECT * FROM deals WHERE id = $1',
+      [id]
+    );
+
+    if (existing.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Deal not found'
+      });
+    }
+
+    // Delete deal
+    const result = await pool.query(
+      'DELETE FROM deals WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Deal deleted successfully',
+      deal: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Delete deal error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting deal',
+      error: error.message
+    });
+  }
+};

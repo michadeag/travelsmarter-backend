@@ -524,3 +524,118 @@ exports.getPricing = async (req, res) => {
     },
   });
 };
+
+// @desc Get all subscriptions (admin only)
+// @route GET /api/subscriptions
+// @access Private
+exports.getSubscriptions = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT s.*, u.email, u.first_name, u.last_name
+       FROM subscriptions s
+       JOIN users u ON s.user_id = u.id
+       ORDER BY s.created_at DESC`
+    );
+
+    res.status(200).json({
+      success: true,
+      subscriptions: result.rows,
+      count: result.rows.length
+    });
+  } catch (error) {
+    console.error('Get subscriptions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching subscriptions',
+      error: error.message
+    });
+  }
+};
+
+// @desc Update subscription (admin only)
+// @route PUT /api/subscriptions/:id
+// @access Private
+exports.updateSubscription = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tier, status, cancel_at_period_end } = req.body;
+
+    // Check if subscription exists
+    const existing = await pool.query(
+      'SELECT * FROM subscriptions WHERE id = $1',
+      [id]
+    );
+
+    if (existing.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Subscription not found'
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE subscriptions
+       SET tier = COALESCE($1, tier),
+           status = COALESCE($2, status),
+           cancel_at_period_end = COALESCE($3, cancel_at_period_end),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $4
+       RETURNING *`,
+      [tier, status, cancel_at_period_end, id]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Subscription updated successfully',
+      subscription: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Update subscription error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating subscription',
+      error: error.message
+    });
+  }
+};
+
+// @desc Delete subscription (admin only)
+// @route DELETE /api/subscriptions/:id
+// @access Private
+exports.deleteSubscription = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if subscription exists
+    const existing = await pool.query(
+      'SELECT * FROM subscriptions WHERE id = $1',
+      [id]
+    );
+
+    if (existing.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Subscription not found'
+      });
+    }
+
+    // Delete subscription
+    const result = await pool.query(
+      'DELETE FROM subscriptions WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Subscription deleted successfully',
+      subscription: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Delete subscription error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting subscription',
+      error: error.message
+    });
+  }
+};

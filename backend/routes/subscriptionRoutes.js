@@ -7,6 +7,9 @@ const {
   getCurrentSubscription,
   cancelSubscription,
   getPricing,
+  getSubscriptions,
+  updateSubscription,
+  deleteSubscription,
 } = require('../controllers/subscriptionController');
 
 // Public routes
@@ -19,5 +22,10 @@ router.post('/webhook', handleWebhook);
 router.post('/checkout', protect, createCheckoutSession);
 router.get('/current', protect, getCurrentSubscription);
 router.post('/cancel', protect, cancelSubscription);
+
+// Admin routes (require authentication)
+router.get('/', protect, getSubscriptions);
+router.put('/:id', protect, updateSubscription);
+router.delete('/:id', protect, deleteSubscription);
 
 module.exports = router;

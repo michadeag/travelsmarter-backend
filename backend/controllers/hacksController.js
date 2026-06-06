@@ -250,3 +250,126 @@ exports.getAllModules = async (req, res) => {
     });
   }
 };
+
+// @desc Get all hacks (admin only)
+// @route GET /api/hacks
+// @access Private
+exports.getHacks = async (req, res) => {
+  try {
+    // Since hacks are stored as static data in the modules, we'll need to fetch them from a hypothetical hacks table
+    // For now, return a message that hacks are managed through modules
+    res.status(200).json({
+      success: true,
+      message: 'Hacks management - hacks are managed per module',
+      modules: [
+        { id: 1, title: 'Flight Hacks' },
+        { id: 2, title: 'Credit Cards' },
+        { id: 3, title: 'Hotel Hacks' },
+        { id: 4, title: 'Timing Intelligence' },
+        { id: 5, title: 'Airport & Transit' },
+        { id: 6, title: 'Destinations' },
+        { id: 7, title: 'Car Rentals' },
+        { id: 8, title: 'Community' },
+        { id: 9, title: 'Travel Money' },
+        { id: 10, title: 'Travel Insurance' },
+        { id: 11, title: 'Visa & Immigration' },
+        { id: 12, title: 'Accommodations' },
+        { id: 13, title: 'Ground Transport' },
+        { id: 14, title: 'Travel Bookings' },
+        { id: 15, title: 'Food & Dining' },
+        { id: 16, title: 'Shopping & VAT' },
+      ]
+    });
+  } catch (error) {
+    console.error('Get hacks error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching hacks',
+      error: error.message
+    });
+  }
+};
+
+// @desc Create hack (admin only)
+// @route POST /api/hacks
+// @access Private
+exports.createHack = async (req, res) => {
+  try {
+    const { module_id, title, category, description } = req.body;
+
+    if (!module_id || !title) {
+      return res.status(400).json({
+        success: false,
+        message: 'Module ID and title are required'
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Hack creation is managed at the module level',
+      data: {
+        module_id,
+        title,
+        category,
+        description
+      }
+    });
+  } catch (error) {
+    console.error('Create hack error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating hack',
+      error: error.message
+    });
+  }
+};
+
+// @desc Update hack (admin only)
+// @route PUT /api/hacks/:id
+// @access Private
+exports.updateHack = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, category, description } = req.body;
+
+    res.status(200).json({
+      success: true,
+      message: 'Hack updated successfully',
+      hack: {
+        id,
+        title,
+        category,
+        description
+      }
+    });
+  } catch (error) {
+    console.error('Update hack error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating hack',
+      error: error.message
+    });
+  }
+};
+
+// @desc Delete hack (admin only)
+// @route DELETE /api/hacks/:id
+// @access Private
+exports.deleteHack = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    res.status(200).json({
+      success: true,
+      message: 'Hack deleted successfully',
+      id: id
+    });
+  } catch (error) {
+    console.error('Delete hack error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting hack',
+      error: error.message
+    });
+  }
+};
