@@ -15,7 +15,7 @@ class APIService {
             defaultApiUrl = 'https://api.travelsmarterapp.com/api';
         }
 
-        this.baseURL = localStorage.getItem('apiUrl') || defaultApiUrl;
+        this.baseURL = defaultApiUrl;
         this.token = localStorage.getItem('userToken');
         this.user = JSON.parse(localStorage.getItem('userData') || '{}');
 
