@@ -278,8 +278,13 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_scheduled_emails_user ON scheduled_emails(user_id);
     `;
 
-    await pool.query(createTablesSQL);
-    console.log('✅ Database tables created/verified');
+    try {
+      await pool.query(createTablesSQL);
+      console.log('✅ Database tables created/verified');
+    } catch (tableError) {
+      console.error('❌ Error creating tables:', tableError.message);
+      throw tableError;
+    }
 
     // Initialize settings
     await SettingsController.initializeTable();
@@ -323,9 +328,9 @@ initializeApp().then(() => {
     }, 60 * 60 * 1000); // Run every hour
 
     // Run immediately on startup to catch any emails that should have been sent
-    emailSequenceService.sendPendingEmails().catch(err =>
-      console.error('Error on startup email check:', err)
-    );
+    emailSequenceService.sendPendingEmails().catch(err => {
+      console.warn('⚠️ Warning on startup email check (tables may not exist yet):', err.message);
+    });
   });
 }).catch(error => {
   console.error('Failed to initialize app:', error);
