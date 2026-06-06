@@ -5330,6 +5330,18 @@
             </div>
         </div>
 
+        <!-- TIER COMPARISON MATRIX -->
+        <div id="tier-matrix-container"></div>
+        <script>
+            // Insert tier matrix before footer
+            const tierMatrix = document.createElement('div');
+            tierMatrix.innerHTML = window.createTierMatrix ? window.createTierMatrix() : '';
+            const footerEl = document.querySelector('.footer');
+            if (footerEl && tierMatrix.innerHTML) {
+                footerEl.parentNode.insertBefore(tierMatrix, footerEl);
+            }
+        </script>
+
         <!-- FOOTER -->
         <div class="footer">
             <p>🌍 TravelSmarter • Daily Updated Travel Intelligence • Made with ❤️ for Frequent Travelers</p>
@@ -5402,5 +5414,8 @@
             window.location.href = 'auth.html';
         }
     </script>
+
+    <!-- Tier Gating System -->
+    <script src="tier-gating.js"></script>
 </body>
 </html>
