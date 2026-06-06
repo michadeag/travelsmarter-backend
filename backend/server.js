@@ -15,8 +15,8 @@ const adminRoutes = require('./routes/adminRoutes');
 const promoRoutes = require('./routes/promoRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 
-// Email template routes - commented out for now (deployment issues)
-// let emailTemplateRoutes = require('./routes/emailTemplateRoutes');
+// Email template routes
+const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 
 // Import controllers
 const SettingsController = require('./controllers/settingsController');
@@ -122,8 +122,8 @@ app.post('/api/contact/send', async (req, res) => {
 // Use the external contact routes as fallback
 app.use('/api/contact', contactRoutes);
 
-// Email template routes - commented out for now
-// app.use('/api/email-templates', emailTemplateRoutes);
+// Email template routes
+app.use('/api/email-templates', emailTemplateRoutes);
 
 // Diagnostic endpoint - updated Jun 6 21:57
 app.get('/api/test/version', (req, res) => {
