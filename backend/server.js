@@ -13,6 +13,7 @@ const dealsRoutes = require('./routes/dealsRoutes');
 const hacksRoutes = require('./routes/hacksRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const promoRoutes = require('./routes/promoRoutes');
+const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 
 // Import controllers
 const SettingsController = require('./controllers/settingsController');
@@ -48,6 +49,7 @@ app.use('/api/deals', dealsRoutes);
 app.use('/api/hacks', hacksRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/promos', promoRoutes);
+app.use('/api/email-templates', emailTemplateRoutes);
 
 // Test endpoint to verify routes are loading
 app.get('/api/promos/test', (req, res) => {
@@ -100,6 +102,11 @@ app.use((req, res) => {
 async function initializeApp() {
   try {
     console.log('🔧 Initializing database...');
+
+    // Seed email templates from the service
+    await emailSequenceService.seedEmailSequence().catch(err => {
+      console.warn('⚠️ Error seeding email templates:', err.message);
+    });
 
     // Create all required tables
     const createTablesSQL = `
@@ -225,6 +232,46 @@ async function initializeApp() {
 
       -- Create index for payment history lookups
       CREATE INDEX IF NOT EXISTS idx_payment_history_user_id ON payment_history(user_id);
+
+      -- Email sequences table (e.g., "10-day welcome sequence")
+      CREATE TABLE IF NOT EXISTS email_sequences (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL UNIQUE,
+        description TEXT,
+        is_active BOOLEAN DEFAULT true,
+        trigger_event VARCHAR(100) DEFAULT 'signup',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Email templates table (individual email content)
+      CREATE TABLE IF NOT EXISTS email_templates (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        sequence_id UUID NOT NULL REFERENCES email_sequences(id) ON DELETE CASCADE,
+        day INTEGER NOT NULL,
+        subject VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        html_content TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Scheduled emails table (tracks which emails have been sent to which users)
+      CREATE TABLE IF NOT EXISTS scheduled_emails (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        template_id UUID NOT NULL REFERENCES email_templates(id),
+        scheduled_at TIMESTAMP,
+        sent_at TIMESTAMP,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Create indexes for email lookups
+      CREATE INDEX IF NOT EXISTS idx_email_templates_sequence ON email_templates(sequence_id);
+      CREATE INDEX IF NOT EXISTS idx_scheduled_emails_status ON scheduled_emails(status);
+      CREATE INDEX IF NOT EXISTS idx_scheduled_emails_user ON scheduled_emails(user_id);
     `;
 
     await pool.query(createTablesSQL);

@@ -41,6 +41,7 @@ function initDashboard() {
     loadDeals();
     loadHacks();
     loadPromos();
+    loadEmailTemplates();
     loadRecentActivities();
     loadSettings();
 
@@ -95,6 +96,7 @@ function switchTab(tabName) {
         deals: 'Deals Management',
         hacks: 'Hacks & Modules',
         promos: 'Promo Codes',
+        'email-templates': 'Email Templates',
         analytics: 'Analytics',
         settings: 'Settings'
     };
@@ -1255,4 +1257,172 @@ function formatTime(dateString) {
 function displayError(elementId, message) {
     const tbody = document.getElementById(elementId);
     tbody.innerHTML = `<tr><td colspan="10" class="empty-state">${message}</td></tr>`;
+}
+
+// EMAIL TEMPLATES MANAGEMENT
+async function loadEmailTemplates() {
+    try {
+        // Load sequences
+        const sequencesResponse = await fetch(`${API_URL}/api/email-templates/sequences`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (sequencesResponse.ok) {
+            const sequencesData = await sequencesResponse.json();
+            renderSequences(sequencesData.data || []);
+        } else {
+            console.error('Failed to load sequences');
+        }
+
+        // Load templates
+        const templatesResponse = await fetch(`${API_URL}/api/email-templates/templates`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (templatesResponse.ok) {
+            const templatesData = await templatesResponse.json();
+            // For now, just show loading - we'll render after getting sequence info
+        }
+    } catch (error) {
+        console.error('Error loading email templates:', error);
+    }
+}
+
+function renderSequences(sequences) {
+    const tbody = document.getElementById('sequences-table');
+
+    if (!sequences || sequences.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No sequences yet</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = sequences.map(seq => `
+        <tr>
+            <td><strong>${seq.name}</strong></td>
+            <td>${seq.description || '-'}</td>
+            <td>${seq.template_count || 0} templates</td>
+            <td><span class="badge ${seq.is_active ? 'badge-success' : 'badge-danger'}">${seq.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="viewSequence('${seq.id}')">View</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteSequence('${seq.id}')">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function viewSequence(sequenceId) {
+    try {
+        const response = await fetch(`${API_URL}/api/email-templates/sequences/${sequenceId}`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            renderTemplatesForSequence(data.templates);
+        }
+    } catch (error) {
+        console.error('Error loading sequence details:', error);
+    }
+}
+
+function renderTemplatesForSequence(templates) {
+    const tbody = document.getElementById('templates-table');
+
+    if (!templates || templates.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No templates in this sequence</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = templates.map(template => `
+        <tr>
+            <td>Day ${template.day}</td>
+            <td>${template.subject}</td>
+            <td>${template.sequence_id}</td>
+            <td><span class="badge ${template.is_active ? 'badge-success' : 'badge-danger'}">${template.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="editTemplate('${template.id}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteTemplate('${template.id}')">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openEmailSequenceModal() {
+    // Placeholder - will implement modal for creating new sequence
+    const name = prompt('Enter sequence name:', 'Welcome Email Sequence');
+    if (name) {
+        createSequence(name);
+    }
+}
+
+function openTemplateModal() {
+    // Placeholder - will implement modal for creating new template
+    alert('Template editor modal - to be implemented');
+}
+
+async function createSequence(name) {
+    try {
+        const response = await fetch(`${API_URL}/api/email-templates/sequences`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${getAuthToken()}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, description: '' })
+        });
+
+        if (response.ok) {
+            showAlert('Sequence created successfully', 'success');
+            loadEmailTemplates();
+        } else {
+            const error = await response.json();
+            showAlert(error.message || 'Failed to create sequence', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating sequence:', error);
+        showAlert('Error creating sequence', 'error');
+    }
+}
+
+async function deleteSequence(sequenceId) {
+    if (confirm('Are you sure you want to delete this sequence?')) {
+        try {
+            const response = await fetch(`${API_URL}/api/email-templates/sequences/${sequenceId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            });
+
+            if (response.ok) {
+                showAlert('Sequence deleted', 'success');
+                loadEmailTemplates();
+            }
+        } catch (error) {
+            console.error('Error deleting sequence:', error);
+            showAlert('Error deleting sequence', 'error');
+        }
+    }
+}
+
+async function deleteTemplate(templateId) {
+    if (confirm('Are you sure you want to delete this template?')) {
+        try {
+            const response = await fetch(`${API_URL}/api/email-templates/templates/${templateId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            });
+
+            if (response.ok) {
+                showAlert('Template deleted', 'success');
+                loadEmailTemplates();
+            }
+        } catch (error) {
+            console.error('Error deleting template:', error);
+            showAlert('Error deleting template', 'error');
+        }
+    }
+}
+
+function editTemplate(templateId) {
+    // Placeholder - will implement template editor
+    alert('Template editor - to be implemented');
 }

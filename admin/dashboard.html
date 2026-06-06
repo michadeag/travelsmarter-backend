@@ -578,6 +578,7 @@
                 <a class="nav-link" data-tab="deals">🎯 Deals</a>
                 <a class="nav-link" data-tab="hacks">💡 Hacks</a>
                 <a class="nav-link" data-tab="promos">🎟️ Promo Codes</a>
+                <a class="nav-link" data-tab="email-templates">📧 Email Templates</a>
                 <a class="nav-link" data-tab="analytics">📈 Analytics</a>
                 <a class="nav-link" data-tab="settings">⚙️ Settings</a>
             </nav>
@@ -850,6 +851,57 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- EMAIL TEMPLATES TAB -->
+            <div id="email-templates" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>Email Templates</h3>
+                    <button class="btn btn-primary" onclick="openEmailSequenceModal()">+ New Sequence</button>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <h4>Email Sequences</h4>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Sequence Name</th>
+                                    <th>Description</th>
+                                    <th>Templates</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sequences-table">
+                                <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h4>Email Templates</h4>
+                        <button class="btn btn-secondary" onclick="openTemplateModal()">+ Add Template</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Subject</th>
+                                    <th>Sequence</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="templates-table">
+                                <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
