@@ -401,7 +401,7 @@ function displaySubscriptions(subscriptions) {
     const tbody = document.getElementById('subscriptions-table');
 
     if (subscriptions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No subscriptions found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No subscriptions found</td></tr>';
         return;
     }
 
@@ -744,7 +744,7 @@ function displayPromos(promos) {
     const tbody = document.getElementById('promos-table');
 
     if (promos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No promo codes found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No promo codes found</td></tr>';
         return;
     }
 
@@ -893,7 +893,7 @@ function displayHacks(modules) {
     const tbody = document.getElementById('hacks-table');
 
     if (modules.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No hacks modules found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hacks modules found</td></tr>';
         return;
     }
 
