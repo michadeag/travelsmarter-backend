@@ -843,15 +843,33 @@
                 return;
             }
 
+            // Check if Stripe is initialized
+            if (!stripe || !cardElement) {
+                document.getElementById('card-errors').textContent = 'Payment system not initialized. Please refresh the page.';
+                return;
+            }
+
             // Show loading state
             document.getElementById('loading').style.display = 'block';
             document.getElementById('payButton').disabled = true;
 
             try {
                 // Get form data
+                const firstName = document.getElementById('firstName').value;
+                const lastName = document.getElementById('lastName').value;
                 const email = document.getElementById('email').value;
-                const name = document.getElementById('name').value;
+                const name = `${firstName} ${lastName}`.trim();
                 const selectedPlan = document.querySelector('input[name="plan"]:checked').value;
+
+                // Validate required fields
+                if (!firstName || !lastName || !email) {
+                    document.getElementById('card-errors').textContent = 'Please fill in all required fields';
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('payButton').disabled = false;
+                    return;
+                }
+
+                console.log('Creating payment method for:', email, name);
 
                 // Create payment method from card element
                 const {error, paymentMethod} = await stripe.createPaymentMethod({
@@ -864,14 +882,28 @@
                 });
 
                 if (error) {
+                    console.error('Stripe error:', error);
                     document.getElementById('card-errors').textContent = error.message;
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('payButton').disabled = false;
                     return;
                 }
 
+                console.log('Payment method created:', paymentMethod.id);
+
+                // Determine backend URL
+                let backendUrl;
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    backendUrl = 'http://localhost:5000';
+                } else {
+                    backendUrl = 'https://api.travelsmarterapp.com';
+                }
+
                 // Send to backend to create subscription
-                const response = await fetch('/api/subscriptions/checkout', {
+                const endpoint = `${backendUrl}/api/subscriptions/checkout`;
+                console.log('Sending payment to:', endpoint);
+
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -880,11 +912,14 @@
                     body: JSON.stringify({
                         tier: selectedPlan,
                         paymentMethodId: paymentMethod.id,
-                        email: email
+                        email: email,
+                        name: name
                     })
                 });
 
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
 
                 if (data.success) {
                     // Show success message
@@ -898,14 +933,16 @@
                     }, 3000);
                 } else {
                     // Handle error
-                    document.getElementById('card-errors').textContent = data.message || 'Payment failed. Please try again.';
+                    const errorMsg = data.message || data.error || 'Payment failed. Please try again.';
+                    console.error('Payment error:', errorMsg);
+                    document.getElementById('card-errors').textContent = errorMsg;
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('payButton').disabled = false;
                 }
 
             } catch (error) {
                 console.error('Checkout error:', error);
-                document.getElementById('card-errors').textContent = 'An error occurred. Please try again.';
+                document.getElementById('card-errors').textContent = error.message || 'An error occurred. Please try again.';
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('payButton').disabled = false;
             }
