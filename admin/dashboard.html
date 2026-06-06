@@ -1079,6 +1079,39 @@
         </div>
     </div>
 
+    <!-- Subscription Modal -->
+    <div id="subscription-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Subscription</h3>
+                <button class="close-modal" onclick="closeSubscriptionModal()">✕</button>
+            </div>
+
+            <div class="form-group">
+                <label>Subscription Tier</label>
+                <select id="modal-subscription-tier">
+                    <option value="free">Free</option>
+                    <option value="smart_traveler">Smart Traveler (€19/mo)</option>
+                    <option value="elite">Elite (€49/mo)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Status</label>
+                <select id="modal-subscription-status">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+
+            <div class="actions" style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="saveSubscription()">Save Subscription</button>
+                <button class="btn btn-secondary" onclick="closeSubscriptionModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Deal Modal -->
     <div id="deal-modal" class="modal">
         <div class="modal-content">
