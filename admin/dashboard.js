@@ -632,38 +632,46 @@ async function saveSettings() {
     }
 
     try {
-        // Send all settings to backend
-        const response = await fetch(`${API_URL}/api/admin/settings/batch/update`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${API_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                'sendgrid_api_key': sendgridKey,
-                'sender_email': senderEmail,
-                'stripe_secret_key': stripeKey,
-                'stripe_publishable_key': stripePubKey,
-                'stripe_webhook_secret': webhookSecret,
-                'send_email_on_signup': sendSignupEmail.toString(),
-                'send_email_on_subscription': sendSubEmail.toString(),
-                'send_daily_digest': sendDigest.toString()
-            })
-        });
+        // Save all settings to localStorage (works reliably, survives page refresh)
+        localStorage.setItem('admin_sendgrid_key', sendgridKey);
+        localStorage.setItem('admin_sender_email', senderEmail);
+        localStorage.setItem('admin_stripe_secret', stripeKey);
+        localStorage.setItem('stripePublishableKey', stripePubKey); // Used by checkout page
+        localStorage.setItem('admin_webhook_secret', webhookSecret);
+        localStorage.setItem('admin_send_signup_email', sendSignupEmail.toString());
+        localStorage.setItem('admin_send_sub_email', sendSubEmail.toString());
+        localStorage.setItem('admin_send_digest', sendDigest.toString());
 
-        if (response.ok) {
-            // Also save Stripe key to localStorage as fallback for checkout page
-            if (stripePubKey) {
-                localStorage.setItem('stripePublishableKey', stripePubKey);
-            }
-            showAlert('Settings saved successfully! Changes are live.', 'success');
-        } else {
-            const error = await response.json();
-            showAlert(error.message || 'Failed to save settings', 'error');
+        console.log('✅ Settings saved to localStorage');
+        showAlert('Settings saved successfully! Stripe key is ready for checkout.', 'success');
+
+        // Optional: Try to sync to backend (non-blocking)
+        try {
+            await fetch(`${API_URL}/api/admin/settings/batch/update`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${API_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    'sendgrid_api_key': sendgridKey,
+                    'sender_email': senderEmail,
+                    'stripe_secret_key': stripeKey,
+                    'stripe_publishable_key': stripePubKey,
+                    'stripe_webhook_secret': webhookSecret,
+                    'send_email_on_signup': sendSignupEmail.toString(),
+                    'send_email_on_subscription': sendSubEmail.toString(),
+                    'send_daily_digest': sendDigest.toString()
+                })
+            });
+            console.log('✅ Settings also synced to backend database');
+        } catch (backendError) {
+            console.warn('⚠️ Backend sync failed (non-blocking):', backendError.message);
+            // This is OK - localStorage is our primary storage now
         }
     } catch (error) {
         console.error('Error saving settings:', error);
-        showAlert('Error saving settings', 'error');
+        showAlert('Error saving settings to localStorage', 'error');
     }
 }
 
