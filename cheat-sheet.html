@@ -1222,7 +1222,9 @@
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 15px;
-                margin: 30px 0;
+                margin: 30px auto;
+                max-width: 800px;
+                width: 100%;
             `;
 
             // Smart Traveler Button
@@ -1241,7 +1243,7 @@
                 user-select: none;
             `;
             smartButton.innerHTML = '🔓 Smart Traveler<br>Modules 5-10 Unlocked<br>€19/month';
-            smartButton.onclick = () => window.location.href = '/pricing?tier=smart';
+            smartButton.onclick = () => window.location.href = '/checkout.html?tier=smart';
             smartButton.onmouseover = function() {
                 this.style.background = 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)';
                 this.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
@@ -1269,7 +1271,7 @@
                 user-select: none;
             `;
             eliteButton.innerHTML = '👑 Elite<br>All 16 Modules<br>€49/month';
-            eliteButton.onclick = () => window.location.href = '/pricing?tier=elite';
+            eliteButton.onclick = () => window.location.href = '/checkout.html?tier=elite';
             eliteButton.onmouseover = function() {
                 this.style.background = 'linear-gradient(135deg, #059669 0%, #065f46 100%)';
                 this.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)';
