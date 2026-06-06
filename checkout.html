@@ -655,20 +655,42 @@
                 console.log('Backend URL:', backendUrl);
                 console.log('Fetching Stripe key from:', endpoint);
 
-                // Fetch Stripe publishable key from backend
-                const response = await fetch(endpoint);
-                if (!response.ok) {
-                    console.error('Failed to fetch Stripe key. Status:', response.status, 'Endpoint:', endpoint);
-                    throw new Error('Failed to fetch Stripe configuration');
-                }
-                const data = await response.json();
-                const stripeKey = data.stripepublishableKey;
+                let stripeKey = null;
 
-                console.log('Stripe key fetched:', stripeKey ? 'Success (key loaded)' : 'Empty (no key)');
+                // Try to fetch from API
+                try {
+                    const response = await fetch(endpoint, { mode: 'cors' });
+                    if (response.ok) {
+                        const data = await response.json();
+                        stripeKey = data.stripepublishableKey;
+                        if (stripeKey) {
+                            console.log('✅ Stripe key fetched from API');
+                            localStorage.setItem('stripePublishableKey', stripeKey);
+                        }
+                    }
+                } catch (error) {
+                    console.warn('API fetch failed:', error.message);
+                }
+
+                // Fallback 1: Try localStorage
+                if (!stripeKey) {
+                    stripeKey = localStorage.getItem('stripePublishableKey');
+                    if (stripeKey) {
+                        console.log('✅ Using Stripe key from localStorage');
+                    }
+                }
+
+                // Fallback 2: Try sessionStorage (for admin dashboard)
+                if (!stripeKey) {
+                    stripeKey = sessionStorage.getItem('temp_stripe_key');
+                    if (stripeKey) {
+                        console.log('✅ Using temporary Stripe key from session');
+                    }
+                }
 
                 if (!stripeKey) {
-                    console.error('Stripe key not configured');
-                    document.getElementById('card-errors').textContent = 'Payment system not configured. Please contact support.';
+                    console.error('Stripe key not found in any source');
+                    document.getElementById('card-errors').textContent = 'Payment system not configured. Please save your Stripe key in the admin dashboard.';
                     return;
                 }
 

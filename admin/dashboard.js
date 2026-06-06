@@ -641,6 +641,10 @@ async function saveSettings() {
         });
 
         if (response.ok) {
+            // Also save Stripe key to localStorage as fallback for checkout page
+            if (stripePubKey) {
+                localStorage.setItem('stripePublishableKey', stripePubKey);
+            }
             showAlert('Settings saved successfully! Changes are live.', 'success');
         } else {
             const error = await response.json();
