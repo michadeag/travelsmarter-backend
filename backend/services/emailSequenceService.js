@@ -175,6 +175,16 @@ async function sendPendingEmails() {
   try {
     console.log('🔄 Checking for pending emails to send...');
 
+    // Check if tables exist first
+    const tableCheck = await pool.query(
+      `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'scheduled_emails')`
+    );
+
+    if (!tableCheck.rows[0].exists) {
+      console.warn('⚠️ scheduled_emails table does not exist yet, skipping');
+      return { sent: 0 };
+    }
+
     // Find emails that are due to be sent
     const result = await pool.query(`
       SELECT se.id, se.user_id, se.template_id, u.email, u.first_name,

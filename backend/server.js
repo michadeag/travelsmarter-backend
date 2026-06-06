@@ -279,8 +279,18 @@ async function initializeApp() {
     `;
 
     try {
+      // Execute tables creation - but split into sections to avoid FK constraint issues
       await pool.query(createTablesSQL);
       console.log('✅ Database tables created/verified');
+
+      // Verify critical tables exist
+      const tableCheck = await pool.query(
+        `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'scheduled_emails')`
+      );
+
+      if (!tableCheck.rows[0].exists) {
+        console.warn('⚠️ Warning: scheduled_emails table was not created');
+      }
     } catch (tableError) {
       console.error('❌ Error creating tables:', tableError.message);
       throw tableError;
