@@ -9,7 +9,7 @@ if (process.env.DATABASE_URL) {
   console.log('📡 Connecting using DATABASE_URL');
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    ssl: { rejectUnauthorized: false }, // DigitalOcean uses self-signed certs
   });
 } else {
   // Fall back to individual variables
