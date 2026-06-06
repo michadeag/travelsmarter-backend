@@ -803,18 +803,23 @@
                     document.getElementById('successMessage').style.display = 'block';
                     document.getElementById('checkoutForm').style.display = 'none';
 
-                // In production, you would:
-                // 1. Create Stripe payment intent
-                // 2. Use Stripe.js to process card
-                // 3. Create subscription in your backend
-                // 4. Send confirmation email
-                // 5. Redirect to app dashboard
+                    // Redirect to app after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 3000);
+                } else {
+                    // Handle error
+                    document.getElementById('card-errors').textContent = data.message || 'Payment failed. Please try again.';
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('payButton').disabled = false;
+                }
 
-                // Redirect to app after 3 seconds
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 3000);
-            }, 2000);
+            } catch (error) {
+                console.error('Checkout error:', error);
+                document.getElementById('card-errors').textContent = 'An error occurred. Please try again.';
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('payButton').disabled = false;
+            }
         });
 
         // Update button price on load
