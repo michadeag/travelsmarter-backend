@@ -475,7 +475,7 @@
 
                 <div class="info-box">
                     <strong>✓ First 30 days free to try</strong><br>
-                    Then auto-renews at €19/month. Cancel anytime, no questions asked.
+                    Then auto-renews at €<span id="infoBoxPrice">19</span>/month. Cancel anytime, no questions asked.
                 </div>
 
                 <div class="guarantee-badge">
@@ -664,6 +664,7 @@
             document.getElementById('subtotal').textContent = price;
             document.getElementById('total').textContent = price;
             document.getElementById('buttonPrice').textContent = price;
+            document.getElementById('infoBoxPrice').textContent = price;
         }
 
         // Initialize plan from URL parameter
