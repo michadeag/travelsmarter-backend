@@ -48,6 +48,15 @@ app.use('/api/hacks', hacksRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/promos', promoRoutes);
 
+// Test endpoint to verify routes are loading
+app.get('/api/promos/test', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Promo test endpoint working!',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
