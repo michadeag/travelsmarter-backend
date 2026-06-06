@@ -2,6 +2,7 @@ const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
 const { generateToken } = require('../middleware/auth');
 const emailService = require('../services/emailService');
+const emailSequenceService = require('../services/emailSequenceService');
 
 // @desc Register user
 // @route POST /api/auth/signup
@@ -55,11 +56,17 @@ exports.signup = async (req, res) => {
       [user.id]
     );
 
-    // Send welcome email (non-blocking)
+    // Send welcome email and initialize 10-day email sequence (non-blocking)
     emailService.sendWelcomeEmail({
       email: user.email,
       firstName: user.first_name
     }).catch(err => console.error('Failed to send welcome email:', err));
+
+    emailSequenceService.initializeEmailSequence(
+      user.id,
+      user.email,
+      user.first_name
+    ).catch(err => console.error('Failed to initialize email sequence:', err));
 
     res.status(201).json({
       success: true,

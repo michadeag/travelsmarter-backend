@@ -4,6 +4,7 @@ const helmet = require('helmet');
 require('dotenv').config();
 
 const pool = require('./config/database');
+const emailSequenceService = require('./services/emailSequenceService');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -251,6 +252,22 @@ initializeApp().then(() => {
 ║   Database: ${process.env.DB_NAME}                      ║
 ╚════════════════════════════════════════╝
     `);
+
+    // Start email sequence scheduler
+    // Runs every hour to check for pending emails
+    console.log('📧 Email sequence scheduler started (runs every hour)');
+    setInterval(async () => {
+      try {
+        await emailSequenceService.sendPendingEmails();
+      } catch (error) {
+        console.error('❌ Error in email sequence scheduler:', error);
+      }
+    }, 60 * 60 * 1000); // Run every hour
+
+    // Run immediately on startup to catch any emails that should have been sent
+    emailSequenceService.sendPendingEmails().catch(err =>
+      console.error('Error on startup email check:', err)
+    );
   });
 }).catch(error => {
   console.error('Failed to initialize app:', error);
