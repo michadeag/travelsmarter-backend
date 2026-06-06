@@ -901,9 +901,9 @@ function displayHacks(modules) {
     tbody.innerHTML = modules.map(module => `
         <tr>
             <td><strong>${module.title}</strong></td>
-            <td>${module.hack_count || '0'}</td>
-            <td>${module.save_count || '0'}</td>
-            <td>€${module.avg_value || '0'}</td>
+            <td>View</td>
+            <td>-</td>
+            <td>-</td>
             <td><span class="badge badge-success">Active</span></td>
         </tr>
     `).join('');
