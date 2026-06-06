@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout | TravelSmarter</title>
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
         * {
             margin: 0;
@@ -630,6 +631,22 @@
     </div>
 
     <script>
+        // Initialize Stripe
+        const stripe = Stripe('pk_test_51234567890abcdef'); // Replace with your actual publishable key
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+
+        // Handle card errors
+        cardElement.on('change', function(event) {
+            const displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+
         // Plan Selection
         function selectPlan(planType) {
             const options = document.querySelectorAll('.plan-option');
@@ -648,6 +665,29 @@
             document.getElementById('total').textContent = price;
             document.getElementById('buttonPrice').textContent = price;
         }
+
+        // Initialize plan from URL parameter
+        function initializePlanFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tier = urlParams.get('tier');
+
+            if (tier === 'elite') {
+                // Pre-select Elite plan
+                document.querySelector('input[value="elite"]').checked = true;
+                document.querySelectorAll('.plan-option').forEach(opt => opt.classList.remove('selected'));
+                document.querySelectorAll('.plan-option')[1].classList.add('selected');
+                updatePrice();
+            } else if (tier === 'smart_traveler') {
+                // Pre-select Smart Traveler plan
+                document.querySelector('input[value="smart"]').checked = true;
+                document.querySelectorAll('.plan-option').forEach(opt => opt.classList.remove('selected'));
+                document.querySelectorAll('.plan-option')[0].classList.add('selected');
+                updatePrice();
+            }
+        }
+
+        // Call on page load
+        window.addEventListener('load', initializePlanFromUrl);
 
         // Apply Promo Code
         function applyPromoCode() {
@@ -676,7 +716,7 @@
         }
 
         // Form Submission
-        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+        document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             // Validation
@@ -689,12 +729,50 @@
             document.getElementById('loading').style.display = 'block';
             document.getElementById('payButton').disabled = true;
 
-            // Simulate payment processing (in production, use Stripe.js)
-            setTimeout(() => {
-                // Show success message
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('successMessage').style.display = 'block';
-                document.getElementById('checkoutForm').style.display = 'none';
+            try {
+                // Get form data
+                const email = document.getElementById('email').value;
+                const name = document.getElementById('name').value;
+                const selectedPlan = document.querySelector('input[name="plan"]:checked').value;
+
+                // Create payment method from card element
+                const {error, paymentMethod} = await stripe.createPaymentMethod({
+                    type: 'card',
+                    card: cardElement,
+                    billing_details: {
+                        email: email,
+                        name: name
+                    }
+                });
+
+                if (error) {
+                    document.getElementById('card-errors').textContent = error.message;
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('payButton').disabled = false;
+                    return;
+                }
+
+                // Send to backend to create subscription
+                const response = await fetch('/api/subscriptions/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
+                    },
+                    body: JSON.stringify({
+                        tier: selectedPlan,
+                        paymentMethodId: paymentMethod.id,
+                        email: email
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('checkoutForm').style.display = 'none';
 
                 // In production, you would:
                 // 1. Create Stripe payment intent
