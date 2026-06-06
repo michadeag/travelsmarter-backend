@@ -379,7 +379,7 @@ async function deleteUser(userId) {
 // SUBSCRIPTIONS
 async function loadSubscriptions() {
     try {
-        const response = await fetch(`${API_URL}/api/subscriptions/list`, {
+        const response = await fetch(`${API_URL}/api/subscriptions`, {
             headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
@@ -397,20 +397,122 @@ function displaySubscriptions(subscriptions) {
     const tbody = document.getElementById('subscriptions-table');
 
     if (subscriptions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No subscriptions found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No subscriptions found</td></tr>';
         return;
     }
 
     tbody.innerHTML = subscriptions.map(sub => `
         <tr>
-            <td>${sub.user_email}</td>
+            <td>${sub.email || 'N/A'}</td>
             <td>${sub.tier}</td>
             <td><span class="badge badge-${sub.status === 'active' ? 'success' : 'danger'}">${sub.status}</span></td>
             <td>${formatDate(sub.created_at)}</td>
             <td>${formatDate(sub.current_period_end)}</td>
-            <td>€${sub.price_monthly}</td>
+            <td>€${sub.price_monthly || '0'}</td>
+            <td>
+                <div class="actions">
+                    <button class="btn btn-sm btn-primary" onclick="editSubscription('${sub.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteSubscription('${sub.id}')">Delete</button>
+                </div>
+            </td>
         </tr>
     `).join('');
+}
+
+// SUBSCRIPTION MODALS & CRUD
+function openSubscriptionModal() {
+    document.getElementById('subscription-modal').classList.add('active');
+}
+
+function closeSubscriptionModal() {
+    document.getElementById('subscription-modal').classList.remove('active');
+    document.getElementById('modal-subscription-tier').value = '';
+    document.getElementById('modal-subscription-status').value = 'active';
+}
+
+async function editSubscription(subId) {
+    try {
+        const response = await fetch(`${API_URL}/api/subscriptions`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (!response.ok) {
+            showAlert('Failed to load subscription data', 'error');
+            return;
+        }
+
+        const data = await response.json();
+        const sub = data.subscriptions.find(s => s.id === subId);
+
+        if (!sub) {
+            showAlert('Subscription not found', 'error');
+            return;
+        }
+
+        document.getElementById('modal-subscription-tier').value = sub.tier;
+        document.getElementById('modal-subscription-status').value = sub.status;
+        document.getElementById('subscription-modal').dataset.subId = subId;
+        openSubscriptionModal();
+    } catch (error) {
+        console.error('Error loading subscription for edit:', error);
+        showAlert('Error loading subscription data', 'error');
+    }
+}
+
+async function deleteSubscription(subId) {
+    if (!confirm('Are you sure you want to delete this subscription?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/subscriptions/${subId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (response.ok) {
+            showAlert('Subscription deleted successfully', 'success');
+            loadSubscriptions();
+        } else {
+            showAlert('Failed to delete subscription', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting subscription:', error);
+        showAlert('Error deleting subscription', 'error');
+    }
+}
+
+async function saveSubscription() {
+    const subId = document.getElementById('subscription-modal').dataset.subId;
+    const tier = document.getElementById('modal-subscription-tier').value;
+    const status = document.getElementById('modal-subscription-status').value;
+
+    if (!tier || !status) {
+        showAlert('All fields are required', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/subscriptions/${subId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${getAuthToken()}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tier, status })
+        });
+
+        if (response.ok) {
+            showAlert('Subscription updated successfully', 'success');
+            closeSubscriptionModal();
+            loadSubscriptions();
+        } else {
+            showAlert('Failed to update subscription', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating subscription:', error);
+        showAlert('Error updating subscription', 'error');
+    }
 }
 
 // DEALS
@@ -474,13 +576,25 @@ function openDealModal() {
 }
 
 function closeDealModal() {
-    document.getElementById('deal-modal').classList.remove('active');
+    const modal = document.getElementById('deal-modal');
+    modal.classList.remove('active');
     document.getElementById('modal-deal-title').value = '';
     document.getElementById('modal-deal-description').value = '';
     document.getElementById('modal-deal-value').value = '';
+    document.getElementById('modal-deal-category').value = '';
+    modal.dataset.isEditing = 'false';
+    modal.dataset.dealId = '';
+    const modalTitle = document.querySelector('#deal-modal .modal-header h2');
+    if (modalTitle) {
+        modalTitle.textContent = 'Add New Deal';
+    }
 }
 
 async function saveDeal() {
+    const modal = document.getElementById('deal-modal');
+    const isEditing = modal.dataset.isEditing === 'true';
+    const dealId = modal.dataset.dealId;
+
     const title = document.getElementById('modal-deal-title').value;
     const description = document.getElementById('modal-deal-description').value;
     const category = document.getElementById('modal-deal-category').value;
@@ -492,8 +606,16 @@ async function saveDeal() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/deals`, {
-            method: 'POST',
+        let url = `${API_URL}/api/deals`;
+        let method = 'POST';
+
+        if (isEditing) {
+            url = `${API_URL}/api/deals/${dealId}`;
+            method = 'PUT';
+        }
+
+        const response = await fetch(url, {
+            method,
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`,
                 'Content-Type': 'application/json'
@@ -502,28 +624,58 @@ async function saveDeal() {
                 title,
                 description,
                 category,
-                dealType: 'featured',
-                valueAmount: parseFloat(value),
-                valueCurrency: 'EUR',
-                source: 'admin'
+                deal_type: 'featured',
+                value_amount: parseFloat(value),
+                value_currency: 'EUR'
             })
         });
 
         if (response.ok) {
-            showAlert('Deal created successfully', 'success');
+            showAlert(isEditing ? 'Deal updated successfully' : 'Deal created successfully', 'success');
             closeDealModal();
             loadDeals();
         } else {
-            showAlert('Failed to create deal', 'error');
+            showAlert('Failed to save deal', 'error');
         }
     } catch (error) {
-        console.error('Error creating deal:', error);
-        showAlert('Error creating deal', 'error');
+        console.error('Error saving deal:', error);
+        showAlert('Error saving deal', 'error');
     }
 }
 
 async function editDeal(dealId) {
-    showAlert('Edit functionality coming soon', 'warning');
+    try {
+        const response = await fetch(`${API_URL}/api/deals/${dealId}`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (!response.ok) {
+            showAlert('Failed to load deal data', 'error');
+            return;
+        }
+
+        const data = await response.json();
+        const deal = data.deal;
+
+        document.getElementById('modal-deal-title').value = deal.title;
+        document.getElementById('modal-deal-description').value = deal.description || '';
+        document.getElementById('modal-deal-category').value = deal.category || '';
+        document.getElementById('modal-deal-value').value = deal.value_amount || '';
+
+        const modal = document.getElementById('deal-modal');
+        modal.dataset.dealId = dealId;
+        modal.dataset.isEditing = 'true';
+
+        const modalTitle = document.querySelector('#deal-modal .modal-header h2');
+        if (modalTitle) {
+            modalTitle.textContent = 'Edit Deal';
+        }
+
+        openDealModal();
+    } catch (error) {
+        console.error('Error loading deal for edit:', error);
+        showAlert('Error loading deal data', 'error');
+    }
 }
 
 async function deleteDeal(dealId) {
@@ -559,48 +711,310 @@ function openPromoModal() {
 }
 
 function closePromoModal() {
-    document.getElementById('promo-modal').classList.remove('active');
+    const modal = document.getElementById('promo-modal');
+    modal.classList.remove('active');
     document.getElementById('modal-promo-code').value = '';
     document.getElementById('modal-promo-percent').value = '';
     document.getElementById('modal-promo-max').value = '';
+    modal.dataset.isEditing = 'false';
+    modal.dataset.promoId = '';
+}
+
+async function loadPromos() {
+    try {
+        const response = await fetch(`${API_URL}/api/promos`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            displayPromos(data.data || []);
+        }
+    } catch (error) {
+        console.error('Error loading promos:', error);
+        displayError('promos-table', 'Failed to load promo codes');
+    }
+}
+
+function displayPromos(promos) {
+    const tbody = document.getElementById('promos-table');
+
+    if (promos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No promo codes found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = promos.map(promo => `
+        <tr>
+            <td><strong>${promo.code}</strong></td>
+            <td>${promo.discount_percent}%</td>
+            <td>${promo.current_uses}/${promo.max_uses || '∞'}</td>
+            <td>${formatDate(promo.valid_until)}</td>
+            <td><span class="badge badge-${promo.is_active ? 'success' : 'danger'}">${promo.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td>
+                <div class="actions">
+                    <button class="btn btn-sm btn-primary" onclick="editPromo('${promo.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deletePromo('${promo.id}')">Delete</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
 }
 
 async function savePromo() {
+    const modal = document.getElementById('promo-modal');
+    const isEditing = modal.dataset.isEditing === 'true';
+    const promoId = modal.dataset.promoId;
+
     const code = document.getElementById('modal-promo-code').value.toUpperCase();
     const percent = document.getElementById('modal-promo-percent').value;
     const maxUses = document.getElementById('modal-promo-max').value;
     const validUntil = document.getElementById('modal-promo-until').value;
 
-    if (!code || !percent || !maxUses) {
-        showAlert('All fields are required', 'error');
+    if (!code || !percent) {
+        showAlert('Code and percentage are required', 'error');
         return;
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/promos`, {
-            method: 'POST',
+        let url = `${API_URL}/api/promos`;
+        let method = 'POST';
+
+        if (isEditing) {
+            url = `${API_URL}/api/promos/${promoId}`;
+            method = 'PUT';
+        }
+
+        const response = await fetch(url, {
+            method,
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 code,
-                discountPercent: parseFloat(percent),
-                maxUses: parseInt(maxUses),
-                validUntil: new Date(validUntil)
+                discount_percent: parseFloat(percent),
+                discount_amount: null,
+                max_uses: parseInt(maxUses) || null,
+                valid_until: validUntil ? new Date(validUntil).toISOString() : null
             })
         });
 
         if (response.ok) {
-            showAlert('Promo code created successfully', 'success');
+            showAlert(isEditing ? 'Promo code updated successfully' : 'Promo code created successfully', 'success');
             closePromoModal();
-            location.reload(); // Reload to show new code
+            loadPromos();
         } else {
-            showAlert('Failed to create promo code', 'error');
+            showAlert('Failed to save promo code', 'error');
         }
     } catch (error) {
-        console.error('Error creating promo:', error);
-        showAlert('Error creating promo code', 'error');
+        console.error('Error saving promo:', error);
+        showAlert('Error saving promo code', 'error');
+    }
+}
+
+async function editPromo(promoId) {
+    try {
+        const response = await fetch(`${API_URL}/api/promos/${promoId}`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (!response.ok) {
+            showAlert('Failed to load promo data', 'error');
+            return;
+        }
+
+        const data = await response.json();
+        const promo = data.data;
+
+        document.getElementById('modal-promo-code').value = promo.code;
+        document.getElementById('modal-promo-percent').value = promo.discount_percent;
+        document.getElementById('modal-promo-max').value = promo.max_uses || '';
+        if (promo.valid_until) {
+            document.getElementById('modal-promo-until').value = promo.valid_until.split('T')[0];
+        }
+
+        const modal = document.getElementById('promo-modal');
+        modal.dataset.promoId = promoId;
+        modal.dataset.isEditing = 'true';
+
+        openPromoModal();
+    } catch (error) {
+        console.error('Error loading promo for edit:', error);
+        showAlert('Error loading promo data', 'error');
+    }
+}
+
+async function deletePromo(promoId) {
+    if (!confirm('Are you sure you want to delete this promo code?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/promos/${promoId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (response.ok) {
+            showAlert('Promo code deleted successfully', 'success');
+            loadPromos();
+        } else {
+            showAlert('Failed to delete promo code', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting promo:', error);
+        showAlert('Error deleting promo code', 'error');
+    }
+}
+
+// HACKS
+async function loadHacks() {
+    try {
+        const response = await fetch(`${API_URL}/api/hacks`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            displayHacks(data.modules || []);
+        }
+    } catch (error) {
+        console.error('Error loading hacks:', error);
+        displayError('hacks-table', 'Failed to load hacks');
+    }
+}
+
+function displayHacks(modules) {
+    const tbody = document.getElementById('hacks-table');
+
+    if (modules.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No hacks modules found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = modules.map(module => `
+        <tr>
+            <td><strong>${module.title}</strong></td>
+            <td>Module ID: ${module.id}</td>
+            <td>Hacks Content</td>
+            <td>
+                <div class="actions">
+                    <button class="btn btn-sm btn-primary" onclick="editHack('${module.id}')">Manage</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openHackModal() {
+    document.getElementById('hack-modal').classList.add('active');
+}
+
+function closeHackModal() {
+    const modal = document.getElementById('hack-modal');
+    modal.classList.remove('active');
+    document.getElementById('modal-hack-title').value = '';
+    document.getElementById('modal-hack-category').value = '';
+    document.getElementById('modal-hack-description').value = '';
+    modal.dataset.isEditing = 'false';
+    modal.dataset.hackId = '';
+}
+
+async function editHack(moduleId) {
+    try {
+        const response = await fetch(`${API_URL}/api/hacks/module/${moduleId}`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (!response.ok) {
+            showAlert('Failed to load hack module', 'error');
+            return;
+        }
+
+        const data = await response.json();
+        const module = data.module || { id: moduleId, title: `Module ${moduleId}` };
+
+        document.getElementById('modal-hack-title').value = module.title || '';
+        const modal = document.getElementById('hack-modal');
+        modal.dataset.hackId = moduleId;
+        modal.dataset.isEditing = 'true';
+
+        openHackModal();
+    } catch (error) {
+        console.error('Error loading hack for edit:', error);
+        showAlert('Error loading hack data', 'error');
+    }
+}
+
+async function saveHack() {
+    const modal = document.getElementById('hack-modal');
+    const hackId = modal.dataset.hackId;
+    const title = document.getElementById('modal-hack-title').value;
+    const category = document.getElementById('modal-hack-category').value;
+    const description = document.getElementById('modal-hack-description').value;
+
+    if (!title) {
+        showAlert('Title is required', 'error');
+        return;
+    }
+
+    try {
+        let url = `${API_URL}/api/hacks`;
+        let method = 'POST';
+
+        if (modal.dataset.isEditing === 'true') {
+            url = `${API_URL}/api/hacks/${hackId}`;
+            method = 'PUT';
+        }
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${getAuthToken()}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                module_id: hackId,
+                title,
+                category,
+                description
+            })
+        });
+
+        if (response.ok) {
+            showAlert('Hack saved successfully', 'success');
+            closeHackModal();
+            loadHacks();
+        } else {
+            showAlert('Failed to save hack', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving hack:', error);
+        showAlert('Error saving hack', 'error');
+    }
+}
+
+async function deleteHack(hackId) {
+    if (!confirm('Are you sure you want to delete this hack?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/hacks/${hackId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (response.ok) {
+            showAlert('Hack deleted successfully', 'success');
+            loadHacks();
+        } else {
+            showAlert('Failed to delete hack', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting hack:', error);
+        showAlert('Error deleting hack', 'error');
     }
 }
 
