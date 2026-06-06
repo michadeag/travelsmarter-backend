@@ -1,14 +1,28 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'travelsmarter',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+// Support both DATABASE_URL and individual environment variables
+let pool;
+
+if (process.env.DATABASE_URL) {
+  // Use DATABASE_URL if available (standard PostgreSQL format)
+  console.log('📡 Connecting using DATABASE_URL');
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  });
+} else {
+  // Fall back to individual variables
+  console.log('📡 Connecting using individual DB environment variables');
+  pool = new Pool({
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    database: process.env.DB_NAME || 'travelsmarter',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  });
+}
 
 // Test connection
 pool.on('connect', () => {
