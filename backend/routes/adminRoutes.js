@@ -30,6 +30,46 @@ router.post('/settings/batch/update', SettingsController.updateMultipleSettings)
 // Delete setting
 router.delete('/settings/:key', SettingsController.deleteSetting);
 
+// Get recent activities for dashboard
+router.get('/activities', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    const { limit = 10 } = req.query;
+
+    // Get recent user signups and activities
+    const result = await pool.query(
+      `SELECT
+        u.id,
+        u.email,
+        u.first_name,
+        u.created_at,
+        'signup' as activity_type
+      FROM users u
+      ORDER BY u.created_at DESC
+      LIMIT $1`,
+      [parseInt(limit)]
+    );
+
+    res.status(200).json({
+      success: true,
+      activities: result.rows.map(row => ({
+        id: row.id,
+        user: row.first_name || row.email,
+        email: row.email,
+        activity: 'New user signup',
+        timestamp: row.created_at
+      }))
+    });
+  } catch (error) {
+    console.error('Get activities error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching activities',
+      error: error.message
+    });
+  }
+});
+
 // Public endpoint to get Stripe publishable key (for checkout page)
 router.get('/config/stripe-key', async (req, res) => {
   try {

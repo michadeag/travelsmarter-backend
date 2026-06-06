@@ -525,6 +525,45 @@ exports.getPricing = async (req, res) => {
   });
 };
 
+// @desc Get subscription statistics for dashboard
+// @route GET /api/subscriptions/stats
+// @access Private
+exports.getSubscriptionStats = async (req, res) => {
+  try {
+    // Get active subscriptions count
+    const activeResult = await pool.query(
+      `SELECT COUNT(*) as count FROM subscriptions WHERE status = 'active'`
+    );
+
+    // Get total MRR (Monthly Recurring Revenue)
+    const mrrResult = await pool.query(
+      `SELECT SUM(price_monthly) as total_mrr FROM subscriptions WHERE status = 'active'`
+    );
+
+    // Get subscriptions by tier
+    const tierResult = await pool.query(
+      `SELECT tier, COUNT(*) as count FROM subscriptions WHERE status = 'active' GROUP BY tier`
+    );
+
+    res.status(200).json({
+      success: true,
+      activeSubscriptions: parseInt(activeResult.rows[0].count),
+      monthlyRevenue: parseFloat(mrrResult.rows[0].total_mrr) || 0,
+      byTier: tierResult.rows.map(row => ({
+        tier: row.tier,
+        count: parseInt(row.count)
+      }))
+    });
+  } catch (error) {
+    console.error('Get subscription stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching subscription stats',
+      error: error.message
+    });
+  }
+};
+
 // @desc Get all subscriptions (admin only)
 // @route GET /api/subscriptions
 // @access Private
