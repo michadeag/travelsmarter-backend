@@ -360,3 +360,106 @@ exports.getUserCount = async (req, res) => {
     });
   }
 };
+
+// @desc Update user (admin only)
+// @route PUT /api/auth/users/:id
+// @access Private
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, subscriptionTier } = req.body;
+
+    // Check if user exists
+    const userExists = await pool.query(
+      'SELECT id FROM users WHERE id = $1',
+      [id]
+    );
+
+    if (userExists.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Update user
+    const updatedUser = await pool.query(
+      `UPDATE users
+       SET first_name = COALESCE($1, first_name),
+           last_name = COALESCE($2, last_name),
+           subscription_tier = COALESCE($3, subscription_tier),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $4
+       RETURNING id, email, first_name, last_name, subscription_tier, created_at`,
+      [firstName, lastName, subscriptionTier, id]
+    );
+
+    const user = updatedUser.rows[0];
+
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        subscriptionTier: user.subscription_tier,
+        createdAt: user.created_at
+      }
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating user',
+      error: error.message
+    });
+  }
+};
+
+// @desc Delete user (admin only)
+// @route DELETE /api/auth/users/:id
+// @access Private
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if user exists
+    const userExists = await pool.query(
+      'SELECT id FROM users WHERE id = $1',
+      [id]
+    );
+
+    if (userExists.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Delete user (cascade deletes related data due to FK constraints)
+    const deletedUser = await pool.query(
+      'DELETE FROM users WHERE id = $1 RETURNING id, email, first_name, last_name',
+      [id]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'User deleted successfully',
+      user: {
+        id: deletedUser.rows[0].id,
+        email: deletedUser.rows[0].email,
+        firstName: deletedUser.rows[0].first_name,
+        lastName: deletedUser.rows[0].last_name
+      }
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting user',
+      error: error.message
+    });
+  }
+};

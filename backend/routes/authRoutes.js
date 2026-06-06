@@ -9,6 +9,8 @@ const {
   changePassword,
   getAllUsers,
   getUserCount,
+  updateUser,
+  deleteUser,
 } = require('../controllers/authController');
 
 // Public routes
@@ -18,6 +20,8 @@ router.post('/login', login);
 // Admin routes (require authentication)
 router.get('/users', protect, getAllUsers);
 router.get('/users/count', protect, getUserCount);
+router.put('/users/:id', protect, updateUser);
+router.delete('/users/:id', protect, deleteUser);
 
 // Private routes
 router.get('/me', protect, getMe);

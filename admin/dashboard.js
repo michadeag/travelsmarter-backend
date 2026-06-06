@@ -239,10 +239,20 @@ function openUserModal() {
 }
 
 function closeUserModal() {
-    document.getElementById('user-modal').classList.remove('active');
+    const modal = document.getElementById('user-modal');
+    modal.classList.remove('active');
     document.getElementById('modal-user-email').value = '';
     document.getElementById('modal-user-first').value = '';
     document.getElementById('modal-user-last').value = '';
+    document.getElementById('modal-user-tier').value = 'free';
+    // Reset edit mode
+    modal.dataset.isEditing = 'false';
+    modal.dataset.userId = '';
+    // Reset modal title
+    const modalTitle = document.querySelector('#user-modal .modal-header h2');
+    if (modalTitle) {
+        modalTitle.textContent = 'Add New User';
+    }
 }
 
 async function saveUser() {
@@ -250,6 +260,9 @@ async function saveUser() {
     const firstName = document.getElementById('modal-user-first').value;
     const lastName = document.getElementById('modal-user-last').value;
     const tier = document.getElementById('modal-user-tier').value;
+    const modal = document.getElementById('user-modal');
+    const isEditing = modal.dataset.isEditing === 'true';
+    const userId = modal.dataset.userId;
 
     if (!email) {
         showAlert('Email is required', 'error');
@@ -257,8 +270,16 @@ async function saveUser() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/users/create`, {
-            method: 'POST',
+        let url = `${API_URL}/api/users/create`;
+        let method = 'POST';
+
+        if (isEditing) {
+            url = `${API_URL}/api/auth/users/${userId}`;
+            method = 'PUT';
+        }
+
+        const response = await fetch(url, {
+            method,
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`,
                 'Content-Type': 'application/json'
@@ -274,9 +295,13 @@ async function saveUser() {
         if (response.ok) {
             showAlert('User saved successfully', 'success');
             closeUserModal();
+            // Reset edit mode
+            modal.dataset.isEditing = 'false';
+            modal.dataset.userId = '';
             loadUsers();
         } else {
-            showAlert('Failed to save user', 'error');
+            const errorData = await response.json();
+            showAlert(errorData.message || 'Failed to save user', 'error');
         }
     } catch (error) {
         console.error('Error saving user:', error);
@@ -285,9 +310,47 @@ async function saveUser() {
 }
 
 async function editUser(userId) {
-    // Load user data and open modal for editing
-    // Implementation depends on backend API structure
-    showAlert('Edit functionality coming soon', 'warning');
+    try {
+        // Fetch user data
+        const response = await fetch(`${API_URL}/api/auth/users`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (!response.ok) {
+            showAlert('Failed to load user data', 'error');
+            return;
+        }
+
+        const data = await response.json();
+        const user = data.users.find(u => u.id === userId);
+
+        if (!user) {
+            showAlert('User not found', 'error');
+            return;
+        }
+
+        // Populate modal with user data
+        document.getElementById('modal-user-email').value = user.email;
+        document.getElementById('modal-user-first').value = user.first_name || '';
+        document.getElementById('modal-user-last').value = user.last_name || '';
+        document.getElementById('modal-user-tier').value = user.subscription_tier || 'free';
+
+        // Store userId for save operation
+        document.getElementById('user-modal').dataset.userId = userId;
+        document.getElementById('user-modal').dataset.isEditing = 'true';
+
+        // Update modal title
+        const modalTitle = document.querySelector('#user-modal .modal-header h2');
+        if (modalTitle) {
+            modalTitle.textContent = 'Edit User';
+        }
+
+        // Open modal
+        openUserModal();
+    } catch (error) {
+        console.error('Error loading user for edit:', error);
+        showAlert('Error loading user data', 'error');
+    }
 }
 
 async function deleteUser(userId) {
