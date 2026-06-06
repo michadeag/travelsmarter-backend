@@ -57,8 +57,8 @@ Create a file in your frontend root directory called `app.json`:
           "file": "index.html"
         },
         {
-          "path": "/squeeze-page.html",
-          "file": "squeeze-page.html"
+          "path": "/welcome.html",
+          "file": "welcome.html"
         },
         {
           "path": "/sales-page.html",

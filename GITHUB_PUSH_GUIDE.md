@@ -68,7 +68,7 @@ Make sure your frontend files are in a clear folder structure:
 ```
 ~/travelsmarter-frontend/          ← Main folder
 ├── index.html
-├── squeeze-page.html
+├── welcome.html
 ├── sales-page.html
 ├── checkout.html
 ├── privacy-policy.html
@@ -176,7 +176,7 @@ ls
 Should show your HTML files:
 ```
 index.html
-squeeze-page.html
+welcome.html
 sales-page.html
 ...
 ```
@@ -293,7 +293,7 @@ Example:
 ```
 travelsmarter-frontend
 ├── index.html
-├── squeeze-page.html
+├── welcome.html
 ├── sales-page.html
 ├── checkout.html
 ├── frontend/
