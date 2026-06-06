@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout | TravelSmarter</title>
-    <script src="https://js.stripe.com/v3/"></script>
     <style>
         * {
             margin: 0;
@@ -238,12 +237,6 @@
             gap: 15px;
         }
 
-        .stripe-element {
-            padding: 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1em;
-        }
 
         .promo-input {
             display: grid;
@@ -560,11 +553,9 @@
                     <!-- PAYMENT METHOD -->
                     <div class="form-section">
                         <h3>Payment Method</h3>
-                        <div class="form-group">
-                            <label>Credit or Debit Card *</label>
-                            <div class="stripe-element" id="card-element">
-                                <!-- Stripe Card Element will be inserted here -->
-                            </div>
+                        <div class="info-box">
+                            <strong>✓ Secure Checkout</strong><br>
+                            You'll be redirected to Stripe's secure payment page to enter your card details.
                         </div>
                         <div id="card-errors" class="error-message"></div>
                     </div>
@@ -631,98 +622,9 @@
     </div>
 
     <script>
-        // Stripe initialization - fetch key from backend
-        let stripe;
-        let elements;
-        let cardElement;
-
-        async function initializeStripe() {
-            try {
-                // Determine the correct backend URL based on current domain
-                let backendUrl;
-
-                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                    // Local development
-                    backendUrl = 'http://localhost:5000';
-                } else {
-                    // Production - use your live backend API
-                    backendUrl = 'https://api.travelsmarterapp.com';
-                }
-
-                const endpoint = `${backendUrl}/api/admin/config/stripe-key`;
-
-                console.log('Current domain:', window.location.hostname);
-                console.log('Backend URL:', backendUrl);
-                console.log('Fetching Stripe key from:', endpoint);
-
-                let stripeKey = null;
-
-                // Try to fetch from API
-                try {
-                    const response = await fetch(endpoint, { mode: 'cors' });
-                    if (response.ok) {
-                        const data = await response.json();
-                        stripeKey = data.stripepublishableKey;
-                        if (stripeKey) {
-                            console.log('✅ Stripe key fetched from API');
-                            localStorage.setItem('stripePublishableKey', stripeKey);
-                        }
-                    }
-                } catch (error) {
-                    console.warn('API fetch failed:', error.message);
-                }
-
-                // Fallback 1: Try localStorage
-                if (!stripeKey) {
-                    stripeKey = localStorage.getItem('stripePublishableKey');
-                    if (stripeKey) {
-                        console.log('✅ Using Stripe key from localStorage');
-                    }
-                }
-
-                // Fallback 2: Try sessionStorage (for admin dashboard)
-                if (!stripeKey) {
-                    stripeKey = sessionStorage.getItem('temp_stripe_key');
-                    if (stripeKey) {
-                        console.log('✅ Using temporary Stripe key from session');
-                    }
-                }
-
-                if (!stripeKey) {
-                    console.error('Stripe key not found in any source');
-                    document.getElementById('card-errors').textContent = 'Payment system not configured. Please save your Stripe key in the admin dashboard.';
-                    return;
-                }
-
-                // Initialize Stripe with the fetched key
-                stripe = Stripe(stripeKey);
-                elements = stripe.elements();
-                cardElement = elements.create('card');
-                cardElement.mount('#card-element');
-
-                // Handle card errors
-                cardElement.on('change', function(event) {
-                    const displayError = document.getElementById('card-errors');
-                    if (event.error) {
-                        displayError.textContent = event.error.message;
-                    } else {
-                        displayError.textContent = '';
-                    }
-                });
-
-                console.log('✅ Stripe initialized successfully');
-            } catch (error) {
-                console.error('Error initializing Stripe:', error);
-                document.getElementById('card-errors').textContent = 'Error initializing payment system.';
-            }
-        }
-
-        // Initialize Stripe when page loads
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeStripe);
-        } else {
-            initializeStripe();
-        }
+        // Note: We use Stripe Checkout (hosted) instead of custom card element
+        // The backend creates a checkout session and we redirect to Stripe's page
+        // This means we don't need to initialize Stripe on the frontend
 
         // Plan Selection
         function selectPlan(planType) {
@@ -843,53 +745,25 @@
                 return;
             }
 
-            // Check if Stripe is initialized
-            if (!stripe || !cardElement) {
-                document.getElementById('card-errors').textContent = 'Payment system not initialized. Please refresh the page.';
-                return;
-            }
-
             // Show loading state
             document.getElementById('loading').style.display = 'block';
             document.getElementById('payButton').disabled = true;
 
             try {
                 // Get form data
-                const firstName = document.getElementById('firstName').value;
-                const lastName = document.getElementById('lastName').value;
-                const email = document.getElementById('email').value;
-                const name = `${firstName} ${lastName}`.trim();
                 const selectedPlan = document.querySelector('input[name="plan"]:checked').value;
+                const userToken = localStorage.getItem('userToken');
 
-                // Validate required fields
-                if (!firstName || !lastName || !email) {
-                    document.getElementById('card-errors').textContent = 'Please fill in all required fields';
+                console.log('Selected plan:', selectedPlan);
+                console.log('User token:', userToken ? 'present' : 'missing');
+
+                // Validate user is logged in
+                if (!userToken) {
+                    document.getElementById('card-errors').textContent = 'Please log in to complete your purchase';
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('payButton').disabled = false;
                     return;
                 }
-
-                console.log('Creating payment method for:', email, name);
-
-                // Create payment method from card element
-                const {error, paymentMethod} = await stripe.createPaymentMethod({
-                    type: 'card',
-                    card: cardElement,
-                    billing_details: {
-                        email: email,
-                        name: name
-                    }
-                });
-
-                if (error) {
-                    console.error('Stripe error:', error);
-                    document.getElementById('card-errors').textContent = error.message;
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('payButton').disabled = false;
-                    return;
-                }
-
-                console.log('Payment method created:', paymentMethod.id);
 
                 // Determine backend URL
                 let backendUrl;
@@ -899,21 +773,18 @@
                     backendUrl = 'https://api.travelsmarterapp.com';
                 }
 
-                // Send to backend to create subscription
+                // Send to backend to create Stripe checkout session
                 const endpoint = `${backendUrl}/api/subscriptions/checkout`;
-                console.log('Sending payment to:', endpoint);
+                console.log('Creating checkout session at:', endpoint);
 
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
+                        'Authorization': `Bearer ${userToken}`
                     },
                     body: JSON.stringify({
-                        tier: selectedPlan,
-                        paymentMethodId: paymentMethod.id,
-                        email: email,
-                        name: name
+                        tier: selectedPlan
                     })
                 });
 
@@ -921,16 +792,10 @@
                 const data = await response.json();
                 console.log('Response data:', data);
 
-                if (data.success) {
-                    // Show success message
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('successMessage').style.display = 'block';
-                    document.getElementById('checkoutForm').style.display = 'none';
-
-                    // Redirect to app after 3 seconds
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 3000);
+                if (data.success && data.url) {
+                    // Redirect to Stripe Checkout (hosted page)
+                    console.log('Redirecting to Stripe checkout:', data.url);
+                    window.location.href = data.url;
                 } else {
                     // Handle error
                     const errorMsg = data.message || data.error || 'Payment failed. Please try again.';
