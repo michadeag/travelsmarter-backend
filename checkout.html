@@ -638,10 +638,21 @@
 
         async function initializeStripe() {
             try {
-                // Get backend URL (check localStorage first, then use default)
-                const backendUrl = localStorage.getItem('apiUrl') || 'https://api.travelsmarterapp.com';
+                // Determine the correct backend URL based on current domain
+                let backendUrl;
+
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    // Local development
+                    backendUrl = 'http://localhost:5000';
+                } else {
+                    // Production - use your live backend API
+                    backendUrl = 'https://api.travelsmarterapp.com';
+                }
+
                 const endpoint = `${backendUrl}/api/admin/config/stripe-key`;
 
+                console.log('Current domain:', window.location.hostname);
+                console.log('Backend URL:', backendUrl);
                 console.log('Fetching Stripe key from:', endpoint);
 
                 // Fetch Stripe publishable key from backend
