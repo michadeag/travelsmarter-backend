@@ -13,7 +13,13 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
 
 console.log('Admin Dashboard using API:', API_URL);
 
-const API_TOKEN = localStorage.getItem('userToken') || localStorage.getItem('adminToken');
+// Helper function to get current auth token
+function getAuthToken() {
+    return localStorage.getItem('userToken') || localStorage.getItem('adminToken');
+}
+
+// Deprecated: Use getAuthToken() instead
+const API_TOKEN = null;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
@@ -23,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initDashboard() {
     // Check if logged in
-    if (!API_TOKEN) {
+    if (!getAuthToken()) {
         redirectToLogin();
         return;
     }
@@ -111,13 +117,13 @@ async function loadDashboardStats() {
         // Fetch stats from API
         const [usersRes, subsRes, dealsRes] = await Promise.all([
             fetch(`${API_URL}/api/auth/users/count`, {
-                headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
             }),
             fetch(`${API_URL}/api/subscriptions/stats`, {
-                headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
             }),
             fetch(`${API_URL}/api/deals/count`, {
-                headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
             })
         ]);
 
@@ -141,7 +147,7 @@ async function loadDashboardStats() {
 async function loadSubscriptionStats() {
     try {
         const response = await fetch(`${API_URL}/api/subscriptions/stats`, {
-            headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
         if (response.ok) {
@@ -168,13 +174,21 @@ async function loadSubscriptionStats() {
 // USERS MANAGEMENT
 async function loadUsers() {
     try {
+        const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken');
+        if (!token) {
+            console.error('No authentication token found');
+            return;
+        }
+
         const response = await fetch(`${API_URL}/api/auth/users`, {
-            headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (response.ok) {
             const data = await response.json();
             displayUsers(data.users || []);
+        } else {
+            console.error('Failed to load users:', response.status, response.statusText);
         }
     } catch (error) {
         console.error('Error loading users:', error);
@@ -246,7 +260,7 @@ async function saveUser() {
         const response = await fetch(`${API_URL}/api/users/create`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${API_TOKEN}`,
+                'Authorization': `Bearer ${getAuthToken()}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -284,7 +298,7 @@ async function deleteUser(userId) {
     try {
         const response = await fetch(`${API_URL}/api/users/${userId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
         if (response.ok) {
@@ -303,7 +317,7 @@ async function deleteUser(userId) {
 async function loadSubscriptions() {
     try {
         const response = await fetch(`${API_URL}/api/subscriptions/list`, {
-            headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
         if (response.ok) {
@@ -340,7 +354,7 @@ function displaySubscriptions(subscriptions) {
 async function loadDeals() {
     try {
         const response = await fetch(`${API_URL}/api/deals?limit=50`, {
-            headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
         if (response.ok) {
@@ -418,7 +432,7 @@ async function saveDeal() {
         const response = await fetch(`${API_URL}/api/deals`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${API_TOKEN}`,
+                'Authorization': `Bearer ${getAuthToken()}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -457,7 +471,7 @@ async function deleteDeal(dealId) {
     try {
         const response = await fetch(`${API_URL}/api/deals/${dealId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
         if (response.ok) {
@@ -503,7 +517,7 @@ async function savePromo() {
         const response = await fetch(`${API_URL}/api/promos`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${API_TOKEN}`,
+                'Authorization': `Bearer ${getAuthToken()}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -531,7 +545,7 @@ async function savePromo() {
 async function loadRecentActivities() {
     try {
         const response = await fetch(`${API_URL}/api/admin/activities?limit=10`, {
-            headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
         if (response.ok) {
@@ -566,7 +580,7 @@ async function loadSettings() {
     try {
         // Try to fetch from backend API
         const response = await fetch(`${API_URL}/api/admin/settings`, {
-            headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
         if (response.ok) {
@@ -698,7 +712,7 @@ async function saveSettings() {
             await fetch(`${API_URL}/api/admin/settings/batch/update`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${API_TOKEN}`,
+                    'Authorization': `Bearer ${getAuthToken()}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
