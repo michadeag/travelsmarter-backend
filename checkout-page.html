@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Mein Fitness-Assistent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            opacity: 0.95;
+            font-size: 1.05em;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .order-summary {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .order-summary h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .plan-name {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .plan-description {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .features-list li {
+            color: #333;
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .features-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .price-section {
+            margin-bottom: 20px;
+        }
+
+        .subtotal,
+        .tax,
+        .total {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .total {
+            font-size: 1.3em;
+            color: #333;
+            font-weight: 700;
+            border-top: 2px solid #e0e0e0;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .price-value {
+            font-weight: 600;
+        }
+
+        .payment-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            margin-bottom: 20px;
+        }
+
+        .stripe-element {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .payment-method-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .payment-method {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .payment-method:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .payment-method.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .payment-method input[type="radio"] {
+            display: none;
+        }
+
+        .method-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .method-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .pay-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .pay-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .pay-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .security-badges {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        .security-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .security-icon {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .guarantee-section {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #155724;
+        }
+
+        .guarantee-section h3 {
+            color: #155724;
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+
+        .guarantee-section p {
+            margin: 0;
+            font-size: 0.95em;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .spinner {
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                padding: 25px;
+            }
+
+            .order-summary {
+                position: static;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .security-badges {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>💳 Checkout</h1>
+            <p>Sicherer Kauf mit Stripe oder PayPal</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h2>Bestellübersicht</h2>
+
+                <div id="planSummary">
+                    <div class="plan-name">Premium</div>
+                    <div class="plan-description">
+                        Vollständige Features mit Advanced Analytics, Smart Notifications und Ad-Free Experience
+                    </div>
+                </div>
+
+                <ul class="features-list" id="featuresList">
+                    <li>90+ Tage History</li>
+                    <li>Alle 20+ Badges</li>
+                    <li>Advanced Analytics</li>
+                    <li>Smart Notifications</li>
+                    <li>Goal Customization</li>
+                    <li>Ad-Free</li>
+                </ul>
+
+                <div class="price-section">
+                    <div class="subtotal">
+                        <span>Monatliches Abo</span>
+                        <span class="price-value" id="subtotal">€9,99</span>
+                    </div>
+                    <div class="tax">
+                        <span>MwSt (19%)</span>
+                        <span class="price-value" id="tax">€1,90</span>
+                    </div>
+                    <div class="total">
+                        <span>Gesamtpreis</span>
+                        <span class="price-value" id="total">€11,89</span>
+                    </div>
+                </div>
+
+                <div class="guarantee-section">
+                    <h3>🛡️ 30-Tage Geld-zurück-Garantie</h3>
+                    <p>Nicht zufrieden? Volle Rückerstattung, keine Fragen gestellt.</p>
+                </div>
+
+                <div class="security-badges">
+                    <div class="security-badge">
+                        <div class="security-icon">🔒</div>
+                        <div>256-Bit SSL</div>
+                    </div>
+                    <div class="security-badge">
+                        <div class="security-icon">✓</div>
+                        <div>PCI Compliant</div>
+                    </div>
+                    <div class="security-badge">
+                        <div class="security-icon">🛡️</div>
+                        <div>Fraud Protected</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Form -->
+            <div class="payment-form">
+                <a href="sales-page.html" class="back-link">← Zurück zur Sales Page</a>
+
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage">
+                    ✅ Zahlung erfolgreich! Weiterleitung zur App...
+                </div>
+
+                <form id="checkoutForm">
+                    <!-- Plan Selector (Hidden, set via URL param) -->
+                    <input type="hidden" id="plan" name="plan" value="premium">
+
+                    <!-- Payment Method Selector -->
+                    <div style="margin-bottom: 30px;">
+                        <label style="display: block; margin-bottom: 15px; font-weight: 600;">Zahlungsmethode</label>
+                        <div class="payment-method-selector">
+                            <label class="payment-method active">
+                                <input type="radio" name="paymentMethod" value="stripe" checked>
+                                <div class="method-icon">💳</div>
+                                <div class="method-name">Stripe</div>
+                                <div style="font-size: 0.8em; opacity: 0.8;">Karte</div>
+                            </label>
+                            <label class="payment-method">
+                                <input type="radio" name="paymentMethod" value="paypal">
+                                <div class="method-icon">🅿️</div>
+                                <div class="method-name">PayPal</div>
+                                <div style="font-size: 0.8em; opacity: 0.8;">Konto</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Stripe Form -->
+                    <div id="stripeSection" class="stripe-payment-section">
+                        <div class="form-group">
+                            <label>Email Adresse</label>
+                            <input type="email" id="billing-email" required placeholder="deine@email.de">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" id="billing-name" required placeholder="Dein Name">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Kartendaten</label>
+                            <div id="stripe-card-element" class="stripe-element"></div>
+                        </div>
+
+                        <div id="stripe-card-errors" style="color: #fa755a; margin-bottom: 15px; display: none;"></div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Land</label>
+                                <select id="billing-country" required>
+                                    <option value="">Wählen...</option>
+                                    <option value="DE">Deutschland</option>
+                                    <option value="AT">Österreich</option>
+                                    <option value="CH">Schweiz</option>
+                                    <option value="FR">Frankreich</option>
+                                    <option value="IT">Italien</option>
+                                    <option value="ES">Spanien</option>
+                                    <option value="NL">Niederlande</option>
+                                    <option value="BE">Belgien</option>
+                                    <option value="LU">Luxemburg</option>
+                                    <option value="PL">Polen</option>
+                                    <option value="CZ">Tschechien</option>
+                                    <option value="GB">Großbritannien</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>PLZ</label>
+                                <input type="text" id="billing-postal" required placeholder="10115">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PayPal Section -->
+                    <div id="paypal-payment-section" style="display: none;">
+                        <div class="form-group">
+                            <label>Email Adresse (für PayPal)</label>
+                            <input type="email" id="paypal-email" placeholder="deine@email.de">
+                        </div>
+                        <p style="color: #666; font-size: 0.9em; margin-bottom: 20px;">
+                            Du wirst zu PayPal weitergeleitet um deine Zahlung zu bestätigen. Keine versteckten Gebühren - du siehst alle Kosten bei PayPal.
+                        </p>
+                        <div id="paypal-button-container"></div>
+                    </div>
+
+                    <!-- Terms & Conditions -->
+                    <div class="form-group" style="margin-top: 25px;">
+                        <label style="display: flex; align-items: flex-start;">
+                            <input type="checkbox" id="terms" required style="margin-top: 3px; margin-right: 10px;">
+                            <span>Ich akzeptiere die <a href="terms-of-service.html" target="_blank" style="color: #667eea; text-decoration: none;">Nutzungsbedingungen</a> und <a href="privacy-policy.html" target="_blank" style="color: #667eea; text-decoration: none;">Datenschutzerklärung</a></span>
+                        </label>
+                    </div>
+
+                    <!-- Pay Button -->
+                    <button type="submit" class="pay-button" id="payButton">
+                        <span class="loading" id="loading">
+                            <span class="spinner"></span>Wird verarbeitet...
+                        </span>
+                        <span id="buttonText">🔒 Jetzt Bezahlen (€11,89)</span>
+                    </button>
+
+                    <p style="font-size: 0.85em; color: #999; text-align: center; margin-top: 15px;">
+                        Deine Zahlung ist sicher. Wir akzeptieren alle gängigen Karten.
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Stripe (you need to replace this with your actual Stripe key)
+        // Get your Stripe publishable key from https://dashboard.stripe.com/apikeys
+        const STRIPE_PUBLIC_KEY = 'https://travelsmarterapp.com/checkout.html'; // Replace!
+
+        // For now, we'll use a placeholder
+        let stripeLoaded = false;
+        if (document.currentScript.src.includes('stripe.com')) {
+            stripeLoaded = true;
+        }
+
+        // Payment method selector
+        document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const stripeSection = document.querySelector('.stripe-payment-section');
+                const paypalSection = document.getElementById('paypal-payment-section');
+
+                document.querySelectorAll('.payment-method').forEach(method => {
+                    method.classList.remove('active');
+                });
+                e.target.closest('.payment-method').classList.add('active');
+
+                if (e.target.value === 'stripe') {
+                    stripeSection.style.display = 'block';
+                    paypalSection.style.display = 'none';
+                } else {
+                    stripeSection.style.display = 'none';
+                    paypalSection.style.display = 'block';
+                }
+            });
+        });
+
+        // Get plan from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const plan = urlParams.get('plan') || 'premium';
+        document.getElementById('plan').value = plan;
+
+        // Update plan summary based on selection
+        const planDetails = {
+            premium: {
+                name: 'Premium',
+                description: 'Vollständige Features mit Advanced Analytics, Smart Notifications und Ad-Free Experience',
+                price: 9.99,
+                features: [
+                    '90+ Tage History',
+                    'Alle 20+ Badges',
+                    'Advanced Analytics',
+                    'Smart Notifications',
+                    'Goal Customization',
+                    'Ad-Free'
+                ]
+            },
+            premium_plus: {
+                name: 'Premium+',
+                description: 'Premium Features + Personal Coaching, Exclusive Community & Priority Support',
+                price: 19.99,
+                features: [
+                    'Alles in Premium',
+                    'Personal Coaching (1x/month)',
+                    'Exclusive Community',
+                    'Priority Support',
+                    'Beta Features',
+                    '1 Woche kostenlos'
+                ]
+            }
+        };
+
+        // Update UI based on plan
+        function updatePlanUI() {
+            const selectedPlan = planDetails[plan];
+            if (!selectedPlan) return;
+
+            document.querySelector('.plan-name').textContent = selectedPlan.name;
+            document.querySelector('.plan-description').textContent = selectedPlan.description;
+
+            const price = selectedPlan.price;
+            const tax = price * 0.19;
+            const total = price + tax;
+
+            document.getElementById('subtotal').textContent = '€' + price.toFixed(2);
+            document.getElementById('tax').textContent = '€' + tax.toFixed(2);
+            document.getElementById('total').textContent = '€' + total.toFixed(2);
+            document.getElementById('buttonText').textContent = `🔒 Jetzt Bezahlen (€${total.toFixed(2)})`;
+
+            const featuresList = document.getElementById('featuresList');
+            featuresList.innerHTML = selectedPlan.features.map(f => `<li>${f}</li>`).join('');
+        }
+
+        updatePlanUI();
+
+        // Form submission
+        document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+
+            if (paymentMethod === 'stripe') {
+                handleStripePayment();
+            } else {
+                handlePayPalPayment();
+            }
+        });
+
+        async function handleStripePayment() {
+            const button = document.getElementById('payButton');
+            const loading = document.getElementById('loading');
+            const buttonText = document.getElementById('buttonText');
+            const errorMessage = document.getElementById('errorMessage');
+            const email = document.getElementById('billing-email').value;
+            const name = document.getElementById('billing-name').value;
+
+            loading.style.display = 'inline';
+            buttonText.style.display = 'none';
+            button.disabled = true;
+            errorMessage.style.display = 'none';
+
+            try {
+                // In production, you would:
+                // 1. Create a Stripe Checkout Session on your backend
+                // 2. Redirect to the session URL
+
+                // For demo, we'll simulate success
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Store order info
+                localStorage.setItem('lastOrder', JSON.stringify({
+                    plan: document.getElementById('plan').value,
+                    email: email,
+                    name: name,
+                    date: new Date().toISOString(),
+                    paymentMethod: 'stripe'
+                }));
+
+                // Show success
+                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('checkoutForm').style.display = 'none';
+
+                // Redirect to app after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'index.html?premium=true&email=' + encodeURIComponent(email);
+                }, 2000);
+
+            } catch (error) {
+                errorMessage.textContent = 'Fehler: ' + error.message;
+                errorMessage.style.display = 'block';
+                loading.style.display = 'none';
+                buttonText.style.display = 'inline';
+                button.disabled = false;
+            }
+        }
+
+        function handlePayPalPayment() {
+            const button = document.getElementById('payButton');
+            const loading = document.getElementById('loading');
+            const buttonText = document.getElementById('buttonText');
+
+            loading.style.display = 'inline';
+            buttonText.style.display = 'none';
+            button.disabled = true;
+
+            // In production:
+            // 1. Create PayPal order on backend
+            // 2. Redirect to PayPal.com for approval
+            // 3. Handle return/callback
+
+            setTimeout(() => {
+                alert('PayPal Integration würde dich zu PayPal.com weiterleiten.\n\nFür Demo: Klick OK um zur App zu gehen.');
+                localStorage.setItem('lastOrder', JSON.stringify({
+                    plan: document.getElementById('plan').value,
+                    email: document.getElementById('paypal-email').value,
+                    date: new Date().toISOString(),
+                    paymentMethod: 'paypal'
+                }));
+                window.location.href = 'index.html?premium=true&payment=paypal';
+            }, 1000);
+        }
+
+        // Test mode notice (remove in production)
+        if (STRIPE_PUBLIC_KEY.includes('pk_live_yV21N5CUUKS5tlZDSySkt1TO00jQTjts3n')) {
+            console.warn('⚠️ Stripe key not configured! This is a demo checkout page.');
+        }
+    </script>
+</body>
+</html>
