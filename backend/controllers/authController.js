@@ -298,3 +298,58 @@ exports.changePassword = async (req, res) => {
     });
   }
 };
+
+// @desc Get all users (admin only)
+// @route GET /api/auth/users
+// @access Private
+exports.getAllUsers = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, email, first_name, last_name, subscription_tier, created_at, last_login
+       FROM users
+       ORDER BY created_at DESC`
+    );
+
+    res.status(200).json({
+      success: true,
+      users: result.rows.map(user => ({
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        subscription_tier: user.subscription_tier,
+        created_at: user.created_at,
+        last_login: user.last_login
+      }))
+    });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching users',
+      error: error.message
+    });
+  }
+};
+
+// @desc Get user count (admin only)
+// @route GET /api/auth/users/count
+// @access Private
+exports.getUserCount = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT COUNT(*) as count FROM users');
+    const count = parseInt(result.rows[0].count);
+
+    res.status(200).json({
+      success: true,
+      count: count
+    });
+  } catch (error) {
+    console.error('Get user count error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching user count',
+      error: error.message
+    });
+  }
+};

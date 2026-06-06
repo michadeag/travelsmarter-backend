@@ -7,11 +7,17 @@ const {
   getMe,
   updateProfile,
   changePassword,
+  getAllUsers,
+  getUserCount,
 } = require('../controllers/authController');
 
 // Public routes
 router.post('/signup', signup);
 router.post('/login', login);
+
+// Admin routes (require authentication)
+router.get('/users', protect, getAllUsers);
+router.get('/users/count', protect, getUserCount);
 
 // Private routes
 router.get('/me', protect, getMe);
