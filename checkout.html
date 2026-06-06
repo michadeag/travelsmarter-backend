@@ -720,28 +720,53 @@
         });
 
         // Apply Promo Code
-        function applyPromoCode() {
+        async function applyPromoCode() {
             const code = document.getElementById('promoCode').value.toUpperCase();
-            const discountMap = {
-                'SAVE20': 0.20,
-                'WELCOME10': 0.10,
-                'ANNUAL15': 0.15
-            };
 
-            if (discountMap[code]) {
-                const selectedPlan = document.querySelector('input[name="plan"]:checked').value;
-                const basePrice = selectedPlan === 'elite' ? 49 : 19;
-                const discount = Math.round(basePrice * discountMap[code] * 100) / 100;
-                const total = basePrice - discount;
+            if (!code) {
+                alert('Please enter a promo code');
+                return;
+            }
 
-                document.getElementById('discount').textContent = discount;
-                document.getElementById('total').textContent = total;
-                document.getElementById('buttonPrice').textContent = total;
+            try {
+                // Validate promo code with backend
+                const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? 'http://localhost:5000'
+                    : 'https://api.travelsmarterapp.com';
 
-                alert(`Promo code applied! Saving €${discount} this month.`);
-                document.getElementById('promoCode').disabled = true;
-            } else {
-                alert('Invalid or expired promo code');
+                const response = await fetch(`${backendUrl}/api/promos/${code}/validate`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const selectedPlan = document.querySelector('input[name="plan"]:checked').value;
+                    const basePrice = selectedPlan === 'elite' ? 49 : 19;
+
+                    // Calculate discount
+                    let discountAmount = 0;
+                    if (data.data.discount_percent) {
+                        discountAmount = Math.round(basePrice * (data.data.discount_percent / 100) * 100) / 100;
+                    } else if (data.data.discount_amount) {
+                        discountAmount = data.data.discount_amount;
+                    }
+
+                    const total = Math.max(0, basePrice - discountAmount);
+
+                    document.getElementById('discount').textContent = discountAmount;
+                    document.getElementById('total').textContent = total;
+                    document.getElementById('buttonPrice').textContent = total;
+
+                    // Store promo code for checkout
+                    window.appliedPromoCode = code;
+                    window.promoDiscount = discountAmount;
+
+                    alert(`Promo code applied! Saving €${discountAmount} this month.`);
+                    document.getElementById('promoCode').disabled = true;
+                } else {
+                    alert('Invalid or expired promo code');
+                }
+            } catch (error) {
+                console.error('Error validating promo code:', error);
+                alert('Error validating promo code. Please try again.');
             }
         }
 
