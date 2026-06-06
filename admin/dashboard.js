@@ -23,6 +23,7 @@ function initDashboard() {
     loadSubscriptions();
     loadDeals();
     loadRecentActivities();
+    loadSettings();
 
     // Set admin name
     const adminName = localStorage.getItem('adminName') || 'Admin';
@@ -550,20 +551,105 @@ function displayActivities(activities) {
 }
 
 // SETTINGS
-function saveSettings() {
-    const sendgridKey = document.getElementById('sendgrid-key').value;
-    const stripeKey = document.getElementById('stripe-key').value;
+async function loadSettings() {
+    try {
+        const response = await fetch(`${API_URL}/api/admin/settings`, {
+            headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+        });
 
-    if (!sendgridKey || !stripeKey) {
-        showAlert('API keys are required', 'error');
+        if (response.ok) {
+            const data = await response.json();
+            const settings = data.data || {};
+
+            // Populate form fields with settings values
+            if (settings.sendgrid_api_key?.value) {
+                document.getElementById('sendgrid-key').value = settings.sendgrid_api_key.value;
+            }
+            if (settings.sender_email?.value) {
+                document.getElementById('sender-email').value = settings.sender_email.value;
+            }
+            if (settings.stripe_secret_key?.value) {
+                document.getElementById('stripe-key').value = settings.stripe_secret_key.value;
+            }
+            if (settings.stripe_publishable_key?.value) {
+                // Add a display field for publishable key
+                const pubKeyField = document.getElementById('stripe-pub-key');
+                if (pubKeyField) {
+                    pubKeyField.value = settings.stripe_publishable_key.value;
+                }
+            }
+            if (settings.stripe_webhook_secret?.value) {
+                document.getElementById('webhook-secret').value = settings.stripe_webhook_secret.value;
+            }
+
+            // Load checkboxes
+            const sendSignupEmail = document.getElementById('send-signup');
+            const sendSubEmail = document.getElementById('send-sub');
+            const sendDigest = document.getElementById('send-digest');
+
+            if (sendSignupEmail) {
+                sendSignupEmail.checked = settings.send_email_on_signup?.value === 'true';
+            }
+            if (sendSubEmail) {
+                sendSubEmail.checked = settings.send_email_on_subscription?.value === 'true';
+            }
+            if (sendDigest) {
+                sendDigest.checked = settings.send_daily_digest?.value === 'true';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+async function saveSettings() {
+    const sendgridKey = document.getElementById('sendgrid-key').value;
+    const senderEmail = document.getElementById('sender-email').value;
+    const stripeKey = document.getElementById('stripe-key').value;
+    const stripePubKey = document.getElementById('stripe-pub-key')?.value || '';
+    const webhookSecret = document.getElementById('webhook-secret').value;
+
+    // Checkbox values
+    const sendSignupEmail = document.getElementById('send-signup').checked;
+    const sendSubEmail = document.getElementById('send-sub').checked;
+    const sendDigest = document.getElementById('send-digest').checked;
+
+    // Validate required fields
+    if (!stripeKey || !sendgridKey) {
+        showAlert('Stripe Secret Key and SendGrid API Key are required', 'error');
         return;
     }
 
-    // In production, send to backend
-    localStorage.setItem('sendgridKey', sendgridKey);
-    localStorage.setItem('stripeKey', stripeKey);
+    try {
+        // Send all settings to backend
+        const response = await fetch(`${API_URL}/api/admin/settings/batch/update`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${API_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'sendgrid_api_key': sendgridKey,
+                'sender_email': senderEmail,
+                'stripe_secret_key': stripeKey,
+                'stripe_publishable_key': stripePubKey,
+                'stripe_webhook_secret': webhookSecret,
+                'send_email_on_signup': sendSignupEmail.toString(),
+                'send_email_on_subscription': sendSubEmail.toString(),
+                'send_daily_digest': sendDigest.toString()
+            })
+        });
 
-    showAlert('Settings saved successfully', 'success');
+        if (response.ok) {
+            showAlert('Settings saved successfully! Changes are live.', 'success');
+        } else {
+            const error = await response.json();
+            showAlert(error.message || 'Failed to save settings', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        showAlert('Error saving settings', 'error');
+    }
 }
 
 // AUTHENTICATION

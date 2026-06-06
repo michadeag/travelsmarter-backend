@@ -947,6 +947,11 @@
                     <h4 style="margin-top: 30px; margin-bottom: 20px;">Stripe Configuration</h4>
 
                     <div class="form-group">
+                        <label>Stripe Publishable Key</label>
+                        <input type="text" id="stripe-pub-key" placeholder="pk_live_xxxxx...">
+                    </div>
+
+                    <div class="form-group">
                         <label>Stripe Secret Key</label>
                         <input type="password" id="stripe-key" placeholder="sk_live_xxxxx...">
                     </div>
@@ -960,19 +965,19 @@
 
                     <div class="form-group">
                         <label>
-                            <input type="checkbox" checked> Send email on new signup
+                            <input type="checkbox" id="send-signup" value="send_signup" checked> Send email on new signup
                         </label>
                     </div>
 
                     <div class="form-group">
                         <label>
-                            <input type="checkbox" checked> Send email on new subscription
+                            <input type="checkbox" id="send-sub" value="send_sub" checked> Send email on new subscription
                         </label>
                     </div>
 
                     <div class="form-group">
                         <label>
-                            <input type="checkbox"> Send daily digest
+                            <input type="checkbox" id="send-digest" value="send_digest"> Send daily digest
                         </label>
                     </div>
 

@@ -631,21 +631,56 @@
     </div>
 
     <script>
-        // Initialize Stripe
-        const stripe = Stripe('pk_test_51234567890abcdef'); // Replace with your actual publishable key
-        const elements = stripe.elements();
-        const cardElement = elements.create('card');
-        cardElement.mount('#card-element');
+        // Stripe initialization - fetch key from backend
+        let stripe;
+        let elements;
+        let cardElement;
 
-        // Handle card errors
-        cardElement.on('change', function(event) {
-            const displayError = document.getElementById('card-errors');
-            if (event.error) {
-                displayError.textContent = event.error.message;
-            } else {
-                displayError.textContent = '';
+        async function initializeStripe() {
+            try {
+                // Fetch Stripe publishable key from backend
+                const response = await fetch('./../../api/admin/config/stripe-key');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch Stripe configuration');
+                }
+                const data = await response.json();
+                const stripeKey = data.stripepublishableKey;
+
+                if (!stripeKey) {
+                    console.error('Stripe key not configured');
+                    document.getElementById('card-errors').textContent = 'Payment system not configured. Please contact support.';
+                    return;
+                }
+
+                // Initialize Stripe with the fetched key
+                stripe = Stripe(stripeKey);
+                elements = stripe.elements();
+                cardElement = elements.create('card');
+                cardElement.mount('#card-element');
+
+                // Handle card errors
+                cardElement.on('change', function(event) {
+                    const displayError = document.getElementById('card-errors');
+                    if (event.error) {
+                        displayError.textContent = event.error.message;
+                    } else {
+                        displayError.textContent = '';
+                    }
+                });
+
+                console.log('✅ Stripe initialized successfully');
+            } catch (error) {
+                console.error('Error initializing Stripe:', error);
+                document.getElementById('card-errors').textContent = 'Error initializing payment system.';
             }
-        });
+        }
+
+        // Initialize Stripe when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeStripe);
+        } else {
+            initializeStripe();
+        }
 
         // Plan Selection
         function selectPlan(planType) {

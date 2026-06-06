@@ -10,6 +10,10 @@ const authRoutes = require('./routes/authRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const dealsRoutes = require('./routes/dealsRoutes');
 const hacksRoutes = require('./routes/hacksRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+
+// Import controllers
+const SettingsController = require('./controllers/settingsController');
 
 const app = express();
 
@@ -32,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/deals', dealsRoutes);
 app.use('/api/hacks', hacksRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -71,18 +76,34 @@ app.use((req, res) => {
   });
 });
 
+// Initialize settings table and defaults on startup
+async function initializeApp() {
+  try {
+    await SettingsController.initializeTable();
+    await SettingsController.initializeDefaults();
+    console.log('✅ App initialization complete');
+  } catch (error) {
+    console.error('❌ Error during app initialization:', error);
+  }
+}
+
 // Start server
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`
+initializeApp().then(() => {
+  app.listen(PORT, () => {
+    console.log(`
 ╔════════════════════════════════════════╗
 ║   🚀 TravelSmarter API Server Running  ║
 ║   Port: ${PORT}                         ║
 ║   Environment: ${process.env.NODE_ENV || 'development'}              ║
 ║   Database: ${process.env.DB_NAME}                      ║
 ╚════════════════════════════════════════╝
-  `);
+    `);
+  });
+}).catch(error => {
+  console.error('Failed to initialize app:', error);
+  process.exit(1);
 });
 
 // Handle graceful shutdown
