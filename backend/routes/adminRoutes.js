@@ -7,6 +7,14 @@ const SettingsController = require('../controllers/settingsController');
  * All routes are public for now (add authentication middleware if needed)
  */
 
+// Health check for admin routes
+router.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Admin routes are working'
+  });
+});
+
 // Get all settings
 router.get('/settings', SettingsController.getAllSettings);
 
@@ -25,27 +33,45 @@ router.delete('/settings/:key', SettingsController.deleteSetting);
 // Public endpoint to get Stripe publishable key (for checkout page)
 router.get('/config/stripe-key', async (req, res) => {
   try {
-    const result = await require('../config/database').query(
+    const pool = require('../config/database');
+
+    const result = await pool.query(
       'SELECT value FROM settings WHERE key = $1',
       ['stripe_publishable_key']
     );
 
-    if (result.rows.length === 0 || !result.rows[0].value) {
-      return res.status(404).json({
+    console.log('Stripe key query result:', result.rows);
+
+    if (!result.rows || result.rows.length === 0) {
+      console.warn('Stripe key not found in database');
+      return res.status(200).json({
         success: false,
-        error: 'Stripe key not configured'
+        stripepublishableKey: null,
+        error: 'Stripe key not configured in database'
+      });
+    }
+
+    const stripeKey = result.rows[0].value;
+
+    if (!stripeKey) {
+      console.warn('Stripe key value is empty');
+      return res.status(200).json({
+        success: false,
+        stripepublishableKey: null,
+        error: 'Stripe key is empty'
       });
     }
 
     res.status(200).json({
       success: true,
-      stripepublishableKey: result.rows[0].value
+      stripepublishableKey: stripeKey
     });
   } catch (error) {
     console.error('Get Stripe key error:', error);
-    res.status(500).json({
+    res.status(200).json({
       success: false,
-      error: 'Failed to retrieve Stripe configuration'
+      stripepublishableKey: null,
+      error: 'Failed to retrieve Stripe key: ' + error.message
     });
   }
 });
