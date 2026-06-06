@@ -389,7 +389,11 @@ async function loadSubscriptions() {
 
         if (response.ok) {
             const data = await response.json();
+            console.log('Subscriptions data:', data);
             displaySubscriptions(data.subscriptions || []);
+        } else {
+            console.error('Subscriptions API error:', response.status, response.statusText);
+            displayError('subscriptions-table', `Failed to load subscriptions: ${response.status}`);
         }
     } catch (error) {
         console.error('Error loading subscriptions:', error);
@@ -398,6 +402,7 @@ async function loadSubscriptions() {
 }
 
 function displaySubscriptions(subscriptions) {
+    console.log('displaySubscriptions called with:', subscriptions.length, 'items');
     const tbody = document.getElementById('subscriptions-table');
 
     if (subscriptions.length === 0) {
@@ -528,7 +533,11 @@ async function loadDeals() {
 
         if (response.ok) {
             const data = await response.json();
+            console.log('Deals data:', data);
             displayDeals(data.deals || []);
+        } else {
+            console.error('Deals API error:', response.status, response.statusText);
+            displayError('deals-table', `Failed to load deals: ${response.status}`);
         }
     } catch (error) {
         console.error('Error loading deals:', error);
@@ -732,7 +741,11 @@ async function loadPromos() {
 
         if (response.ok) {
             const data = await response.json();
+            console.log('Promos data:', data);
             displayPromos(data.data || []);
+        } else {
+            console.error('Promos API error:', response.status, response.statusText);
+            displayError('promos-table', `Failed to load promo codes: ${response.status}`);
         }
     } catch (error) {
         console.error('Error loading promos:', error);
@@ -882,7 +895,11 @@ async function loadHacks() {
 
         if (response.ok) {
             const data = await response.json();
+            console.log('Hacks data:', data);
             displayHacks(data.modules || []);
+        } else {
+            console.error('Hacks API error:', response.status, response.statusText);
+            displayError('hacks-table', `Failed to load hacks: ${response.status}`);
         }
     } catch (error) {
         console.error('Error loading hacks:', error);
