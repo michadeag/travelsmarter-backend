@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 Travel Hacking Cheat Sheet - 87 Verified Hacks</title>
+    <title>2026 Travel Hacking Cheat Sheet - 22 Verified Hacks</title>
     <style>
         * {
             margin: 0;
@@ -299,12 +299,39 @@
             font-size: 2em;
             page-break-before: always;
         }
+
+        /* TIER GATING */
+        [data-tier-lock] {
+            opacity: 0.6;
+            filter: grayscale(100%);
+            pointer-events: none;
+        }
+
+        [data-tier-lock] .module-header {
+            background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+            position: relative;
+        }
+
+        [data-tier-lock]::after {
+            content: "🔒 Unlock with Smart Traveler (€19/month)";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            white-space: nowrap;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
     <div class="no-print" style="margin: 0 auto; max-width: 800px;">
         <h2 style="color: #667eea; margin-bottom: 15px;">📄 2026 Travel Hacking Cheat Sheet</h2>
-        <p style="color: #6b7280; margin-bottom: 15px;">87 Verified Hacks | €49 Value | Ready to Print or Save as PDF</p>
+        <p style="color: #6b7280; margin-bottom: 15px;">22 Verified Hacks (FREE Tier) | €49 Value | Ready to Print or Save as PDF</p>
         <button onclick="window.print()">🖨️ Print or Save as PDF</button>
     </div>
 
@@ -898,6 +925,9 @@
             </div>
         </div>
 
+        <!-- PREMIUM MODULES (5-16) - TIER LOCKED -->
+        <div data-tier-lock="smart_traveler">
+
         <div class="module">
             <div class="module-header">
                 <h2>✈️ Module 5: Airport & Transit Hacks (6 hacks)</h2>
@@ -1158,6 +1188,9 @@
                 <div class="hack-value">💰 Value: €100-300/Trip Extra Savings | Best months: Mid-January, Mid-July</div>
             </div>
         </div>
+
+        </div>
+        <!-- END TIER LOCKED MODULES -->
 
         <!-- FOOTER -->
         <div class="footer">
