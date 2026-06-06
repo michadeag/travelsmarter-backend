@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const { canAccessModule, filterModulesByTier, getUserTierConfig } = require('../utils/tierGating');
 
 // @desc Save a hack
 // @route POST /api/hacks/save
@@ -167,6 +168,27 @@ exports.isHackSaved = async (req, res) => {
 exports.getHacksByModule = async (req, res) => {
   try {
     const { moduleId } = req.params;
+    const moduleIdNum = parseInt(moduleId);
+
+    // Get user's subscription tier (default to 'free' if not authenticated)
+    let userTier = 'free';
+    if (req.user) {
+      userTier = req.user.subscription_tier || 'free';
+    }
+
+    // Check if user has access to this module
+    if (!canAccessModule(userTier, moduleIdNum)) {
+      const tierConfig = getUserTierConfig(userTier);
+      return res.status(403).json({
+        success: false,
+        message: 'This module is locked',
+        locked: true,
+        currentTier: userTier,
+        currentTierName: tierConfig.name,
+        requiredUpgrade: moduleIdNum > 10 ? 'elite' : 'smart_traveler',
+        upgradeMessage: `Upgrade to ${moduleIdNum > 10 ? 'Elite' : 'Smart Traveler'} to access this module`
+      });
+    }
 
     // This would return hacks from your static hack database
     // For now, this is a placeholder that would connect to your hack data
@@ -216,6 +238,12 @@ exports.getHacksByModule = async (req, res) => {
 // @access Public
 exports.getAllModules = async (req, res) => {
   try {
+    // Get user's subscription tier (default to 'free' if not authenticated)
+    let userTier = 'free';
+    if (req.user) {
+      userTier = req.user.subscription_tier || 'free';
+    }
+
     const modules = [
       { id: 1, title: 'Flight Hacks', icon: '✈️', hackCount: 6 },
       { id: 2, title: 'Credit Cards', icon: '💳', hackCount: 7 },
@@ -235,11 +263,27 @@ exports.getAllModules = async (req, res) => {
       { id: 16, title: 'Shopping & VAT', icon: '🛍️', hackCount: 5 },
     ];
 
+    // Add access status to each module based on user tier
+    const modulesWithAccess = modules.map(module => {
+      const hasAccess = canAccessModule(userTier, module.id);
+      return {
+        ...module,
+        accessible: hasAccess,
+        locked: !hasAccess,
+        message: hasAccess ? 'You have access' : 'Upgrade to unlock'
+      };
+    });
+
+    const tierConfig = getUserTierConfig(userTier);
+
     res.status(200).json({
       success: true,
+      userTier: userTier,
+      userTierName: tierConfig.name,
       totalModules: modules.length,
+      accessibleModules: modulesWithAccess.filter(m => m.accessible).length,
       totalHacks: modules.reduce((sum, m) => sum + m.hackCount, 0),
-      modules: modules,
+      modules: modulesWithAccess,
     });
   } catch (error) {
     console.error('Get all modules error:', error);
