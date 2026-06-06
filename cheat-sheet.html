@@ -300,40 +300,15 @@
             page-break-before: always;
         }
 
-        /* TIER GATING - CSS ONLY (No JS overlay) */
+        /* TIER GATING */
         [data-tier-lock] {
             position: relative;
         }
 
-        /* Greyout only the actual module content, not the badge */
+        /* Greyout the module content */
         [data-tier-lock] > div {
             opacity: 0.6;
             filter: grayscale(100%);
-        }
-
-        /* Upgrade badge - stands out with full visibility */
-        [data-tier-lock] > div:first-child::before {
-            content: "🔒 Modules 5-16 locked - Upgrade to Smart Traveler (€19/month)";
-            display: block;
-            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-            color: white;
-            padding: 16px 24px;
-            font-size: 1em;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            font-weight: 700;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            opacity: 1 !important;
-            filter: none !important;
-        }
-
-        [data-tier-lock] > div:first-child::before:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
-            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-            transform: translateY(-2px);
         }
 
         [data-tier-lock] .module-header {
@@ -1238,21 +1213,33 @@
         </div>
     </div>
 
-    <!-- Tier Gating: Make upgrade badge clickable -->
+    <!-- Tier Gating: Show both upgrade paths with distinct colors -->
     <script>
-        // Make the upgrade badge clickable
+        // Create upgrade buttons for Smart Traveler and Elite
         document.addEventListener('DOMContentLoaded', function() {
             const lockedSections = document.querySelectorAll('[data-tier-lock] > div:first-child');
-            lockedSections.forEach(section => {
-                // Create a clickable wrapper for the ::before pseudo-element
-                const badge = document.createElement('div');
-                badge.style.cssText = `
+
+            // Only show on the first locked section (Module 5)
+            if (lockedSections.length > 0) {
+                const section = lockedSections[0];
+
+                // Container for both buttons
+                const container = document.createElement('div');
+                container.style.cssText = `
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 15px;
+                    margin-bottom: 30px;
+                `;
+
+                // Smart Traveler Button
+                const smartButton = document.createElement('div');
+                smartButton.style.cssText = `
                     background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
                     color: white;
-                    padding: 16px 24px;
-                    font-size: 1em;
-                    margin-bottom: 20px;
-                    border-radius: 8px;
+                    padding: 18px 24px;
+                    font-size: 0.95em;
+                    border-radius: 10px;
                     font-weight: 700;
                     text-align: center;
                     cursor: pointer;
@@ -1260,20 +1247,51 @@
                     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
                     user-select: none;
                 `;
-                badge.textContent = '🔒 Modules 5-16 locked - Upgrade to Smart Traveler (€19/month)';
-                badge.onclick = () => window.location.href = '/pricing';
-                badge.onmouseover = function() {
+                smartButton.innerHTML = '🔓 Smart Traveler<br>Modules 5-10 Unlocked<br>€19/month';
+                smartButton.onclick = () => window.location.href = '/pricing?tier=smart';
+                smartButton.onmouseover = function() {
                     this.style.background = 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)';
                     this.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
-                    this.style.transform = 'translateY(-2px)';
+                    this.style.transform = 'translateY(-3px)';
                 };
-                badge.onmouseout = function() {
+                smartButton.onmouseout = function() {
                     this.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)';
                     this.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
                     this.style.transform = 'translateY(0)';
                 };
-                section.insertBefore(badge, section.firstChild);
-            });
+
+                // Elite Button
+                const eliteButton = document.createElement('div');
+                eliteButton.style.cssText = `
+                    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+                    color: white;
+                    padding: 18px 24px;
+                    font-size: 0.95em;
+                    border-radius: 10px;
+                    font-weight: 700;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+                    user-select: none;
+                `;
+                eliteButton.innerHTML = '👑 Elite<br>All 16 Modules<br>€49/month';
+                eliteButton.onclick = () => window.location.href = '/pricing?tier=elite';
+                eliteButton.onmouseover = function() {
+                    this.style.background = 'linear-gradient(135deg, #059669 0%, #065f46 100%)';
+                    this.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)';
+                    this.style.transform = 'translateY(-3px)';
+                };
+                eliteButton.onmouseout = function() {
+                    this.style.background = 'linear-gradient(135deg, #10b981 0%, #047857 100%)';
+                    this.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
+                    this.style.transform = 'translateY(0)';
+                };
+
+                container.appendChild(smartButton);
+                container.appendChild(eliteButton);
+                section.insertBefore(container, section.firstChild);
+            }
         });
     </script>
 </body>
