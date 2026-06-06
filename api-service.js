@@ -13,6 +13,11 @@ class APIService {
         } else {
             // Production
             defaultApiUrl = 'https://api.travelsmarterapp.com/api';
+            // Clear any localhost URLs from localStorage in production
+            const storedUrl = localStorage.getItem('apiUrl');
+            if (storedUrl && storedUrl.includes('localhost')) {
+                localStorage.removeItem('apiUrl');
+            }
         }
 
         this.baseURL = defaultApiUrl;
