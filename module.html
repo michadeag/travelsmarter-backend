@@ -351,7 +351,7 @@
                     if (response.status === 403) {
                         // Access denied
                         document.getElementById('access-denied').style.display = 'block';
-                        document.getElementById('lock-message').textContent = data.message || 'Upgrade your plan to access this module.';
+                        document.getElementById('lock-message').textContent = data.upgradeMessage || 'Upgrade your plan to access this module.';
                         document.getElementById('module-name').textContent = MODULE_NAMES[moduleId] || 'Module';
                         document.getElementById('module-icon').textContent = MODULE_ICONS[moduleId] || '📚';
                         return;
@@ -360,24 +360,21 @@
                 }
 
                 // Display module info
-                const moduleName = MODULE_NAMES[moduleId] || data.module?.module || 'Module';
+                const moduleName = MODULE_NAMES[moduleId] || 'Module';
                 const moduleIcon = MODULE_ICONS[moduleId] || '📚';
 
                 document.getElementById('module-icon').textContent = moduleIcon;
                 document.getElementById('module-name').textContent = moduleName;
-                document.getElementById('hack-count').textContent = data.module?.hackCount || 0;
+                document.getElementById('hack-count').textContent = data.hackCount || 0;
 
-                // For now, show that hacks are managed in the web app
-                if (data.message === 'To get detailed hacks, refer to the web application content') {
-                    document.getElementById('hacks-empty').style.display = 'block';
-                    document.getElementById('hacks-empty').innerHTML = `
-                        <p style="margin-bottom: 20px;">The detailed hacks for this module are displayed in the web application.</p>
-                        <p style="color: #667eea; font-weight: 600;">More coming soon!</p>
-                    `;
-                } else if (data.hacks && data.hacks.length > 0) {
+                // Display hacks if available
+                if (data.hacks && data.hacks.length > 0) {
                     displayHacks(data.hacks);
                 } else {
                     document.getElementById('hacks-empty').style.display = 'block';
+                    document.getElementById('hacks-empty').innerHTML = `
+                        <p>No hacks available in this module yet.</p>
+                    `;
                 }
             } catch (error) {
                 console.error('Error loading module:', error);
@@ -398,11 +395,15 @@
             hacks.forEach(hack => {
                 const card = document.createElement('div');
                 card.className = 'hack-card';
+
+                const difficultyBadge = hack.difficulty ? `<div style="margin: 10px 0;"><span style="background: #667eea; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${hack.difficulty}</span></div>` : '';
+
                 card.innerHTML = `
-                    <h3>${hack.title || hack.name}</h3>
+                    <h3>${hack.title}</h3>
                     <p>${hack.description || 'No description available'}</p>
+                    ${difficultyBadge}
                     <div class="hack-actions">
-                        <button class="btn btn-primary" onclick="saveHack(${hack.id || 1})">💾 Save</button>
+                        <button class="btn btn-primary" onclick="saveHack('${hack.id}')">💾 Save</button>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -427,10 +428,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        moduleId: parseInt(moduleId),
-                        hackId: hackId,
-                        hackTitle: MODULE_NAMES[moduleId] || 'Hack',
-                        hackCategory: 'Travel'
+                        hackId: hackId
                     })
                 });
 
