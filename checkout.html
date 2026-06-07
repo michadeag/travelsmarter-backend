@@ -487,12 +487,8 @@
 
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
                     <h4 style="color: #667eea; margin-bottom: 15px; font-size: 0.9em;">What You Get:</h4>
-                    <ul style="list-style: none; margin-left: 0;">
-                        <li style="margin-bottom: 10px; font-size: 0.9em;"><strong>✓</strong> All 8 modules (flights, hotels, credit cards, etc.)</li>
-                        <li style="margin-bottom: 10px; font-size: 0.9em;"><strong>✓</strong> 47 verified hacks updated daily</li>
-                        <li style="margin-bottom: 10px; font-size: 0.9em;"><strong>✓</strong> 1,574+ real-time deal alerts/day</li>
-                        <li style="margin-bottom: 10px; font-size: 0.9em;"><strong>✓</strong> Community verification system</li>
-                        <li style="margin-bottom: 10px; font-size: 0.9em;"><strong>✓</strong> Expert contributor insights</li>
+                    <ul id="featuresList" style="list-style: none; margin-left: 0;">
+                        <!-- Features will be populated by JavaScript based on selected plan -->
                     </ul>
                 </div>
             </aside>
@@ -643,6 +639,48 @@
             event.currentTarget.classList.add('selected');
             document.querySelector(`input[value="${planType}"]`).checked = true;
             updatePrice();
+            updateFeatures();
+        }
+
+        // Update Features based on selected plan
+        function updateFeatures() {
+            const checkedInput = document.querySelector('input[name="plan"]:checked');
+            if (!checkedInput) return;
+
+            const selectedPlan = checkedInput.value;
+            const featuresList = document.getElementById('featuresList');
+
+            let features = [];
+
+            if (selectedPlan === 'elite') {
+                features = [
+                    'All 16 modules (flights, hotels, credit cards, visas, etc.)',
+                    '87 verified hacks updated daily',
+                    'SMS alerts for mistake fares',
+                    'Expert consultations (Calendly)',
+                    'Custom deal filters',
+                    'Partner discount access',
+                    'Premium email support',
+                    'Community verification system'
+                ];
+            } else {
+                // Smart Traveler features
+                features = [
+                    'All 10 modules (flights, hotels, credit cards, etc.)',
+                    '47 verified hacks updated daily',
+                    '1,574+ real-time deal alerts/day',
+                    'Daily deal alerts',
+                    'Save hacks & deals',
+                    'Priority support',
+                    'Expert community',
+                    'Community verification system'
+                ];
+            }
+
+            // Build HTML for features
+            featuresList.innerHTML = features.map(feature =>
+                `<li style="margin-bottom: 10px; font-size: 0.9em;"><strong>✓</strong> ${feature}</li>`
+            ).join('');
         }
 
         // Update Price
@@ -706,6 +744,7 @@
             // Update the price display
             console.log('Updating price...');
             updatePrice();
+            updateFeatures();
             console.log('Initialization complete');
         }
 
