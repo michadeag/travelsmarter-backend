@@ -242,6 +242,7 @@ async function saveProfileChanges() {
     const lastName = document.getElementById('modal-last-name').value;
 
     try {
+        console.log('Updating profile with:', { firstName, lastName });
         const response = await fetch(`${API_URL}/api/auth/update-profile`, {
             method: 'PUT',
             headers: {
@@ -249,22 +250,24 @@ async function saveProfileChanges() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                first_name: firstName,
-                last_name: lastName
+                firstName: firstName,
+                lastName: lastName
             })
         });
+
+        const data = await response.json();
+        console.log('Profile update response:', data);
 
         if (response.ok) {
             showAlert('Profile updated successfully', 'success');
             closeEditProfileModal();
             loadProfile();
         } else {
-            const error = await response.json();
-            showAlert(error.message || 'Failed to update profile', 'error');
+            showAlert(data.message || 'Failed to update profile', 'error');
         }
     } catch (error) {
         console.error('Error saving profile:', error);
-        showAlert('Error updating profile', 'error');
+        showAlert(error.message || 'Error updating profile', 'error');
     }
 }
 
@@ -274,12 +277,18 @@ async function savePasswordChange() {
     const newPassword = document.getElementById('modal-new-password').value;
     const confirmPassword = document.getElementById('modal-confirm-password').value;
 
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        showAlert('Please fill in all password fields', 'error');
+        return;
+    }
+
     if (newPassword !== confirmPassword) {
         showAlert('Passwords do not match', 'error');
         return;
     }
 
     try {
+        console.log('Changing password...');
         const response = await fetch(`${API_URL}/api/auth/change-password`, {
             method: 'POST',
             headers: {
@@ -287,21 +296,23 @@ async function savePasswordChange() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                current_password: currentPassword,
-                new_password: newPassword
+                currentPassword: currentPassword,
+                newPassword: newPassword
             })
         });
+
+        const data = await response.json();
+        console.log('Password change response:', data);
 
         if (response.ok) {
             showAlert('Password changed successfully', 'success');
             closeChangePasswordModal();
         } else {
-            const error = await response.json();
-            showAlert(error.message || 'Failed to change password', 'error');
+            showAlert(data.message || 'Failed to change password', 'error');
         }
     } catch (error) {
         console.error('Error changing password:', error);
-        showAlert('Error changing password', 'error');
+        showAlert(error.message || 'Error changing password', 'error');
     }
 }
 
