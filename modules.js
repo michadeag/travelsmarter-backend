@@ -155,7 +155,7 @@ function createModuleCard(module) {
  * Navigate to module details
  */
 function viewModule(moduleId) {
-  window.location.href = `/module/${moduleId}`;
+  window.location.href = `module.html?id=${moduleId}`;
 }
 
 /**
