@@ -383,7 +383,10 @@ async function initializeApp() {
       -- Create index for module lookups
       CREATE INDEX IF NOT EXISTS idx_hacks_module_id ON hacks(module_id);
 
-      -- Saved hacks table
+      -- Drop old saved_hacks table if it exists with wrong schema
+      DROP TABLE IF EXISTS saved_hacks CASCADE;
+
+      -- Saved hacks table (recreated with correct UUID schema)
       CREATE TABLE IF NOT EXISTS saved_hacks (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
