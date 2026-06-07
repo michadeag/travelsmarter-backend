@@ -76,7 +76,7 @@ exports.createPost = async (req, res) => {
 
     // Check user is Elite
     const subscriptionCheck = await pool.query(
-      'SELECT tier FROM subscriptions WHERE user_id = $1 AND is_active = true',
+      'SELECT tier FROM subscriptions WHERE user_id = $1',
       [userId]
     );
 
