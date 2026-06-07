@@ -366,6 +366,22 @@
             color: #0c2d6b;
         }
 
+        /* Difficulty Badges */
+        .badge-easy {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-hard {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
         /* Modals */
         .modal {
             display: none;
@@ -771,7 +787,28 @@
                     </div>
                 </div>
 
-                <h3 style="margin-bottom: 20px;">Module Breakdown</h3>
+                <!-- Hacks Management Section -->
+                <h3 style="margin-top: 40px; margin-bottom: 20px;">📚 Hack Management</h3>
+                <button class="btn btn-primary" onclick="openAddHackModal()" style="margin-bottom: 20px;">+ Add New Hack</button>
+
+                <div id="hacks-table-container" class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Difficulty</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hacks-tbody">
+                            <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading hacks...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 style="margin-bottom: 20px; margin-top: 40px;">Module Breakdown</h3>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -857,10 +894,8 @@
 
             <!-- EMAIL TEMPLATES TAB -->
             <div id="email-templates" class="tab-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3>Email Templates</h3>
+                <h3>Email Templates</h3>
                     <button class="btn btn-primary" onclick="openEmailSequenceModal()">+ New Sequence</button>
-                </div>
 
                 <div style="margin-bottom: 30px;">
                     <h4>Email Sequences</h4>
@@ -1268,6 +1303,52 @@
             <div class="actions" style="margin-top: 30px;">
                 <button class="btn btn-primary" onclick="saveEmailTemplate()">Create Template</button>
                 <button class="btn btn-secondary" onclick="closeTemplateModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hack Management Modal -->
+    <div id="hack-management-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="hack-modal-title">Add New Hack</h3>
+                <button class="close-modal" onclick="closeHackManagementModal()">✕</button>
+            </div>
+
+            <div class="form-group">
+                <label>Module ID</label>
+                <select id="modal-hack-module-id" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    <option value="">Select a module (1-16)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="modal-hack-title-new" placeholder="Hack title...">
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="modal-hack-description" placeholder="Detailed description of the hack..." style="min-height: 100px;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Category</label>
+                <input type="text" id="modal-hack-category" placeholder="e.g., Pricing, Strategy, Timing...">
+            </div>
+
+            <div class="form-group">
+                <label>Difficulty</label>
+                <select id="modal-hack-difficulty" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+
+            <div class="actions" style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="saveHackManagement()">Save Hack</button>
+                <button class="btn btn-secondary" onclick="closeHackManagementModal()">Cancel</button>
             </div>
         </div>
     </div>

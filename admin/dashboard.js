@@ -891,155 +891,10 @@ async function deletePromo(promoId) {
     }
 }
 
-// HACKS
-async function loadHacks() {
-    try {
-        const response = await fetch(`${API_URL}/api/hacks`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Hacks data:', data);
-            displayHacks(data.modules || []);
-        } else {
-            console.error('Hacks API error:', response.status, response.statusText);
-            displayError('hacks-table', `Failed to load hacks: ${response.status}`);
-        }
-    } catch (error) {
-        console.error('Error loading hacks:', error);
-        displayError('hacks-table', 'Failed to load hacks');
-    }
-}
-
-function displayHacks(modules) {
-    const tbody = document.getElementById('hacks-table');
-
-    if (modules.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hacks modules found</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = modules.map(module => `
-        <tr>
-            <td><strong>${module.title}</strong></td>
-            <td>View</td>
-            <td>-</td>
-            <td>-</td>
-            <td><span class="badge badge-success">Active</span></td>
-        </tr>
-    `).join('');
-}
-
-function openHackModal() {
-    document.getElementById('hack-modal').classList.add('active');
-}
-
-function closeHackModal() {
-    const modal = document.getElementById('hack-modal');
-    modal.classList.remove('active');
-    document.getElementById('modal-hack-title').value = '';
-    document.getElementById('modal-hack-category').value = '';
-    document.getElementById('modal-hack-description').value = '';
-    modal.dataset.isEditing = 'false';
-    modal.dataset.hackId = '';
-}
-
-async function editHack(moduleId) {
-    try {
-        const response = await fetch(`${API_URL}/api/hacks/module/${moduleId}`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-
-        if (!response.ok) {
-            showAlert('Failed to load hack module', 'error');
-            return;
-        }
-
-        const data = await response.json();
-        const module = data.module || { id: moduleId, title: `Module ${moduleId}` };
-
-        document.getElementById('modal-hack-title').value = module.title || '';
-        const modal = document.getElementById('hack-modal');
-        modal.dataset.hackId = moduleId;
-        modal.dataset.isEditing = 'true';
-
-        openHackModal();
-    } catch (error) {
-        console.error('Error loading hack for edit:', error);
-        showAlert('Error loading hack data', 'error');
-    }
-}
-
-async function saveHack() {
-    const modal = document.getElementById('hack-modal');
-    const hackId = modal.dataset.hackId;
-    const title = document.getElementById('modal-hack-title').value;
-    const category = document.getElementById('modal-hack-category').value;
-    const description = document.getElementById('modal-hack-description').value;
-
-    if (!title) {
-        showAlert('Title is required', 'error');
-        return;
-    }
-
-    try {
-        let url = `${API_URL}/api/hacks`;
-        let method = 'POST';
-
-        if (modal.dataset.isEditing === 'true') {
-            url = `${API_URL}/api/hacks/${hackId}`;
-            method = 'PUT';
-        }
-
-        const response = await fetch(url, {
-            method,
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                module_id: hackId,
-                title,
-                category,
-                description
-            })
-        });
-
-        if (response.ok) {
-            showAlert('Hack saved successfully', 'success');
-            closeHackModal();
-            loadHacks();
-        } else {
-            showAlert('Failed to save hack', 'error');
-        }
-    } catch (error) {
-        console.error('Error saving hack:', error);
-        showAlert('Error saving hack', 'error');
-    }
-}
-
-async function deleteHack(hackId) {
-    if (!confirm('Are you sure you want to delete this hack?')) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_URL}/api/hacks/${hackId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-
-        if (response.ok) {
-            showAlert('Hack deleted successfully', 'success');
-            loadHacks();
-        } else {
-            showAlert('Failed to delete hack', 'error');
-        }
-    } catch (error) {
-        console.error('Error deleting hack:', error);
-        showAlert('Error deleting hack', 'error');
-    }
+// HACKS - Load admin hack management interface
+function loadHacks() {
+    // Call the hack management list loader
+    loadHacksList();
 }
 
 // RECENT ACTIVITIES
@@ -1529,4 +1384,197 @@ async function deleteTemplate(templateId) {
 function editTemplate(templateId) {
     // Placeholder - will implement template editor
     alert('Template editor - to be implemented');
+}
+
+// ============================================
+// HACK MANAGEMENT FUNCTIONS
+// ============================================
+
+let currentEditingHackId = null;
+
+// Load and display all hacks
+async function loadHacksList() {
+    try {
+        const response = await fetch(`${API_URL}/api/admin/hacks`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to load hacks');
+
+        const data = await response.json();
+        const tbody = document.getElementById('hacks-tbody');
+        tbody.innerHTML = '';
+
+        const moduleNames = {
+            1: 'Flight Hacks', 2: 'Credit Cards', 3: 'Hotel Hacks', 4: 'Timing Intelligence',
+            5: 'Airport & Transit', 6: 'Destinations', 7: 'Car Rentals', 8: 'Community',
+            9: 'Travel Money', 10: 'Travel Insurance', 11: 'Visa & Immigration',
+            12: 'Accommodations', 13: 'Ground Transport', 14: 'Travel Bookings',
+            15: 'Food & Dining', 16: 'Shopping & VAT'
+        };
+
+        if (data.hacks && data.hacks.length > 0) {
+            data.hacks.forEach(hack => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${moduleNames[hack.module_id] || `Module ${hack.module_id}`}</td>
+                    <td>${hack.title}</td>
+                    <td>${hack.category}</td>
+                    <td><span class="badge badge-${hack.difficulty}">${hack.difficulty}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editHack('${hack.id}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteHack('${hack.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No hacks found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error loading hacks:', error);
+        showAlert('Failed to load hacks', 'error');
+    }
+}
+
+// Open add hack modal
+function openAddHackModal() {
+    currentEditingHackId = null;
+    document.getElementById('hack-modal-title').textContent = 'Add New Hack';
+    document.getElementById('modal-hack-module-id').value = '';
+    document.getElementById('modal-hack-title-new').value = '';
+    document.getElementById('modal-hack-description').value = '';
+    document.getElementById('modal-hack-category').value = '';
+    document.getElementById('modal-hack-difficulty').value = 'medium';
+
+    // Populate module dropdown
+    const select = document.getElementById('modal-hack-module-id');
+    select.innerHTML = '<option value="">Select a module (1-16)</option>';
+    for (let i = 1; i <= 16; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.text = `Module ${i}`;
+        select.appendChild(option);
+    }
+
+    document.getElementById('hack-management-modal').classList.add('active');
+}
+
+// Edit hack
+async function editHack(hackId) {
+    try {
+        // Get all hacks and find this one
+        const response = await fetch(`${API_URL}/api/admin/hacks`, {
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        const data = await response.json();
+        const hack = data.hacks.find(h => h.id === hackId);
+
+        if (!hack) {
+            showAlert('Hack not found', 'error');
+            return;
+        }
+
+        currentEditingHackId = hackId;
+        document.getElementById('hack-modal-title').textContent = 'Edit Hack';
+        document.getElementById('modal-hack-module-id').value = hack.module_id;
+        document.getElementById('modal-hack-title-new').value = hack.title;
+        document.getElementById('modal-hack-description').value = hack.description;
+        document.getElementById('modal-hack-category').value = hack.category;
+        document.getElementById('modal-hack-difficulty').value = hack.difficulty;
+
+        // Populate module dropdown
+        const select = document.getElementById('modal-hack-module-id');
+        select.innerHTML = '<option value="">Select a module (1-16)</option>';
+        for (let i = 1; i <= 16; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.text = `Module ${i}`;
+            select.appendChild(option);
+        }
+
+        document.getElementById('hack-management-modal').classList.add('active');
+    } catch (error) {
+        console.error('Error loading hack for edit:', error);
+        showAlert('Failed to load hack', 'error');
+    }
+}
+
+// Save hack (create or update)
+async function saveHackManagement() {
+    const moduleId = document.getElementById('modal-hack-module-id').value;
+    const title = document.getElementById('modal-hack-title-new').value;
+    const description = document.getElementById('modal-hack-description').value;
+    const category = document.getElementById('modal-hack-category').value;
+    const difficulty = document.getElementById('modal-hack-difficulty').value;
+
+    if (!moduleId || !title || !description || !category) {
+        showAlert('Please fill in all required fields', 'error');
+        return;
+    }
+
+    try {
+        const url = currentEditingHackId
+            ? `${API_URL}/api/admin/hacks/${currentEditingHackId}`
+            : `${API_URL}/api/admin/hacks`;
+
+        const method = currentEditingHackId ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${getAuthToken()}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                module_id: parseInt(moduleId),
+                title,
+                description,
+                category,
+                difficulty
+            })
+        });
+
+        if (response.ok) {
+            showAlert(currentEditingHackId ? 'Hack updated' : 'Hack created', 'success');
+            closeHackManagementModal();
+            loadHacksList();
+        } else {
+            const error = await response.json();
+            showAlert(error.message || 'Failed to save hack', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving hack:', error);
+        showAlert('Error saving hack', 'error');
+    }
+}
+
+// Delete hack
+async function deleteHack(hackId) {
+    if (!confirm('Are you sure you want to delete this hack?')) return;
+
+    try {
+        const response = await fetch(`${API_URL}/api/admin/hacks/${hackId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+
+        if (response.ok) {
+            showAlert('Hack deleted', 'success');
+            loadHacksList();
+        } else {
+            const error = await response.json();
+            showAlert(error.message || 'Failed to delete hack', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting hack:', error);
+        showAlert('Error deleting hack', 'error');
+    }
+}
+
+// Close hack management modal
+function closeHackManagementModal() {
+    document.getElementById('hack-management-modal').classList.remove('active');
+    currentEditingHackId = null;
 }
