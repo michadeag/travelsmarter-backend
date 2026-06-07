@@ -283,12 +283,19 @@ const emailService = {
   // Send welcome email to new users
   async sendWelcomeEmail(user) {
     try {
+      console.log(`📨 Attempting to send welcome email to ${user.email}`);
+      console.log(`🔑 SendGrid API Key status: ${process.env.SENDGRID_API_KEY ? 'SET' : 'NOT SET'}`);
+
       const msg = templates.welcomeEmail(user);
+      console.log(`📧 Email template created for ${user.email}`);
+
       await sgMail.send(msg);
       console.log(`✉️ Welcome email sent to ${user.email}`);
       return { success: true };
     } catch (error) {
-      console.error(`❌ Failed to send welcome email to ${user.email}:`, error);
+      console.error(`❌ Failed to send welcome email to ${user.email}`);
+      console.error(`Error message: ${error.message}`);
+      console.error(`Full error:`, error);
       return { success: false, error: error.message };
     }
   },

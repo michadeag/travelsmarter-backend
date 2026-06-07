@@ -57,16 +57,24 @@ exports.signup = async (req, res) => {
     );
 
     // Send welcome email and initialize 10-day email sequence (non-blocking)
+    console.log(`🎉 User registered: ${user.email}`);
+    console.log(`📨 Sending welcome email to ${user.email}...`);
+
     emailService.sendWelcomeEmail({
       email: user.email,
       firstName: user.first_name
-    }).catch(err => console.error('Failed to send welcome email:', err));
+    }).catch(err => {
+      console.error('Failed to send welcome email:', err.message || err);
+    });
 
+    console.log(`📬 Initializing email sequence for ${user.email}...`);
     emailSequenceService.initializeEmailSequence(
       user.id,
       user.email,
       user.first_name
-    ).catch(err => console.error('Failed to initialize email sequence:', err));
+    ).catch(err => {
+      console.error('Failed to initialize email sequence:', err.message || err);
+    });
 
     res.status(201).json({
       success: true,
