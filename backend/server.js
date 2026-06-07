@@ -17,6 +17,7 @@ const communityRoutes = require('./routes/communityRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const promoRoutes = require('./routes/promoRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const seedRoutes = require('./routes/seedRoutes');
 
 // Email template routes
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
@@ -56,6 +57,7 @@ app.use('/api/hacks', hacksRoutes);
 app.use('/api/user/deal-filters', dealFiltersRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/seed', seedRoutes);
 app.use('/api/promos', promoRoutes);
 
 // Contact routes - inline for now
