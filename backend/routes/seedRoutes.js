@@ -215,4 +215,107 @@ router.post('/community', async (req, res) => {
   }
 });
 
+/**
+ * Add demo replies to existing community posts
+ * POST /api/admin/seed/community/replies
+ */
+router.post('/community/replies', async (req, res) => {
+  try {
+    // Create demo users for replies
+    const demoUsers = [
+      { email: 'sarah@travelhacker.com', name: 'Sarah', tier: 'elite' },
+      { email: 'james@wanderlust.com', name: 'James', tier: 'elite' },
+      { email: 'emma@globetrotter.com', name: 'Emma', tier: 'elite' }
+    ];
+
+    const userIds = [];
+    for (const user of demoUsers) {
+      const existingUser = await pool.query(
+        'SELECT id FROM users WHERE email = $1',
+        [user.email]
+      );
+
+      if (existingUser.rows.length === 0) {
+        const newUser = await pool.query(
+          `INSERT INTO users (email, password_hash, first_name, last_name, subscription_tier)
+           VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+          [user.email, 'hashed_password', user.name, 'Traveler', user.tier]
+        );
+        userIds.push({ name: user.name, id: newUser.rows[0].id });
+      } else {
+        userIds.push({ name: user.name, id: existingUser.rows[0].id });
+      }
+    }
+
+    // Get all posts for module 8
+    const postsResult = await pool.query(
+      'SELECT id, title FROM community_posts WHERE module_id = 8 ORDER BY created_at DESC LIMIT 10'
+    );
+
+    if (postsResult.rows.length === 0) {
+      return res.json({
+        success: false,
+        message: 'No posts found for Module 8. Create posts first.'
+      });
+    }
+
+    // Reply data mapped to post titles
+    const replyData = {
+      'Best time to visit Thailand?': [
+        { user: 'Sarah', content: 'March-May is perfect! Less rain and fewer tourists. I saved €200 on my March trip by going mid-week.', upvotes: 8 },
+        { user: 'James', content: 'Shoulder season is the way to go. Book 8 weeks in advance for best prices. I got roundtrip flights for €480!', upvotes: 12 }
+      ],
+      'Loyalty status hacks?': [
+        { user: 'Sarah', content: 'Status matching saved me thousands! Matched my IHG elite to Marriott. Free breakfast now at most properties.', upvotes: 15 },
+        { user: 'James', content: 'Pro tip: Match during low travel season for better negotiation. Hotels are more willing to match their benefits.', upvotes: 9 }
+      ],
+      'Credit card sign-up bonuses': [
+        { user: 'Emma', content: 'I opened 2 cards strategically and got 3 free economy flights. The key is timing your spending around bonuses.', upvotes: 14 },
+        { user: 'James', content: 'Just hit 200k points across my cards! Planning 4 free flights this year alone. Best investment ever.', upvotes: 11 }
+      ],
+      'Hotel upgrade strategies': [
+        { user: 'James', content: 'Late check-in is your friend! Hotels love upgrading guests after 3pm when they know their occupancy.', upvotes: 13 },
+        { user: 'Sarah', content: 'Loyalty status matters too. Even without a special occasion, elite members get free upgrades regularly.', upvotes: 10 }
+      ],
+      'Best travel insurance providers': [
+        { user: 'Emma', content: 'SafetyWing paid out my claim in 3 days! Customer service was super responsive. Highly recommend.', upvotes: 16 },
+        { user: 'Sarah', content: 'I use Allianz for longer trips. Bit more expensive but comprehensive coverage is worth it.', upvotes: 7 }
+      ]
+    };
+
+    let repliesAdded = 0;
+
+    // Add replies to posts
+    for (const post of postsResult.rows) {
+      const replies = replyData[post.title] || [];
+
+      for (const reply of replies) {
+        const userId = userIds.find(u => u.name === reply.user)?.id;
+        if (userId) {
+          await pool.query(
+            `INSERT INTO community_replies (post_id, user_id, content, upvote_count)
+             VALUES ($1, $2, $3, $4)`,
+            [post.id, userId, reply.content, reply.upvotes]
+          );
+          repliesAdded++;
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Added ${repliesAdded} replies from ${userIds.length} demo users!`,
+      replies: repliesAdded,
+      users: userIds.length
+    });
+  } catch (error) {
+    console.error('Error adding replies:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error adding replies',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
