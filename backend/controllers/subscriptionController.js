@@ -416,53 +416,72 @@ async function handlePaymentFailed(invoice) {
 // @access Private
 exports.getCurrentSubscription = async (req, res) => {
   try {
+    const userId = req.user.id;
+    console.log('DEBUG: getCurrentSubscription for user:', userId);
+
     const subscriptionResult = await pool.query(
       `SELECT id, user_id, tier, status, price_monthly, current_period_start, current_period_end
        FROM subscriptions
        WHERE user_id = $1
        ORDER BY created_at DESC
        LIMIT 1`,
-      [req.user.id]
+      [userId]
     );
 
-    // If no subscription record exists, check the users table for subscription_tier
-    // (user may have been manually upgraded via dashboard without subscription record)
-    if (subscriptionResult.rows.length === 0) {
-      const userResult = await pool.query(
-        'SELECT subscription_tier FROM users WHERE id = $1',
-        [req.user.id]
-      );
+    console.log('DEBUG: subscriptionResult rows:', subscriptionResult.rows.length);
 
-      if (userResult.rows.length > 0 && userResult.rows[0].subscription_tier) {
-        return res.status(200).json({
-          success: true,
-          subscription: {
-            tier: userResult.rows[0].subscription_tier,
-            status: userResult.rows[0].subscription_tier === 'free' ? 'inactive' : 'active',
-          },
-        });
-      }
+    // If subscription record exists, return it
+    if (subscriptionResult.rows.length > 0) {
+      const subscription = subscriptionResult.rows[0];
+      console.log('DEBUG: Found subscription record, tier:', subscription.tier);
 
       return res.status(200).json({
         success: true,
         subscription: {
-          tier: 'free',
-          status: 'inactive',
+          id: subscription.id,
+          tier: subscription.tier,
+          status: subscription.status,
+          priceMonthly: subscription.price_monthly,
+          currentPeriodStart: subscription.current_period_start,
+          currentPeriodEnd: subscription.current_period_end,
         },
       });
     }
 
-    const subscription = subscriptionResult.rows[0];
+    // If no subscription record exists, check the users table for subscription_tier
+    // (user may have been manually upgraded via dashboard without subscription record)
+    console.log('DEBUG: No subscription record, checking users table...');
+    const userResult = await pool.query(
+      'SELECT subscription_tier, subscription_status FROM users WHERE id = $1',
+      [userId]
+    );
 
-    res.status(200).json({
+    console.log('DEBUG: userResult rows:', userResult.rows.length);
+    if (userResult.rows.length > 0) {
+      console.log('DEBUG: User found, subscription_tier:', userResult.rows[0].subscription_tier);
+    }
+
+    if (userResult.rows.length > 0 && userResult.rows[0].subscription_tier) {
+      const userTier = userResult.rows[0].subscription_tier;
+      const userStatus = userResult.rows[0].subscription_status || (userTier === 'free' ? 'inactive' : 'active');
+
+      console.log('DEBUG: Returning user tier:', userTier, 'status:', userStatus);
+
+      return res.status(200).json({
+        success: true,
+        subscription: {
+          tier: userTier,
+          status: userStatus,
+        },
+      });
+    }
+
+    console.log('DEBUG: Returning default free tier');
+    return res.status(200).json({
       success: true,
       subscription: {
-        id: subscription.id,
-        tier: subscription.tier,
-        status: subscription.status,
-        priceMonthly: subscription.price_monthly,
-        currentPeriodStart: subscription.current_period_start,
-        currentPeriodEnd: subscription.current_period_end,
+        tier: 'free',
+        status: 'inactive',
       },
     });
   } catch (error) {
