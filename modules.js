@@ -56,7 +56,7 @@ function displayModules(data) {
     tierInfo.innerHTML = `
       <div style="padding: 15px; background: #e3f2fd; border-radius: 8px; margin-bottom: 20px;">
         <strong>Current Tier:</strong> ${userTierName}
-        ${userTier !== 'elite' ? `<br><a href="/pricing" style="color: #1976d2; text-decoration: none;">Upgrade for more modules →</a>` : ''}
+        ${userTier !== 'elite' ? `<br><a href="sales-page.html" style="color: #1976d2; text-decoration: none;">Upgrade for more modules →</a>` : ''}
       </div>
     `;
   }
@@ -171,7 +171,7 @@ function viewModule(moduleId) {
  * Navigate to pricing page
  */
 function goToPricing() {
-  window.location.href = '/pricing';
+  window.location.href = 'sales-page.html';
 }
 
 // Load modules when page loads
