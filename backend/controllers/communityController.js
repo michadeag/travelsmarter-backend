@@ -74,13 +74,10 @@ exports.createPost = async (req, res) => {
       });
     }
 
-    // Check user is Elite
-    const subscriptionCheck = await pool.query(
-      'SELECT tier FROM subscriptions WHERE user_id = $1',
-      [userId]
-    );
+    // Check user is Elite (use tier from auth middleware which checks both subscriptions and users tables)
+    const userTier = req.user.subscription_tier || 'free';
 
-    if (subscriptionCheck.rows.length === 0 || subscriptionCheck.rows[0].tier.toLowerCase() !== 'elite') {
+    if (userTier.toLowerCase() !== 'elite') {
       return res.status(403).json({
         success: false,
         message: 'Only Elite members can create posts'
