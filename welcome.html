@@ -795,60 +795,138 @@
         </div>
     </footer>
 
+    <script src="api-service.js"></script>
     <script>
+        // Determine API URL
+        let API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:5000'
+            : 'https://api.travelsmarterapp.com';
+
         // FAQ Toggle
         function toggleFaq(event) {
             const item = event.currentTarget.parentElement;
             item.classList.toggle('active');
         }
 
-        // Form Submission
-        document.getElementById('optinForm').addEventListener('submit', function(e) {
+        // Form Submission - Create Account + Send Welcome Email
+        document.getElementById('optinForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const firstName = this.querySelector('input[name="firstName"]').value;
             const email = this.querySelector('input[name="email"]').value;
+            const button = this.querySelector('button[type="submit"]');
 
-            // Show success message
-            const formHTML = this.innerHTML;
-            this.innerHTML = `
-                <div style="text-align: center; padding: 30px; background: white; border-radius: 8px;">
-                    <h3 style="color: var(--accent); margin-bottom: 10px; font-size: 1.5em;">✓ Success!</h3>
-                    <p style="color: #374151; margin-bottom: 15px;">
-                        Hi ${firstName}, check your email for the cheat sheet!
-                    </p>
-                    <p style="color: #6b7280; font-size: 0.95em;">
-                        Redirecting you to the cheat sheet...
-                    </p>
-                </div>
-            `;
+            // Generate a temporary password
+            const tempPassword = Math.random().toString(36).slice(-10);
 
-            // Redirect to cheat sheet after 2 seconds
-            setTimeout(() => {
-                window.location.href = 'cheat-sheet.html';
-            }, 2000);
+            // Show loading state
+            button.disabled = true;
+            button.textContent = '📥 Creating account...';
+
+            try {
+                // Call signup API
+                const response = await fetch(`${API_URL}/api/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        password: tempPassword,
+                        firstName: firstName,
+                        lastName: ''
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message
+                    this.innerHTML = `
+                        <div style="text-align: center; padding: 30px; background: white; border-radius: 8px;">
+                            <h3 style="color: var(--accent); margin-bottom: 10px; font-size: 1.5em;">✓ Account Created!</h3>
+                            <p style="color: #374151; margin-bottom: 15px;">
+                                Welcome ${firstName}! Your account has been created.
+                            </p>
+                            <p style="color: #6b7280; font-size: 0.95em;">
+                                Check your email for the welcome email + cheat sheet!<br>
+                                Redirecting to cheat sheet...
+                            </p>
+                        </div>
+                    `;
+
+                    // Redirect to cheat sheet after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'cheat-sheet.html';
+                    }, 2000);
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to create account'));
+                    button.disabled = false;
+                    button.textContent = '📥 Send Me the Cheat Sheet (FREE)';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error creating account: ' + error.message);
+                button.disabled = false;
+                button.textContent = '📥 Send Me the Cheat Sheet (FREE)';
+            }
         });
 
-        document.getElementById('optinForm2').addEventListener('submit', function(e) {
+        document.getElementById('optinForm2').addEventListener('submit', async function(e) {
             e.preventDefault();
             const firstName = this.querySelector('input[name="firstName"]').value;
+            const email = this.querySelector('input[name="email"]').value;
+            const button = this.querySelector('button[type="submit"]');
 
-            // Show success message
-            this.innerHTML = `
-                <div style="text-align: center; padding: 30px; background: white; border-radius: 8px;">
-                    <h3 style="color: var(--accent); margin-bottom: 10px; font-size: 1.5em;">✓ Success!</h3>
-                    <p style="color: #374151; margin-bottom: 15px;">
-                        Hi ${firstName}, check your email for the cheat sheet!
-                    </p>
-                    <p style="color: #6b7280; font-size: 0.95em;">
-                        Redirecting you to the cheat sheet...
-                    </p>
-                </div>
-            `;
+            // Generate a temporary password
+            const tempPassword = Math.random().toString(36).slice(-10);
 
-            // Redirect to cheat sheet after 2 seconds
-            setTimeout(() => {
-                window.location.href = 'cheat-sheet.html';
-            }, 2000);
+            // Show loading state
+            button.disabled = true;
+            button.textContent = '📥 Creating account...';
+
+            try {
+                // Call signup API
+                const response = await fetch(`${API_URL}/api/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        password: tempPassword,
+                        firstName: firstName,
+                        lastName: ''
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message
+                    this.innerHTML = `
+                        <div style="text-align: center; padding: 30px; background: white; border-radius: 8px;">
+                            <h3 style="color: var(--accent); margin-bottom: 10px; font-size: 1.5em;">✓ Account Created!</h3>
+                            <p style="color: #374151; margin-bottom: 15px;">
+                                Welcome ${firstName}! Your account has been created.
+                            </p>
+                            <p style="color: #6b7280; font-size: 0.95em;">
+                                Check your email for the welcome email + cheat sheet!<br>
+                                Redirecting to cheat sheet...
+                            </p>
+                        </div>
+                    `;
+
+                    // Redirect to cheat sheet after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'cheat-sheet.html';
+                    }, 2000);
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to create account'));
+                    button.disabled = false;
+                    button.textContent = '📥 Send Me the Cheat Sheet (FREE)';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error creating account: ' + error.message);
+                button.disabled = false;
+                button.textContent = '📥 Send Me the Cheat Sheet (FREE)';
+            }
         });
     </script>
 </body>
