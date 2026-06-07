@@ -55,9 +55,9 @@ async function loadProfile() {
         const data = await response.json();
         const user = data.user;
 
-        document.getElementById('profile-name').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'N/A';
+        document.getElementById('profile-name').textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A';
         document.getElementById('profile-email').textContent = user.email;
-        document.getElementById('profile-joined').textContent = formatDate(user.created_at);
+        document.getElementById('profile-joined').textContent = formatDate(user.createdAt);
 
         document.getElementById('profile-loading').style.display = 'none';
         document.getElementById('profile-content').style.display = 'block';
@@ -102,7 +102,7 @@ async function loadSubscription() {
         badge.className = `subscription-badge ${tierBadges[subscription.tier]}`;
 
         document.getElementById('subscription-status').textContent = subscription.status === 'active' ? 'Active' : 'Inactive';
-        document.getElementById('subscription-next-billing').textContent = subscription.current_period_end ? formatDate(subscription.current_period_end) : 'N/A';
+        document.getElementById('subscription-next-billing').textContent = subscription.currentPeriodEnd ? formatDate(subscription.currentPeriodEnd) : 'N/A';
 
         document.getElementById('subscription-loading').style.display = 'none';
         document.getElementById('subscription-content').style.display = 'block';
@@ -131,11 +131,12 @@ async function loadPaymentHistory() {
         // In a real app, you'd query a separate payment history endpoint
         const tbody = document.getElementById('payments-table-body');
 
-        if (subscription && subscription.created_at) {
+        if (subscription && (subscription.currentPeriodStart || subscription.tier !== 'free')) {
             const row = document.createElement('tr');
+            const paymentDate = subscription.currentPeriodStart || new Date().toISOString();
             row.innerHTML = `
-                <td>${formatDate(subscription.created_at)}</td>
-                <td>€${subscription.price_monthly || '0.00'}</td>
+                <td>${formatDate(paymentDate)}</td>
+                <td>€${subscription.priceMonthly || '0.00'}</td>
                 <td>${subscription.tier === 'smart_traveler' ? 'Smart Traveler' : subscription.tier === 'elite' ? 'Elite' : 'Free'}</td>
                 <td><span class="status-badge status-success">Completed</span></td>
             `;
@@ -166,7 +167,7 @@ async function loadSavedHacks() {
         if (!response.ok) throw new Error('Failed to load saved hacks');
 
         const data = await response.json();
-        const hacks = data.saved_hacks || [];
+        const hacks = data.savedHacks || [];
 
         const grid = document.getElementById('hacks-grid');
 
@@ -179,7 +180,7 @@ async function loadSavedHacks() {
                 card.innerHTML = `
                     <h4>${hack.hack_title || 'Hack'}</h4>
                     <p><strong>Category:</strong> ${hack.hack_category || 'General'}</p>
-                    <p><strong>Saved:</strong> ${formatDate(hack.saved_at)}</p>
+                    <p><strong>Saved:</strong> ${formatDate(hack.saved_at || hack.savedAt)}</p>
                 `;
                 grid.appendChild(card);
             });
@@ -197,8 +198,8 @@ async function loadSavedHacks() {
 // Modal functions
 function openEditProfileModal() {
     if (window.currentUser) {
-        document.getElementById('modal-first-name').value = window.currentUser.first_name || '';
-        document.getElementById('modal-last-name').value = window.currentUser.last_name || '';
+        document.getElementById('modal-first-name').value = window.currentUser.firstName || '';
+        document.getElementById('modal-last-name').value = window.currentUser.lastName || '';
     }
     document.getElementById('edit-profile-modal').classList.add('active');
 }

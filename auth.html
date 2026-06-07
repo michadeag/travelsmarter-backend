@@ -305,7 +305,7 @@
 
             // Check if already logged in
             if (api.isLoggedIn()) {
-                window.location.href = '../index.html';
+                window.location.href = 'account.html';
             }
         });
 
@@ -379,7 +379,7 @@
 
                     showAlert('Success! Redirecting...', 'success');
                     setTimeout(() => {
-                        window.location.href = '../index.html';
+                        window.location.href = 'account.html';
                     }, 1000);
                 } else {
                     showAlert(response.message || 'Authentication failed', 'error');
