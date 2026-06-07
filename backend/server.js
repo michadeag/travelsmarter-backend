@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const pool = require('./config/database');
 const emailSequenceService = require('./services/emailSequenceService');
+const hackUpdateService = require('./services/hackUpdateService');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -499,6 +500,22 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_email_templates_sequence ON email_templates(sequence_id);
       CREATE INDEX IF NOT EXISTS idx_scheduled_emails_status ON scheduled_emails(status);
       CREATE INDEX IF NOT EXISTS idx_scheduled_emails_user ON scheduled_emails(user_id);
+
+      -- Hack update logs table (for tracking automated hack updates)
+      CREATE TABLE IF NOT EXISTS hack_update_logs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        stage VARCHAR(100),
+        new_hacks_added INTEGER DEFAULT 0,
+        hacks_updated INTEGER DEFAULT 0,
+        hacks_marked_obsolete INTEGER DEFAULT 0,
+        duplicates_skipped INTEGER DEFAULT 0,
+        errors TEXT,
+        started_at TIMESTAMP,
+        completed_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_hack_update_logs_started ON hack_update_logs(started_at);
     `;
 
     try {
@@ -568,6 +585,20 @@ initializeApp().then(() => {
         console.error('❌ Error in email sequence scheduler:', error);
       }
     }, 60 * 60 * 1000);
+
+    // Hack update scheduler - runs biweekly (every 14 days) to search for and update hacks
+    console.log('🤖 Hack update scheduler started (runs biweekly)');
+    setInterval(async () => {
+      try {
+        await hackUpdateService.runHackUpdateCycle();
+      } catch (error) {
+        console.error('❌ Error in hack update scheduler:', error);
+      }
+    }, 14 * 24 * 60 * 60 * 1000); // 14 days
+
+    // Run hack update immediately on startup (optional - comment out to skip)
+    // Uncomment next line to run immediately on server start
+    // hackUpdateService.runHackUpdateCycle().catch(err => console.error('Initial hack update failed:', err));
   });
 }).catch(error => {
   console.error('Failed to initialize app:', error);

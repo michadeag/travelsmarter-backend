@@ -14,6 +14,11 @@ const {
   deleteHack,
   listHacks,
 } = require('../controllers/hacksController');
+const {
+  getUpdateLogs,
+  triggerUpdateCycle,
+  getHackStats,
+} = require('../controllers/hackUpdateController');
 
 // Public routes - SPECIFIC routes BEFORE parameter routes
 router.get('/modules', optionalAuth, getAllModules);
@@ -27,6 +32,11 @@ router.get('/admin/hacks', protect, listHacks);
 router.post('/admin/hacks', protect, createHack);
 router.put('/admin/hacks/:id', protect, updateHack);
 router.delete('/admin/hacks/:id', protect, deleteHack);
+
+// Hack update routes
+router.get('/admin/hack-updates', protect, getUpdateLogs);
+router.post('/admin/hack-updates/trigger', protect, triggerUpdateCycle);
+router.get('/admin/hack-stats', protect, getHackStats);
 
 // Legacy routes (kept for compatibility)
 router.get('/', protect, getHacks);
