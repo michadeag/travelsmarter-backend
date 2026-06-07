@@ -10,6 +10,32 @@ const pool = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 
 /**
+ * Reset community discussions (delete all posts and replies)
+ * POST /api/admin/seed/community/reset
+ */
+router.post('/community/reset', async (req, res) => {
+  try {
+    // Delete all replies first (due to foreign key constraints)
+    await pool.query('DELETE FROM community_replies');
+
+    // Delete all posts
+    await pool.query('DELETE FROM community_posts');
+
+    res.json({
+      success: true,
+      message: 'Community discussions cleared. Ready to reseed.'
+    });
+  } catch (error) {
+    console.error('Error resetting community:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error resetting community',
+      error: error.message
+    });
+  }
+});
+
+/**
  * Seed community discussions
  * POST /api/admin/seed/community
  */
@@ -22,7 +48,7 @@ router.post('/community', async (req, res) => {
     if (postCount > 0) {
       return res.json({
         success: false,
-        message: `Community already has ${postCount} posts. Skipping seed.`
+        message: `Community already has ${postCount} posts. Use /reset first if you want to reseed.`
       });
     }
 
