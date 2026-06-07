@@ -559,16 +559,15 @@ initializeApp().then(() => {
 ╚════════════════════════════════════════╝
     `);
 
-    // NOTE: Email sequence scheduler disabled for now
-    // Will be re-enabled once table creation is fixed
-    // console.log('📧 Email sequence scheduler started (runs every hour)');
-    // setInterval(async () => {
-    //   try {
-    //     await emailSequenceService.sendPendingEmails();
-    //   } catch (error) {
-    //     console.error('❌ Error in email sequence scheduler:', error);
-    //   }
-    // }, 60 * 60 * 1000);
+    // Email sequence scheduler - runs every hour to send pending emails
+    console.log('📧 Email sequence scheduler started (runs every hour)');
+    setInterval(async () => {
+      try {
+        await emailSequenceService.sendPendingEmails();
+      } catch (error) {
+        console.error('❌ Error in email sequence scheduler:', error);
+      }
+    }, 60 * 60 * 1000);
   });
 }).catch(error => {
   console.error('Failed to initialize app:', error);
