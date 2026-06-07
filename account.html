@@ -35,15 +35,32 @@
             color: #667eea;
         }
 
+        .navbar-links {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
         .navbar a {
             color: #667eea;
             text-decoration: none;
             font-weight: 600;
             cursor: pointer;
+            font-size: 14px;
         }
 
         .navbar a:hover {
             text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-links {
+                gap: 12px;
+            }
+
+            .navbar a {
+                font-size: 12px;
+            }
         }
 
         .container {
@@ -435,7 +452,12 @@
 <body>
     <div class="navbar">
         <h1>🎫 My Account</h1>
-        <a onclick="logout()">Logout</a>
+        <div class="navbar-links">
+            <a href="index.html">🏠 Home</a>
+            <a href="modules.html">📚 Modules</a>
+            <a href="cheat-sheet.html">📄 Cheat-sheet</a>
+            <a onclick="logout()">🚪 Logout</a>
+        </div>
     </div>
 
     <div class="alert" id="alert"></div>
