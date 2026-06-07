@@ -399,10 +399,10 @@ async function initializeApp() {
     await SettingsController.initializeDefaults();
     console.log('✅ Settings initialized');
 
-    // NOTE: Email seeding disabled for now - focus on API endpoints first
-    // await emailSequenceService.seedEmailSequence().catch(err => {
-    //   console.warn('⚠️ Error seeding email templates:', err.message);
-    // });
+    // Seed default email sequence
+    await emailSequenceService.seedEmailSequence().catch(err => {
+      console.warn('⚠️ Error seeding email templates:', err.message);
+    });
 
     console.log('✅ App initialization complete');
   } catch (error) {
