@@ -253,6 +253,65 @@ function addTierBadge(element, tier) {
 }
 
 /**
+ * Apply tier-gating to module buttons on index page
+ */
+async function applyModuleGating() {
+  const userTier = await getCurrentUserTier();
+  const moduleButtons = document.querySelectorAll('.tab-button');
+
+  // Map modules to their required tier
+  const moduleRequiredTier = {
+    'flight-hacks': 'free',      // Module 1
+    'credit-cards': 'free',      // Module 2
+    'hotels': 'free',            // Module 3
+    'timing': 'free',            // Module 4
+    'airport': 'smart_traveler', // Module 5
+    'destinations': 'smart_traveler', // Module 6
+    'rentacar': 'smart_traveler', // Module 7
+    'community': 'smart_traveler', // Module 8
+    'money': 'smart_traveler',   // Module 9
+    'insurance': 'smart_traveler', // Module 10
+    'visa': 'elite',             // Module 11
+    'accommodation': 'elite',    // Module 12
+    'transport': 'elite',        // Module 13
+    'bookings': 'elite',         // Module 14
+    'food': 'elite',             // Module 15
+    'shopping': 'elite'          // Module 16
+  };
+
+  moduleButtons.forEach(button => {
+    // Find the tab this button controls
+    const tabName = button.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    if (!tabName) return;
+
+    const requiredTier = moduleRequiredTier[tabName];
+    if (!requiredTier) return;
+
+    const hasAccess = isContentAvailable(requiredTier, userTier);
+
+    if (!hasAccess) {
+      // Disable the button
+      button.style.opacity = '0.5';
+      button.style.filter = 'grayscale(100%)';
+      button.style.cursor = 'not-allowed';
+      button.disabled = true;
+
+      // Remove the onclick handler
+      button.removeAttribute('onclick');
+
+      // Add click handler to show upgrade prompt
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert(`This module requires a ${TIER_LIMITS[requiredTier].name} subscription. Click "Upgrade" in the header to unlock all modules.`);
+      });
+
+      // Add lock icon
+      button.innerHTML += ' 🔒';
+    }
+  });
+}
+
+/**
  * Process tier-locked content on page load
  */
 async function initTierGating() {
@@ -275,6 +334,11 @@ async function initTierGating() {
         ${tierConfig.name}
       </span>
     `;
+  }
+
+  // Apply module gating on index page
+  if (document.querySelectorAll('.tab-button').length > 0) {
+    applyModuleGating();
   }
 }
 
