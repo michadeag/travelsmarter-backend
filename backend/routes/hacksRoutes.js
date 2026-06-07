@@ -15,7 +15,7 @@ const {
 } = require('../controllers/hacksController');
 
 // Public routes - SPECIFIC routes BEFORE parameter routes
-router.get('/modules', getAllModules);
+router.get('/modules', protect, getAllModules);
 
 // Private routes - SPECIFIC routes BEFORE parameter routes
 router.post('/save', protect, saveHack);
