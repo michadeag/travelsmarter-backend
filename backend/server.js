@@ -19,6 +19,7 @@ const promoRoutes = require('./routes/promoRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const seedRoutes = require('./routes/seedRoutes');
 const awardChartsRoutes = require('./routes/awardChartsRoutes');
+const eliteStatusRoutes = require('./routes/eliteStatusRoutes');
 
 // Email template routes
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
@@ -60,6 +61,7 @@ app.use('/api/community', communityRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/seed', seedRoutes);
 app.use('/api/award-charts', awardChartsRoutes);
+app.use('/api/elite-status', eliteStatusRoutes);
 app.use('/api/promos', promoRoutes);
 
 // Contact routes - inline for now
@@ -778,6 +780,27 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_award_charts_airline ON award_charts(airline_name);
       CREATE INDEX IF NOT EXISTS idx_award_charts_route ON award_charts(origin_airport, destination_airport);
       CREATE INDEX IF NOT EXISTS idx_award_charts_cabin ON award_charts(cabin_class);
+
+      -- Elite status tracking table (user progress toward loyalty tiers)
+      CREATE TABLE IF NOT EXISTS user_elite_progress (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        program_type VARCHAR(50) NOT NULL,
+        program_name VARCHAR(100) NOT NULL,
+        current_tier VARCHAR(100) NOT NULL,
+        elite_nights INTEGER DEFAULT 0,
+        tier_miles INTEGER DEFAULT 0,
+        elite_night_certificates INTEGER DEFAULT 0,
+        status_expires_at TIMESTAMP,
+        last_activity TIMESTAMP,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, program_name)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_elite_progress_user ON user_elite_progress(user_id);
+      CREATE INDEX IF NOT EXISTS idx_elite_progress_program ON user_elite_progress(program_type, program_name);
     `;
 
     try {
