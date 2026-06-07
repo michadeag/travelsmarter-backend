@@ -80,12 +80,7 @@ exports.createPost = async (req, res) => {
       [userId]
     );
 
-    console.log('DEBUG createPost - userId:', userId);
-    console.log('DEBUG createPost - subscriptionCheck result:', subscriptionCheck.rows);
-    console.log('DEBUG createPost - tier value:', subscriptionCheck.rows.length > 0 ? subscriptionCheck.rows[0].tier : 'NO ROWS');
-
     if (subscriptionCheck.rows.length === 0 || subscriptionCheck.rows[0].tier.toLowerCase() !== 'elite') {
-      console.log('DEBUG - Tier check failed. Rows:', subscriptionCheck.rows.length, 'Tier:', subscriptionCheck.rows.length > 0 ? subscriptionCheck.rows[0].tier : 'N/A');
       return res.status(403).json({
         success: false,
         message: 'Only Elite members can create posts'
