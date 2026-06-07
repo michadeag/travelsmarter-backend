@@ -26,11 +26,11 @@ exports.getPostsByModule = async (req, res) => {
       `SELECT
         cp.id, cp.user_id, cp.title, cp.content, cp.upvote_count, cp.reply_count,
         cp.is_pinned, cp.is_featured, cp.created_at, cp.updated_at,
-        u.first_name, u.last_name, s.tier,
+        u.first_name, u.last_name, COALESCE(u.subscription_tier, s.tier, 'free') as tier,
         COALESCE(user_votes.voted, false) as user_voted
        FROM community_posts cp
        INNER JOIN users u ON cp.user_id = u.id
-       INNER JOIN subscriptions s ON u.id = s.user_id
+       LEFT JOIN subscriptions s ON u.id = s.user_id
        LEFT JOIN (
          SELECT post_id, true as voted
          FROM community_votes
@@ -128,11 +128,11 @@ exports.getReplies = async (req, res) => {
     const result = await pool.query(
       `SELECT
         cr.id, cr.user_id, cr.content, cr.upvote_count, cr.created_at, cr.updated_at,
-        u.first_name, u.last_name, s.tier,
+        u.first_name, u.last_name, COALESCE(u.subscription_tier, s.tier, 'free') as tier,
         COALESCE(user_votes.voted, false) as user_voted
        FROM community_replies cr
        INNER JOIN users u ON cr.user_id = u.id
-       INNER JOIN subscriptions s ON u.id = s.user_id
+       LEFT JOIN subscriptions s ON u.id = s.user_id
        LEFT JOIN (
          SELECT reply_id, true as voted
          FROM community_votes
