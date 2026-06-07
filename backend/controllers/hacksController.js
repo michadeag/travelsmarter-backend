@@ -9,6 +9,8 @@ exports.saveHack = async (req, res) => {
     const { hackId } = req.body;
     const userId = req.user.id;
 
+    console.log('💾 Save hack attempt:', { userId, hackId });
+
     // Validate input
     if (!hackId) {
       return res.status(400).json({
@@ -19,9 +21,11 @@ exports.saveHack = async (req, res) => {
 
     // Verify hack exists
     const hackExists = await pool.query(
-      'SELECT id FROM hacks WHERE id = $1',
+      'SELECT id, title FROM hacks WHERE id = $1',
       [hackId]
     );
+
+    console.log('🔍 Hack lookup result:', hackExists.rows);
 
     if (hackExists.rows.length === 0) {
       return res.status(404).json({
@@ -52,13 +56,16 @@ exports.saveHack = async (req, res) => {
       [userId, hackId]
     );
 
+    console.log('✅ Hack saved:', result.rows[0]);
+
     res.status(201).json({
       success: true,
       message: 'Hack saved successfully',
       savedHack: result.rows[0],
     });
   } catch (error) {
-    console.error('Save hack error:', error);
+    console.error('❌ Save hack error:', error.message);
+    console.error('Stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Error saving hack',
