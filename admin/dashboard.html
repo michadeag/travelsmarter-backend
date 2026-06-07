@@ -1212,6 +1212,66 @@
         </div>
     </div>
 
+    <!-- Email Sequence Modal -->
+    <div id="email-sequence-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Email Sequence</h3>
+                <button class="close-modal" onclick="closeEmailSequenceModal()">✕</button>
+            </div>
+
+            <div class="form-group">
+                <label>Sequence Name</label>
+                <input type="text" id="modal-sequence-name" placeholder="Welcome Email Sequence">
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="modal-sequence-description" placeholder="Describe this email sequence..."></textarea>
+            </div>
+
+            <div class="actions" style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="saveEmailSequence()">Create Sequence</button>
+                <button class="btn btn-secondary" onclick="closeEmailSequenceModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Template Modal -->
+    <div id="template-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Email Template</h3>
+                <button class="close-modal" onclick="closeTemplateModal()">✕</button>
+            </div>
+
+            <div class="form-group">
+                <label>Sequence</label>
+                <select id="modal-template-sequence"></select>
+            </div>
+
+            <div class="form-group">
+                <label>Day</label>
+                <input type="number" id="modal-template-day" placeholder="0" min="0">
+            </div>
+
+            <div class="form-group">
+                <label>Subject</label>
+                <input type="text" id="modal-template-subject" placeholder="Email subject line">
+            </div>
+
+            <div class="form-group">
+                <label>Content</label>
+                <textarea id="modal-template-content" placeholder="Email content..."></textarea>
+            </div>
+
+            <div class="actions" style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="saveEmailTemplate()">Create Template</button>
+                <button class="btn btn-secondary" onclick="closeTemplateModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script src="dashboard.js"></script>
 </body>
 </html>

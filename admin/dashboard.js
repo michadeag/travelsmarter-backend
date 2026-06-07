@@ -1368,16 +1368,96 @@ function renderTemplatesForSequence(templates) {
 }
 
 function openEmailSequenceModal() {
-    // Placeholder - will implement modal for creating new sequence
-    const name = prompt('Enter sequence name:', 'Welcome Email Sequence');
-    if (name) {
-        createSequence(name);
-    }
+    document.getElementById('email-sequence-modal').classList.add('active');
+}
+
+function closeEmailSequenceModal() {
+    document.getElementById('email-sequence-modal').classList.remove('active');
+    document.getElementById('modal-sequence-name').value = '';
+    document.getElementById('modal-sequence-description').value = '';
 }
 
 function openTemplateModal() {
-    // Placeholder - will implement modal for creating new template
-    alert('Template editor modal - to be implemented');
+    document.getElementById('template-modal').classList.add('active');
+}
+
+function closeTemplateModal() {
+    document.getElementById('template-modal').classList.remove('active');
+    document.getElementById('modal-template-day').value = '';
+    document.getElementById('modal-template-subject').value = '';
+    document.getElementById('modal-template-content').value = '';
+}
+
+async function saveEmailSequence() {
+    const name = document.getElementById('modal-sequence-name').value;
+    const description = document.getElementById('modal-sequence-description').value;
+
+    if (!name) {
+        showAlert('Sequence name is required', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/email-templates/sequences`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${getAuthToken()}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, description })
+        });
+
+        if (response.ok) {
+            showAlert('Sequence created successfully', 'success');
+            closeEmailSequenceModal();
+            loadEmailTemplates();
+        } else {
+            showAlert('Failed to create sequence', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating sequence:', error);
+        showAlert('Error creating sequence', 'error');
+    }
+}
+
+async function saveEmailTemplate() {
+    const sequenceId = document.getElementById('modal-template-sequence').value;
+    const day = document.getElementById('modal-template-day').value;
+    const subject = document.getElementById('modal-template-subject').value;
+    const content = document.getElementById('modal-template-content').value;
+
+    if (!sequenceId || !subject) {
+        showAlert('Sequence and subject are required', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/email-templates/templates`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${getAuthToken()}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                sequence_id: sequenceId,
+                day: parseInt(day) || 0,
+                subject,
+                html_content: content,
+                content: content
+            })
+        });
+
+        if (response.ok) {
+            showAlert('Template created successfully', 'success');
+            closeTemplateModal();
+            loadEmailTemplates();
+        } else {
+            showAlert('Failed to create template', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating template:', error);
+        showAlert('Error creating template', 'error');
+    }
 }
 
 async function createSequence(name) {
