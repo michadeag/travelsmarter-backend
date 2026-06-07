@@ -18,6 +18,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const promoRoutes = require('./routes/promoRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const seedRoutes = require('./routes/seedRoutes');
+const awardChartsRoutes = require('./routes/awardChartsRoutes');
 
 // Email template routes
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
@@ -58,6 +59,7 @@ app.use('/api/user/deal-filters', dealFiltersRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/seed', seedRoutes);
+app.use('/api/award-charts', awardChartsRoutes);
 app.use('/api/promos', promoRoutes);
 
 // Contact routes - inline for now
@@ -755,6 +757,27 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_community_votes_user ON community_votes(user_id);
       CREATE INDEX IF NOT EXISTS idx_community_votes_post ON community_votes(post_id);
       CREATE INDEX IF NOT EXISTS idx_community_votes_reply ON community_votes(reply_id);
+
+      -- Award charts table (airline/hotel award redemption rates)
+      CREATE TABLE IF NOT EXISTS award_charts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        airline_name VARCHAR(100) NOT NULL,
+        origin_airport VARCHAR(10) NOT NULL,
+        destination_airport VARCHAR(10) NOT NULL,
+        cabin_class VARCHAR(50) NOT NULL,
+        miles_required INTEGER NOT NULL,
+        cash_equivalent_eur DECIMAL(10, 2),
+        value_cpp DECIMAL(5, 2),
+        notes TEXT,
+        source VARCHAR(100),
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(airline_name, origin_airport, destination_airport, cabin_class)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_award_charts_airline ON award_charts(airline_name);
+      CREATE INDEX IF NOT EXISTS idx_award_charts_route ON award_charts(origin_airport, destination_airport);
+      CREATE INDEX IF NOT EXISTS idx_award_charts_cabin ON award_charts(cabin_class);
     `;
 
     try {

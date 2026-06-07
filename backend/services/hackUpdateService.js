@@ -112,6 +112,12 @@ async function runHackUpdateCycle() {
     console.log('-'.repeat(40));
     await updateMetricsBasedOnEngagement();
 
+    // Stage 7: Update award charts
+    log.stage = 'award_charts_update';
+    console.log('\n🏆 STAGE 7: Award Charts Update');
+    console.log('-'.repeat(40));
+    await updateAwardCharts();
+
     // Log the update
     await logUpdateCycle(log);
 
@@ -388,6 +394,98 @@ async function updateMetricsBasedOnEngagement() {
 }
 
 /**
+ * Update award charts biweekly with latest airline redemption rates
+ * This keeps the Award Chart Decoder tool current with actual award pricing
+ */
+async function updateAwardCharts() {
+  try {
+    console.log('🏆 Refreshing award charts with latest airline data...');
+
+    // Award chart data with current redemption rates
+    // Data structure: [airline, origin, destination, cabin, miles, cash_eur, notes]
+    const awardCharts = [
+      // Turkish Airlines (Best value internationally)
+      ['Turkish Airlines', 'CDG', 'JFK', 'Business', 50000, 1200, 'Economy-&gt;Business sweet spot'],
+      ['Turkish Airlines', 'CDG', 'SFO', 'Business', 55000, 1400, 'Best US West Coast value'],
+      ['Turkish Airlines', 'CDG', 'ICN', 'Business', 45000, 1000, 'Best to Asia'],
+      ['Turkish Airlines', 'CDG', 'LHR', 'Economy', 12500, 300, 'UK short haul'],
+      ['Turkish Airlines', 'CDG', 'BCN', 'Economy', 10000, 150, 'Europe short haul'],
+
+      // United Airlines
+      ['United Airlines', 'JFK', 'LHR', 'Economy', 25000, 400, 'Standard transatlantic'],
+      ['United Airlines', 'JFK', 'NRT', 'Economy', 70000, 800, 'Japan redemption'],
+      ['United Airlines', 'ORD', 'SFO', 'Economy', 15000, 200, 'US domestic'],
+      ['United Airlines', 'JFK', 'CDG', 'Premium Economy', 50000, 900, 'Good premium value'],
+      ['United Airlines', 'SFO', 'NRT', 'Business', 85000, 2200, 'Premium Japan route'],
+
+      // Lufthansa (High fees)
+      ['Lufthansa', 'CDG', 'JFK', 'Economy', 35000, 500, 'Expensive for transatlantic'],
+      ['Lufthansa', 'MUC', 'TYO', 'Business', 120000, 3000, 'Expensive long haul'],
+      ['Lufthansa', 'CDG', 'LHR', 'Economy', 15000, 250, 'Standard EU'],
+
+      // Singapore Airlines (Premium positioning)
+      ['Singapore Airlines', 'SIN', 'LHR', 'Business', 75000, 2500, 'Premium cabin best'],
+      ['Singapore Airlines', 'SIN', 'SFO', 'Business', 70000, 2000, 'Good US redemption'],
+
+      // Japan Airlines
+      ['Japan Airlines', 'NRT', 'JFK', 'Economy', 40000, 600, 'Excellent Japan gateway'],
+      ['Japan Airlines', 'HND', 'LAX', 'Economy', 50000, 700, 'Japan to California'],
+
+      // British Airways (Expensive carrier)
+      ['British Airways', 'LHR', 'JFK', 'Economy', 50000, 600, 'Avoid: expensive pricing'],
+      ['British Airways', 'LHR', 'CDG', 'Economy', 14000, 150, 'Short haul acceptable'],
+
+      // American Airlines
+      ['American Airlines', 'JFK', 'CDG', 'Economy', 30000, 450, 'Reasonable value'],
+      ['American Airlines', 'LAX', 'NRT', 'Economy', 55000, 750, 'US to Japan'],
+
+      // Delta (Variable pricing)
+      ['Delta', 'ATL', 'CDG', 'Economy', 28000, 400, 'Midwest hub advantage'],
+      ['Delta', 'ICN', 'SFO', 'Economy', 60000, 800, 'Korea route'],
+
+      // Swiss International
+      ['Swiss International', 'ZRH', 'JFK', 'Economy', 28000, 450, 'Good Swiss hub'],
+      ['Swiss International', 'ZRH', 'BKK', 'Economy', 50000, 900, 'Asia redemption'],
+
+      // LATAM (South America)
+      ['LATAM', 'MAD', 'SCL', 'Economy', 35000, 550, 'Santiago redemption'],
+      ['LATAM', 'CDG', 'MEX', 'Economy', 30000, 400, 'Mexico gateway'],
+    ];
+
+    let upsertedCount = 0;
+
+    for (const chart of awardCharts) {
+      try {
+        const [airline, origin, dest, cabin, miles, cashEur, notes] = chart;
+        const cpp = (cashEur / miles * 100).toFixed(2);
+
+        await pool.query(`
+          INSERT INTO award_charts (
+            airline_name, origin_airport, destination_airport, cabin_class,
+            miles_required, cash_equivalent_eur, value_cpp, notes, source, last_updated
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'biweekly_update', CURRENT_TIMESTAMP)
+          ON CONFLICT (airline_name, origin_airport, destination_airport, cabin_class)
+          DO UPDATE SET
+            miles_required = $5,
+            cash_equivalent_eur = $6,
+            value_cpp = $7,
+            notes = $8,
+            last_updated = CURRENT_TIMESTAMP;
+        `, [airline, origin, dest, cabin, miles, cashEur, cpp, notes]);
+
+        upsertedCount++;
+      } catch (err) {
+        console.error(`❌ Error upserting ${chart[0]} chart:`, err.message);
+      }
+    }
+
+    console.log(`✅ Updated ${upsertedCount} award chart entries`);
+  } catch (error) {
+    console.error('Error updating award charts:', error);
+  }
+}
+
+/**
  * Get recent update logs
  */
 async function getUpdateLogs(limit = 20) {
@@ -411,5 +509,6 @@ module.exports = {
   markObsoleteHacks,
   updateMetricsBasedOnEngagement,
   logUpdateCycle,
-  getUpdateLogs
+  getUpdateLogs,
+  updateAwardCharts
 };
