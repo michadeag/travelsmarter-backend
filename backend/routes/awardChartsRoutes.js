@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const protect = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 
 // GET all award charts or filter by route/airline
 router.get('/search', async (req, res) => {

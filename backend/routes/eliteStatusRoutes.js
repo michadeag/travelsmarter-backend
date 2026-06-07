@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const protect = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 
 // Elite program definitions with tier requirements
 const ELITE_PROGRAMS = {
