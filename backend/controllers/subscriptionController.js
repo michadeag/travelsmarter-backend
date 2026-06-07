@@ -425,7 +425,24 @@ exports.getCurrentSubscription = async (req, res) => {
       [req.user.id]
     );
 
+    // If no subscription record exists, check the users table for subscription_tier
+    // (user may have been manually upgraded via dashboard without subscription record)
     if (subscriptionResult.rows.length === 0) {
+      const userResult = await pool.query(
+        'SELECT subscription_tier FROM users WHERE id = $1',
+        [req.user.id]
+      );
+
+      if (userResult.rows.length > 0 && userResult.rows[0].subscription_tier) {
+        return res.status(200).json({
+          success: true,
+          subscription: {
+            tier: userResult.rows[0].subscription_tier,
+            status: userResult.rows[0].subscription_tier === 'free' ? 'inactive' : 'active',
+          },
+        });
+      }
+
       return res.status(200).json({
         success: true,
         subscription: {
