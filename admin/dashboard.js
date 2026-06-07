@@ -833,7 +833,7 @@ async function savePromo() {
 
 async function editPromo(promoId) {
     try {
-        const response = await fetch(`${API_URL}/api/promos/${promoId}`, {
+        const response = await fetch(`${API_URL}/api/promos`, {
             headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
@@ -843,7 +843,12 @@ async function editPromo(promoId) {
         }
 
         const data = await response.json();
-        const promo = data.data;
+        const promo = data.data.find(p => p.id === promoId);
+
+        if (!promo) {
+            showAlert('Promo not found', 'error');
+            return;
+        }
 
         document.getElementById('modal-promo-code').value = promo.code;
         document.getElementById('modal-promo-percent').value = promo.discount_percent;
