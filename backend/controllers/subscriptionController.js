@@ -417,7 +417,6 @@ async function handlePaymentFailed(invoice) {
 exports.getCurrentSubscription = async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log('DEBUG: getCurrentSubscription for user:', userId);
 
     const subscriptionResult = await pool.query(
       `SELECT id, user_id, tier, status, price_monthly, current_period_start, current_period_end
@@ -428,12 +427,9 @@ exports.getCurrentSubscription = async (req, res) => {
       [userId]
     );
 
-    console.log('DEBUG: subscriptionResult rows:', subscriptionResult.rows.length);
-
     // If subscription record exists, return it
     if (subscriptionResult.rows.length > 0) {
       const subscription = subscriptionResult.rows[0];
-      console.log('DEBUG: Found subscription record, tier:', subscription.tier);
 
       return res.status(200).json({
         success: true,
@@ -450,22 +446,14 @@ exports.getCurrentSubscription = async (req, res) => {
 
     // If no subscription record exists, check the users table for subscription_tier
     // (user may have been manually upgraded via dashboard without subscription record)
-    console.log('DEBUG: No subscription record, checking users table...');
     const userResult = await pool.query(
       'SELECT subscription_tier, subscription_status FROM users WHERE id = $1',
       [userId]
     );
 
-    console.log('DEBUG: userResult rows:', userResult.rows.length);
-    if (userResult.rows.length > 0) {
-      console.log('DEBUG: User found, subscription_tier:', userResult.rows[0].subscription_tier);
-    }
-
     if (userResult.rows.length > 0 && userResult.rows[0].subscription_tier) {
       const userTier = userResult.rows[0].subscription_tier;
       const userStatus = userResult.rows[0].subscription_status || (userTier === 'free' ? 'inactive' : 'active');
-
-      console.log('DEBUG: Returning user tier:', userTier, 'status:', userStatus);
 
       return res.status(200).json({
         success: true,
@@ -476,7 +464,6 @@ exports.getCurrentSubscription = async (req, res) => {
       });
     }
 
-    console.log('DEBUG: Returning default free tier');
     return res.status(200).json({
       success: true,
       subscription: {
