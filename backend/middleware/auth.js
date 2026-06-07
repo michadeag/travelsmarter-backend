@@ -20,7 +20,7 @@ const protect = async (req, res, next) => {
 
     // Fetch user's current subscription tier from database
     const userResult = await pool.query(
-      `SELECT u.id, u.first_name, u.last_name, u.email, s.tier
+      `SELECT u.id, u.first_name, u.last_name, u.email, u.subscription_tier, s.tier as subscription_tier_from_table
        FROM users u
        LEFT JOIN subscriptions s ON u.id = s.user_id
        WHERE u.id = $1`,
@@ -35,12 +35,16 @@ const protect = async (req, res, next) => {
     }
 
     const user = userResult.rows[0];
+
+    // Determine tier: prefer subscription table, but fall back to users table for manually upgraded users
+    let tier = user.subscription_tier_from_table || user.subscription_tier || 'free';
+
     req.user = {
       id: user.id,
       firstName: user.first_name,
       lastName: user.last_name,
       email: user.email,
-      subscription_tier: user.tier || 'free'
+      subscription_tier: tier
     };
 
     next();
@@ -65,7 +69,7 @@ const optionalAuth = async (req, res, next) => {
 
       // Fetch user's current subscription tier from database
       const userResult = await pool.query(
-        `SELECT u.id, u.first_name, u.last_name, u.email, s.tier
+        `SELECT u.id, u.first_name, u.last_name, u.email, u.subscription_tier, s.tier as subscription_tier_from_table
          FROM users u
          LEFT JOIN subscriptions s ON u.id = s.user_id
          WHERE u.id = $1`,
@@ -74,12 +78,16 @@ const optionalAuth = async (req, res, next) => {
 
       if (userResult.rows.length > 0) {
         const user = userResult.rows[0];
+
+        // Determine tier: prefer subscription table, but fall back to users table for manually upgraded users
+        let tier = user.subscription_tier_from_table || user.subscription_tier || 'free';
+
         req.user = {
           id: user.id,
           firstName: user.first_name,
           lastName: user.last_name,
           email: user.email,
-          subscription_tier: user.tier || 'free'
+          subscription_tier: tier
         };
       } else {
         req.user = null;
