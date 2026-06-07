@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, optionalAuth } = require('../middleware/auth');
 const {
   saveHack,
   removeHack,
@@ -15,7 +15,7 @@ const {
 } = require('../controllers/hacksController');
 
 // Public routes - SPECIFIC routes BEFORE parameter routes
-router.get('/modules', protect, getAllModules);
+router.get('/modules', optionalAuth, getAllModules);
 
 // Private routes - SPECIFIC routes BEFORE parameter routes
 router.post('/save', protect, saveHack);
@@ -25,8 +25,8 @@ router.get('/saved', protect, getSavedHacks);
 router.get('/', protect, getHacks);
 router.post('/', protect, createHack);
 
-// Module hacks - parameter route
-router.get('/module/:moduleId', getHacksByModule);
+// Module hacks - parameter route (optional auth)
+router.get('/module/:moduleId', optionalAuth, getHacksByModule);
 
 // Parameter routes LAST
 router.delete('/:hackId/remove', protect, removeHack);
