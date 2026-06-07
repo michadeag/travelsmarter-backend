@@ -1395,7 +1395,7 @@ let currentEditingHackId = null;
 // Load and display all hacks
 async function loadHacksList() {
     try {
-        const response = await fetch(`${API_URL}/api/admin/hacks`, {
+        const response = await fetch(`${API_URL}/api/hacks/admin/hacks`, {
             headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
@@ -1464,7 +1464,7 @@ function openAddHackModal() {
 async function editHack(hackId) {
     try {
         // Get all hacks and find this one
-        const response = await fetch(`${API_URL}/api/admin/hacks`, {
+        const response = await fetch(`${API_URL}/api/hacks/admin/hacks`, {
             headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
@@ -1516,8 +1516,8 @@ async function saveHackManagement() {
 
     try {
         const url = currentEditingHackId
-            ? `${API_URL}/api/admin/hacks/${currentEditingHackId}`
-            : `${API_URL}/api/admin/hacks`;
+            ? `${API_URL}/api/hacks/admin/hacks/${currentEditingHackId}`
+            : `${API_URL}/api/hacks/admin/hacks`;
 
         const method = currentEditingHackId ? 'PUT' : 'POST';
 
@@ -1555,7 +1555,7 @@ async function deleteHack(hackId) {
     if (!confirm('Are you sure you want to delete this hack?')) return;
 
     try {
-        const response = await fetch(`${API_URL}/api/admin/hacks/${hackId}`, {
+        const response = await fetch(`${API_URL}/api/hacks/admin/hacks/${hackId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
