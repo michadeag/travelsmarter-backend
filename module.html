@@ -237,6 +237,7 @@
         <div class="navbar-links">
             <a href="index.html">🏠 Home</a>
             <a href="modules.html">📚 Modules</a>
+            <a href="tools.html">📋 Tools</a>
             <a href="account.html" id="account-link" style="display: none;">🎫 Account</a>
             <a onclick="logout()" id="logout-link" style="display: none;">🚪 Logout</a>
         </div>
@@ -398,10 +399,42 @@
 
                 const difficultyBadge = hack.difficulty ? `<div style="margin: 10px 0;"><span style="background: #667eea; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${hack.difficulty}</span></div>` : '';
 
+                // Social proof stats
+                const usageCount = hack.usage_count || 0;
+                const avgSavings = hack.avg_savings_euros || 0;
+                const successRate = hack.success_rate || 0;
+
+                const socialProof = `
+                    <div style="
+                        background: linear-gradient(135deg, #f0f4ff 0%, #e8f0ff 100%);
+                        padding: 12px;
+                        border-radius: 8px;
+                        margin: 12px 0;
+                        display: grid;
+                        grid-template-columns: 1fr 1fr 1fr;
+                        gap: 8px;
+                        font-size: 13px;
+                    ">
+                        <div style="text-align: center;">
+                            <div style="color: #667eea; font-weight: 700; font-size: 14px;">${usageCount.toLocaleString()}</div>
+                            <div style="color: #6b7280; font-size: 11px;">Members used</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="color: #10b981; font-weight: 700; font-size: 14px;">€${avgSavings.toFixed(0)}</div>
+                            <div style="color: #6b7280; font-size: 11px;">Avg savings</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="color: #f59e0b; font-weight: 700; font-size: 14px;">${successRate.toFixed(0)}%</div>
+                            <div style="color: #6b7280; font-size: 11px;">Success rate</div>
+                        </div>
+                    </div>
+                `;
+
                 card.innerHTML = `
                     <h3>${hack.title}</h3>
                     <p>${hack.description || 'No description available'}</p>
                     ${difficultyBadge}
+                    ${socialProof}
                     <div class="hack-actions">
                         <button class="btn btn-primary" onclick="saveHack('${hack.id}')">💾 Save</button>
                     </div>
