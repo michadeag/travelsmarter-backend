@@ -178,9 +178,9 @@ async function loadSavedHacks() {
                 const card = document.createElement('div');
                 card.className = 'hack-card';
                 card.innerHTML = `
-                    <h4>${hack.hack_title || 'Hack'}</h4>
-                    <p><strong>Category:</strong> ${hack.hack_category || 'General'}</p>
-                    <p><strong>Saved:</strong> ${formatDate(hack.saved_at || hack.savedAt)}</p>
+                    <h4>${hack.title || 'Hack'}</h4>
+                    <p><strong>Category:</strong> ${hack.category || 'General'}</p>
+                    <p><strong>Saved:</strong> ${formatDate(hack.saved_at)}</p>
                 `;
                 grid.appendChild(card);
             });
