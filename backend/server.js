@@ -253,16 +253,29 @@ async function initializeApp() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      -- Hacks table (travel hacks content)
+      CREATE TABLE IF NOT EXISTS hacks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        module_id INTEGER NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        category VARCHAR(100),
+        difficulty VARCHAR(50) DEFAULT 'medium',
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Create index for module lookups
+      CREATE INDEX IF NOT EXISTS idx_hacks_module_id ON hacks(module_id);
+
       -- Saved hacks table
       CREATE TABLE IF NOT EXISTS saved_hacks (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        module_id INTEGER,
-        hack_id INTEGER,
-        hack_title VARCHAR(255),
-        hack_category VARCHAR(100),
+        hack_id UUID NOT NULL REFERENCES hacks(id) ON DELETE CASCADE,
         saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, module_id, hack_id)
+        UNIQUE(user_id, hack_id)
       );
 
       -- Deals table
