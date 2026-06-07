@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
 
-const protect = (req, res, next) => {
+const protect = async (req, res, next) => {
   let token;
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -17,7 +17,32 @@ const protect = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+
+    // Fetch user's current subscription tier from database
+    const userResult = await pool.query(
+      `SELECT u.id, u.first_name, u.last_name, u.email, s.tier
+       FROM users u
+       LEFT JOIN subscriptions s ON u.id = s.user_id
+       WHERE u.id = $1`,
+      [decoded.id]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const user = userResult.rows[0];
+    req.user = {
+      id: user.id,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      email: user.email,
+      subscription_tier: user.tier || 'free'
+    };
+
     next();
   } catch (error) {
     return res.status(401).json({
@@ -38,16 +63,23 @@ const optionalAuth = async (req, res, next) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Fetch user's subscription tier from database
+      // Fetch user's current subscription tier from database
       const userResult = await pool.query(
-        'SELECT id, subscription_tier FROM users WHERE id = $1',
+        `SELECT u.id, u.first_name, u.last_name, u.email, s.tier
+         FROM users u
+         LEFT JOIN subscriptions s ON u.id = s.user_id
+         WHERE u.id = $1`,
         [decoded.id]
       );
 
       if (userResult.rows.length > 0) {
+        const user = userResult.rows[0];
         req.user = {
-          id: decoded.id,
-          subscription_tier: userResult.rows[0].subscription_tier
+          id: user.id,
+          firstName: user.first_name,
+          lastName: user.last_name,
+          email: user.email,
+          subscription_tier: user.tier || 'free'
         };
       } else {
         req.user = null;
