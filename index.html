@@ -485,8 +485,8 @@
                 <p>Daily Updated Flight Hacks That Work in 2026</p>
             </div>
             <div class="header-right">
-                <div class="user-status">🎯 Free Plan</div>
-                <p style="font-size: 0.85em; color: var(--text-light); margin-top: 5px;">3 hacks/month available</p>
+                <div class="user-status" id="tierDisplay">🎯 Free Plan</div>
+                <p style="font-size: 0.85em; color: var(--text-light); margin-top: 5px;" id="hackAvailable">3 hacks/month available</p>
                 <a href="#" onclick="performLogout(event)" style="display: inline-block; margin-top: 10px; font-size: 0.85em; color: #667eea; text-decoration: none; font-weight: 600; cursor: pointer;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
                     🚪 Logout
                 </a>
@@ -5345,7 +5345,7 @@
         <!-- FOOTER -->
         <div class="footer">
             <p>🌍 TravelSmarter • Daily Updated Travel Intelligence • Made with ❤️ for Frequent Travelers</p>
-            <p style="margin-top: 10px; font-size: 0.85em;">Current: Free Plan • 3 Hacks/Month Available • <strong>Upgrade to Smart Traveler</strong> for unlimited access</p>
+            <p style="margin-top: 10px; font-size: 0.85em;" id="footerTierInfo">Current: Free Plan • 3 Hacks/Month Available • <strong>Upgrade to Smart Traveler</strong> for unlimited access</p>
         </div>
     </div>
 
@@ -5398,6 +5398,64 @@
                 }
             });
         });
+
+        // Update tier display in header
+        function updateTierDisplay() {
+            const tierDisplay = document.getElementById('tierDisplay');
+            const hackAvailable = document.getElementById('hackAvailable');
+            const footerTierInfo = document.getElementById('footerTierInfo');
+
+            if (!tierDisplay || !hackAvailable) return;
+
+            // Get user tier from userData or from window (set by tier-gating.js)
+            let userTier = 'free';
+            try {
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const parsed = JSON.parse(userData);
+                    userTier = (parsed.subscription_tier || 'free').toLowerCase();
+                }
+            } catch (e) {
+                // Ignore parsing errors
+            }
+
+            // Also check if window.userTier is set by tier-gating.js
+            if (window.userTier) {
+                userTier = window.userTier.toLowerCase();
+            }
+
+            // Update display based on tier
+            const tierInfo = {
+                'free': {
+                    display: '🎯 Free Plan',
+                    hacks: '3 hacks/month available',
+                    footer: 'Current: Free Plan • 3 Hacks/Month Available • <strong>Upgrade to Smart Traveler</strong> for unlimited access'
+                },
+                'smart_traveler': {
+                    display: '⭐ Smart Traveler',
+                    hacks: '10 modules, unlimited hacks',
+                    footer: 'Current: Smart Traveler • 10 Modules • <strong>Upgrade to Elite</strong> for SMS alerts & expert support'
+                },
+                'elite': {
+                    display: '👑 Elite',
+                    hacks: '16 modules, unlimited hacks',
+                    footer: 'Current: Elite • 16 Modules • SMS alerts • Expert consultations • Custom filters'
+                }
+            };
+
+            const info = tierInfo[userTier] || tierInfo['free'];
+            tierDisplay.textContent = info.display;
+            hackAvailable.textContent = info.hacks;
+            if (footerTierInfo) {
+                footerTierInfo.innerHTML = info.footer;
+            }
+        }
+
+        // Call on page load
+        document.addEventListener('DOMContentLoaded', updateTierDisplay);
+
+        // Also call after a short delay in case tier data loads after DOM
+        setTimeout(updateTierDisplay, 500);
 
         // Logout functionality
         function performLogout(event) {
