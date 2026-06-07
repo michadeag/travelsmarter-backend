@@ -3,6 +3,143 @@ const router = express.Router();
 const pool = require('../config/database');
 const { protect } = require('../middleware/auth');
 
+// ⚠️ IMPORTANT: Specific routes MUST come BEFORE wildcard /:id route!
+
+// GET available programs list
+router.get('/available-programs', async (req, res) => {
+  try {
+    const programs = [];
+
+    // Add airline programs
+    const airlines = ['United Airlines', 'American Airlines', 'Delta', 'Turkish Airlines', 'British Airways'];
+    airlines.forEach(name => {
+      programs.push({
+        name,
+        type: 'airline',
+        icon: '✈️'
+      });
+    });
+
+    // Add hotel programs
+    const hotels = ['Marriott Bonvoy', 'Hilton Honors', 'IHG One Rewards'];
+    hotels.forEach(name => {
+      programs.push({
+        name,
+        type: 'hotel',
+        icon: '🏨'
+      });
+    });
+
+    res.json({
+      success: true,
+      data: programs
+    });
+  } catch (error) {
+    console.error('Error fetching available programs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching available programs',
+      error: error.message
+    });
+  }
+});
+
+// GET airlines list
+router.get('/list/airlines', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT DISTINCT airline_name FROM award_charts ORDER BY airline_name ASC'
+    );
+
+    res.json({
+      success: true,
+      data: result.rows.map(r => r.airline_name)
+    });
+  } catch (error) {
+    console.error('Error fetching airlines:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching airlines',
+      error: error.message
+    });
+  }
+});
+
+// GET cabin classes available
+router.get('/list/cabins', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT DISTINCT cabin_class FROM award_charts ORDER BY cabin_class ASC'
+    );
+
+    res.json({
+      success: true,
+      data: result.rows.map(r => r.cabin_class)
+    });
+  } catch (error) {
+    console.error('Error fetching cabin classes:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching cabin classes',
+      error: error.message
+    });
+  }
+});
+
+// GET program details including tiers and requirements
+router.get('/program-details/:programName', async (req, res) => {
+  try {
+    const { programName } = req.params;
+
+    // For now, return generic response
+    // In production, this would fetch from a programs database
+    const programs = {
+      'United Airlines': {
+        type: 'airline',
+        icon: '✈️',
+        tiers: [
+          { name: 'Silver', miles: 25000 },
+          { name: 'Gold', miles: 50000 },
+          { name: 'Platinum', miles: 75000 },
+          { name: '1K', miles: 100000 }
+        ]
+      },
+      'American Airlines': {
+        type: 'airline',
+        icon: '✈️',
+        tiers: [
+          { name: 'Silver', miles: 30000 },
+          { name: 'Gold', miles: 50000 },
+          { name: 'Platinum', miles: 75000 },
+          { name: 'Executive Platinum', miles: 120000 }
+        ]
+      }
+    };
+
+    if (programs[programName]) {
+      res.json({
+        success: true,
+        data: {
+          name: programName,
+          ...programs[programName]
+        }
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'Program not found'
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching program details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching program details',
+      error: error.message
+    });
+  }
+});
+
 // GET all award charts or filter by route/airline
 router.get('/search', async (req, res) => {
   try {
@@ -57,6 +194,7 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// ⚠️ WILDCARD ROUTE - MUST COME LAST!
 // GET specific award chart by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -81,48 +219,6 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching award chart',
-      error: error.message
-    });
-  }
-});
-
-// GET airlines list
-router.get('/list/airlines', async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT DISTINCT airline_name FROM award_charts ORDER BY airline_name ASC'
-    );
-
-    res.json({
-      success: true,
-      data: result.rows.map(r => r.airline_name)
-    });
-  } catch (error) {
-    console.error('Error fetching airlines:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching airlines',
-      error: error.message
-    });
-  }
-});
-
-// GET cabin classes available
-router.get('/list/cabins', async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT DISTINCT cabin_class FROM award_charts ORDER BY cabin_class ASC'
-    );
-
-    res.json({
-      success: true,
-      data: result.rows.map(r => r.cabin_class)
-    });
-  } catch (error) {
-    console.error('Error fetching cabin classes:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching cabin classes',
       error: error.message
     });
   }
