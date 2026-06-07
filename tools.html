@@ -357,11 +357,16 @@
             <!-- Tools Grid -->
             <div class="tools-grid">
                 <!-- Checklists -->
-                <div class="tool-card">
+                <div class="tool-card" id="checklist-card">
                     <div class="tool-icon">✅</div>
                     <h2>Travel Checklists</h2>
                     <p>Week-before and at-airport checklists to ensure you don't miss any hacks or savings opportunities.</p>
-                    <button class="tool-button" onclick="openChecklist('week-before')">View Checklist</button>
+                    <button class="tool-button" id="checklist-btn" onclick="openChecklist('week-before')">View Checklist</button>
+                    <div id="free-lock" style="display: none; margin-top: 15px; padding: 15px; background: #f0f0f0; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2em; margin-bottom: 10px;">🔒</div>
+                        <p style="color: #999; font-size: 0.9em; margin-bottom: 10px;">Smart Traveler & Elite feature</p>
+                        <a href="sales-page.html" style="color: #667eea; text-decoration: none; font-weight: 600;">Upgrade to unlock →</a>
+                    </div>
                 </div>
 
                 <!-- Email Templates -->
@@ -606,7 +611,29 @@
         }
 
         function showUpgradePrompt() {
-            document.getElementById('tools-content').style.display = 'none';
+            // Show tools but with preview mode (greyed out)
+            const toolCards = document.querySelectorAll('.tool-card');
+            toolCards.forEach(card => {
+                card.style.opacity = '0.7';
+                card.style.pointerEvents = 'none';
+            });
+
+            // Show lock on checklist card
+            const freeLock = document.getElementById('free-lock');
+            if (freeLock) {
+                freeLock.style.display = 'block';
+            }
+
+            // Disable checklist button
+            const checklistBtn = document.getElementById('checklist-btn');
+            if (checklistBtn) {
+                checklistBtn.disabled = true;
+                checklistBtn.style.opacity = '0.6';
+                checklistBtn.style.cursor = 'not-allowed';
+            }
+
+            // Show email/calculator/guides as coming soon (already greyed)
+            // Show upgrade section at bottom
             document.getElementById('upgrade-section').style.display = 'block';
         }
 

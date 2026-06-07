@@ -455,6 +455,7 @@
         <div class="navbar-links">
             <a href="index.html">🏠 Home</a>
             <a href="modules.html">📚 Modules</a>
+            <a href="tools.html">📋 Tools</a>
             <a href="cheat-sheet.html">📄 Cheat-sheet</a>
             <a onclick="logout()">🚪 Logout</a>
         </div>
@@ -559,6 +560,80 @@
                 <div id="hacks-empty" class="empty-state" style="display: none;">
                     You haven't saved any hacks yet. Start exploring!
                 </div>
+            </div>
+
+            <!-- Deal Filters Card (Elite Only) -->
+            <div class="card full-width-card" id="deal-filters-card" style="display: none;">
+                <h2>🎯 Deal Preferences (Elite)</h2>
+                <p style="color: #666; margin-bottom: 20px;">Customize which travel deals you want to receive alerts for.</p>
+
+                <div class="loading" id="filters-loading">
+                    <div class="spinner"></div>
+                    Loading preferences...
+                </div>
+
+                <div id="filters-content" style="display: none;">
+                    <div class="info-group">
+                        <div class="info-label">Travel Type</div>
+                        <div class="info-value" id="filter-trip-type">-</div>
+                    </div>
+
+                    <div class="info-group">
+                        <div class="info-label">Minimum Savings</div>
+                        <div class="info-value">€<span id="filter-min-savings">100</span></div>
+                    </div>
+
+                    <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+                            📬 You'll only receive alerts for deals that match your preferences.
+                        </p>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="openEditFiltersModal()">Edit Preferences</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Deal Filters Modal -->
+    <div id="edit-filters-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Deal Preferences</h2>
+                <button class="close-modal" onclick="closeEditFiltersModal()">✕</button>
+            </div>
+
+            <div class="form-group">
+                <label>Travel Type</label>
+                <select id="modal-trip-type" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    <option value="all">All Travel Types</option>
+                    <option value="flights">Flights Only</option>
+                    <option value="hotels">Hotels Only</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Minimum Savings (€)</label>
+                <input
+                    type="number"
+                    id="modal-min-savings"
+                    placeholder="Enter minimum savings amount"
+                    min="0"
+                    step="10"
+                    style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; width: 100%;">
+            </div>
+
+            <div style="background: #f0fdf4; padding: 12px; border-radius: 6px; margin: 20px 0;">
+                <p style="color: #065f46; font-size: 13px; margin: 0;">
+                    ✓ Alerts will only be sent for deals matching these preferences
+                </p>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="saveFiltersChanges()">Save Preferences</button>
+                <button class="btn btn-secondary" onclick="closeEditFiltersModal()">Cancel</button>
             </div>
         </div>
     </div>

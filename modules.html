@@ -162,6 +162,86 @@
         .nav-bar a:hover {
             color: #5568d3;
         }
+
+        /* Community Section */
+        #community-section {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin-top: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        #community-section h2 {
+            font-size: 2em;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        #community-section > p {
+            color: #6b7280;
+            margin-bottom: 30px;
+            font-size: 1.05em;
+        }
+
+        .community-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .sort-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .sort-buttons button {
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #667eea;
+            transition: all 0.2s;
+        }
+
+        .sort-buttons button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .create-post-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+
+        .create-post-btn:hover {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .elite-only-banner {
+            background: #f0fdf4;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: #065f46;
+            text-align: center;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -179,15 +259,53 @@
 
         <!-- Header -->
         <div class="header">
-            <h1>📚 Learning Modules</h1>
-            <p>Master travel hacking with our comprehensive guide covering 16 different topics</p>
-            <div id="tier-info"></div>
+            <div>
+                <h1>📚 Learning Modules</h1>
+                <p>Master travel hacking with our comprehensive guide covering 16 different topics</p>
+                <div id="tier-info"></div>
+            </div>
+            <div style="text-align: right;">
+                <a href="tools.html" style="display: inline-block; font-size: 0.9em; color: #667eea; text-decoration: none; font-weight: 600; cursor: pointer; margin-right: 15px;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
+                    📋 Tools
+                </a>
+                <a href="index.html" style="display: inline-block; font-size: 0.9em; color: #667eea; text-decoration: none; font-weight: 600; cursor: pointer;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">
+                    🏠 Home
+                </a>
+            </div>
         </div>
 
         <!-- Modules Grid -->
         <div id="modules-container"></div>
+
+        <!-- Community Discussion Section (Elite Only) -->
+        <div id="community-section" style="display: none;">
+            <h2>💬 Community Discussions</h2>
+            <p>Share your travel hacking tips, tricks, and success stories with the Elite community!</p>
+
+            <div class="elite-only-banner" id="elite-banner" style="display: none;">
+                ⭐ This feature is exclusive to Elite members. <a href="sales-page.html" style="color: #10b981; text-decoration: none; font-weight: bold;">Upgrade to Elite →</a>
+            </div>
+
+            <div class="community-controls" id="community-controls" style="display: none;">
+                <div class="sort-buttons">
+                    <button class="active" onclick="changeCommunitySort('recent')">Recent</button>
+                    <button onclick="changeCommunitySort('popular')">Popular</button>
+                    <button onclick="changeCommunitySort('trending')">Trending</button>
+                </div>
+                <button class="create-post-btn" onclick="openCreatePostModal(document.getElementById('current-module-id').value)">
+                    ✍️ Start Discussion
+                </button>
+            </div>
+
+            <input type="hidden" id="current-module-id" value="">
+
+            <div id="community-posts-container">
+                <p style="text-align: center; color: #999; padding: 40px;">Loading discussions...</p>
+            </div>
+        </div>
     </div>
 
+    <script src="community.js"></script>
     <script src="modules.js"></script>
 </body>
 </html>
