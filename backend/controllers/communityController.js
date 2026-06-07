@@ -80,7 +80,7 @@ exports.createPost = async (req, res) => {
       [userId]
     );
 
-    if (subscriptionCheck.rows.length === 0 || subscriptionCheck.rows[0].tier !== 'elite') {
+    if (subscriptionCheck.rows.length === 0 || subscriptionCheck.rows[0].tier.toLowerCase() !== 'elite') {
       return res.status(403).json({
         success: false,
         message: 'Only Elite members can create posts'
