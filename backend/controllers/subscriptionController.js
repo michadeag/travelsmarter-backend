@@ -216,6 +216,11 @@ async function handleCheckoutSessionCompleted(session) {
 
     const user = userResult.rows[0];
 
+    // Get subscription details from Stripe to get billing dates
+    const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const currentPeriodStart = new Date(stripeSubscription.current_period_start * 1000);
+    const currentPeriodEnd = new Date(stripeSubscription.current_period_end * 1000);
+
     // Update user subscription
     await pool.query(
       `UPDATE users
@@ -224,12 +229,12 @@ async function handleCheckoutSessionCompleted(session) {
       [tier, subscriptionId, userId]
     );
 
-    // Create subscription record
+    // Create subscription record with billing dates
     const subscriptionResult = await pool.query(
-      `INSERT INTO subscriptions (user_id, tier, status, price_monthly, stripe_subscription_id)
-       VALUES ($1, $2, 'active', $3, $4)
+      `INSERT INTO subscriptions (user_id, tier, status, price_monthly, stripe_subscription_id, current_period_start, current_period_end)
+       VALUES ($1, $2, 'active', $3, $4, $5, $6)
        RETURNING current_period_end`,
-      [userId, tier, PRICING[tier].priceMonthly, subscriptionId]
+      [userId, tier, PRICING[tier].priceMonthly, subscriptionId, currentPeriodStart, currentPeriodEnd]
     );
 
     const nextBillingDate = subscriptionResult.rows[0].current_period_end;
@@ -279,13 +284,24 @@ async function handleSubscriptionUpdated(subscription) {
 
   const userId = userResult.rows[0].id;
   const status = subscription.status === 'active' ? 'active' : 'inactive';
+  const currentPeriodStart = new Date(subscription.current_period_start * 1000);
+  const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
 
+  // Update user status
   await pool.query(
     `UPDATE users SET subscription_status = $1 WHERE id = $2`,
     [status, userId]
   );
 
-  console.log(`📝 Subscription updated for user ${userId} - status ${status}`);
+  // Update subscription with billing dates
+  await pool.query(
+    `UPDATE subscriptions
+     SET status = $1, current_period_start = $2, current_period_end = $3, updated_at = CURRENT_TIMESTAMP
+     WHERE stripe_subscription_id = $4`,
+    [status, currentPeriodStart, currentPeriodEnd, subscription.id]
+  );
+
+  console.log(`📝 Subscription updated for user ${userId} - status ${status}, next billing: ${currentPeriodEnd}`);
 }
 
 async function handleSubscriptionDeleted(subscription) {
