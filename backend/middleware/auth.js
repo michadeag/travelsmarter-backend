@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const pool = require('../config/database');
 
 const protect = (req, res, next) => {
   let token;
@@ -26,7 +27,7 @@ const protect = (req, res, next) => {
   }
 };
 
-const optionalAuth = (req, res, next) => {
+const optionalAuth = async (req, res, next) => {
   let token;
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -36,7 +37,21 @@ const optionalAuth = (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decoded;
+
+      // Fetch user's subscription tier from database
+      const userResult = await pool.query(
+        'SELECT id, subscription_tier FROM users WHERE id = $1',
+        [decoded.id]
+      );
+
+      if (userResult.rows.length > 0) {
+        req.user = {
+          id: decoded.id,
+          subscription_tier: userResult.rows[0].subscription_tier
+        };
+      } else {
+        req.user = null;
+      }
     } catch (error) {
       // Token is invalid, but we'll continue without auth
       req.user = null;
