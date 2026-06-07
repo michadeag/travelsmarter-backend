@@ -1412,11 +1412,13 @@ async function saveEmailSequence() {
             closeEmailSequenceModal();
             loadEmailTemplates();
         } else {
-            showAlert('Failed to create sequence', 'error');
+            const error = await response.json();
+            showAlert(error.message || 'Failed to create sequence', 'error');
+            console.error('API error:', error);
         }
     } catch (error) {
         console.error('Error creating sequence:', error);
-        showAlert('Error creating sequence', 'error');
+        showAlert('Error creating sequence: ' + error.message, 'error');
     }
 }
 
@@ -1452,11 +1454,13 @@ async function saveEmailTemplate() {
             closeTemplateModal();
             loadEmailTemplates();
         } else {
-            showAlert('Failed to create template', 'error');
+            const error = await response.json();
+            showAlert(error.message || 'Failed to create template', 'error');
+            console.error('API error:', error);
         }
     } catch (error) {
         console.error('Error creating template:', error);
-        showAlert('Error creating template', 'error');
+        showAlert('Error creating template: ' + error.message, 'error');
     }
 }
 
