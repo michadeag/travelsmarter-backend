@@ -3,7 +3,13 @@
  * Displays modules with access status and upgrade prompts
  */
 
-const API_URL = 'https://api.travelsmarterapp.com';
+// Determine API URL based on environment
+let API_URL;
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    API_URL = 'http://localhost:5000';
+} else {
+    API_URL = 'https://api.travelsmarterapp.com';
+}
 
 // Get auth token
 function getAuthToken() {
@@ -18,6 +24,7 @@ async function loadModules() {
     const token = getAuthToken();
     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
+    console.log('Loading modules with token:', token ? 'YES' : 'NO');
     const response = await fetch(`${API_URL}/api/hacks/modules`, { headers });
 
     if (!response.ok) {
@@ -26,6 +33,8 @@ async function loadModules() {
     }
 
     const data = await response.json();
+    console.log('API Response:', data);
+    console.log('User Tier:', data.userTier);
     displayModules(data);
   } catch (error) {
     console.error('Error loading modules:', error);
