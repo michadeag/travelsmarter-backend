@@ -249,9 +249,12 @@
         <a class="back-button" onclick="goBack()">← Back to Modules</a>
 
         <div class="module-header">
-            <div class="module-title">
-                <div class="module-icon" id="module-icon">📚</div>
-                <h1 id="module-name">Loading...</h1>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div class="module-title">
+                    <div class="module-icon" id="module-icon">📚</div>
+                    <h1 id="module-name">Loading...</h1>
+                </div>
+                <a href="#" id="checklist-btn" onclick="viewChecklist(event)" class="btn btn-primary" style="display: none;">📋 View Checklist</a>
             </div>
             <p id="module-description" style="color: #6b7280; margin-bottom: 10px;"></p>
             <div style="color: #6b7280; font-size: 14px;">
@@ -367,6 +370,9 @@
                 document.getElementById('module-icon').textContent = moduleIcon;
                 document.getElementById('module-name').textContent = moduleName;
                 document.getElementById('hack-count').textContent = data.hackCount || 0;
+
+                // Show checklist button
+                document.getElementById('checklist-btn').style.display = 'inline-block';
 
                 // Display hacks if available
                 if (data.hacks && data.hacks.length > 0) {
@@ -497,6 +503,12 @@
         // Go to pricing/sales page
         function goToPricing() {
             window.location.href = 'sales-page.html';
+        }
+
+        // View module checklist
+        function viewChecklist(event) {
+            event.preventDefault();
+            window.location.href = `module-checklist.html?id=${moduleId}`;
         }
 
         // Logout
