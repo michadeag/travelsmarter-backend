@@ -51,6 +51,9 @@ app.use('/api/subscriptions/webhook', express.raw({type: 'application/json'}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Middleware - Serve static frontend files
+app.use(express.static(require('path').join(__dirname, '../frontend')));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
