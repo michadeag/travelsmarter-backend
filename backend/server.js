@@ -53,6 +53,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/deals', dealsRoutes);
 app.use('/api/hacks', hacksRoutes);
+app.use('/api/user/deal-filters', dealFiltersRoutes);
+app.use('/api/community', communityRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/promos', promoRoutes);
 
