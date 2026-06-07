@@ -5400,28 +5400,35 @@
         });
 
         // Update tier display in header
-        function updateTierDisplay() {
+        async function updateTierDisplay() {
             const tierDisplay = document.getElementById('tierDisplay');
             const hackAvailable = document.getElementById('hackAvailable');
             const footerTierInfo = document.getElementById('footerTierInfo');
 
             if (!tierDisplay || !hackAvailable) return;
 
-            // Get user tier from userData or from window (set by tier-gating.js)
-            let userTier = 'free';
-            try {
-                const userData = localStorage.getItem('userData');
-                if (userData) {
-                    const parsed = JSON.parse(userData);
-                    userTier = (parsed.subscription_tier || 'free').toLowerCase();
-                }
-            } catch (e) {
-                // Ignore parsing errors
-            }
+            // Determine API URL
+            const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:5000'
+                : 'https://api.travelsmarterapp.com';
 
-            // Also check if window.userTier is set by tier-gating.js
-            if (window.userTier) {
-                userTier = window.userTier.toLowerCase();
+            // Get user tier from API
+            let userTier = 'free';
+            const token = localStorage.getItem('userToken');
+
+            if (token) {
+                try {
+                    const response = await fetch(`${API_URL}/api/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        userTier = (data.user.subscriptionTier || 'free').toLowerCase();
+                    }
+                } catch (error) {
+                    console.error('Failed to get user tier:', error);
+                }
             }
 
             // Update display based on tier
@@ -5454,8 +5461,8 @@
         // Call on page load
         document.addEventListener('DOMContentLoaded', updateTierDisplay);
 
-        // Also call after a short delay in case tier data loads after DOM
-        setTimeout(updateTierDisplay, 500);
+        // Also call after a short delay in case page loads before auth
+        setTimeout(updateTierDisplay, 1000);
 
         // Logout functionality
         function performLogout(event) {
