@@ -56,7 +56,7 @@ Reply to: ${email}
     } else {
       await sgMail.send({
         to: 'michael@reesin.com',
-        from: process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com',
+        from: process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com',
         subject: `TravelSmarter Contact: ${topicLabel} - ${name}`,
         text: emailContent,
         html: `
@@ -79,7 +79,7 @@ Reply to: ${email}
     try {
       await sgMail.send({
         to: email,
-        from: process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com',
+        from: process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com',
         subject: 'We received your message - TravelSmarter Support',
         text: `Hi ${name},
 

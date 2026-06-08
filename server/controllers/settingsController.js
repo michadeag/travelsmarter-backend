@@ -213,13 +213,13 @@ class SettingsController {
       { key: 'stripe_secret_key', value: '', type: 'password', description: 'Stripe secret key (sk_...)' },
       { key: 'stripe_webhook_secret', value: '', type: 'password', description: 'Stripe webhook secret' },
       { key: 'sendgrid_api_key', value: '', type: 'password', description: 'SendGrid API key' },
-      { key: 'sender_email', value: 'noreply@travelsmarter.com', type: 'text', description: 'Default sender email' },
+      { key: 'sender_email', value: 'michael@reesin.com', type: 'text', description: 'Default sender email' },
       { key: 'send_email_on_signup', value: 'true', type: 'boolean', description: 'Send welcome email on signup' },
       { key: 'send_email_on_subscription', value: 'true', type: 'boolean', description: 'Send confirmation email on subscription' },
       { key: 'send_daily_digest', value: 'false', type: 'boolean', description: 'Send daily deal digest' },
       { key: 'company_address', value: '', type: 'text', description: 'Company physical address' },
       { key: 'company_phone', value: '', type: 'text', description: 'Company phone number' },
-      { key: 'support_email', value: 'support@travelsmarter.com', type: 'text', description: 'Support email' },
+      { key: 'support_email', value: 'michael@reesin.com', type: 'text', description: 'Support email' },
     ];
 
     for (const setting of defaults) {

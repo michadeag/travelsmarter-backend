@@ -7,7 +7,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const templates = {
   welcomeEmail: (user) => ({
     to: user.email,
-    from: process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com',
+    from: process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com',
     subject: '✈️ Welcome to TravelSmarter!',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -55,7 +55,7 @@ const templates = {
 
   subscriptionConfirmation: (user, subscription) => ({
     to: user.email,
-    from: process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com',
+    from: process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com',
     subject: `✅ Your ${subscription.planName} Subscription is Active!`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -119,7 +119,7 @@ const templates = {
 
   paymentSuccessful: (user, payment) => ({
     to: user.email,
-    from: process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com',
+    from: process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com',
     subject: `💳 Payment Received - €${payment.amount}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -168,7 +168,7 @@ const templates = {
 
   paymentFailed: (user, payment) => ({
     to: user.email,
-    from: process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com',
+    from: process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com',
     subject: `⚠️ Payment Failed - Action Required`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -216,7 +216,7 @@ const templates = {
 
   subscriptionCancelled: (user) => ({
     to: user.email,
-    from: process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com',
+    from: process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com',
     subject: '😢 Your TravelSmarter Subscription Has Been Cancelled',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -288,7 +288,7 @@ const emailService = {
 
       // Ensure default from address if not provided
       if (!msg.from) {
-        msg.from = process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com';
+        msg.from = process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com';
       }
 
       console.log(`📧 Sending email: ${msg.subject} to ${msg.to}`);
