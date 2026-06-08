@@ -908,6 +908,13 @@
                         }]
                     });
 
+                    // Save selected tier to localStorage for success page
+                    const tierMap = {
+                        'smart': 'smart_traveler',
+                        'elite': 'elite'
+                    };
+                    localStorage.setItem('selectedTier', tierMap[selectedPlan] || selectedPlan);
+
                     // Redirect to Stripe Checkout (hosted page)
                     console.log('Redirecting to Stripe checkout:', data.url);
                     window.location.href = data.url;

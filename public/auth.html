@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In - TravelSmarter</title>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-470B6E2DKF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-470B6E2DKF');
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -356,6 +366,19 @@
                 }
 
                 if (response.success) {
+                    // Track signup or login event
+                    if (isSignUp) {
+                        gtag('event', 'sign_up', {
+                            'method': 'email',
+                            'user_email': email
+                        });
+                    } else {
+                        gtag('event', 'login', {
+                            'method': 'email',
+                            'user_email': email
+                        });
+                    }
+
                     showAlert('Success! Redirecting...', 'success');
                     setTimeout(() => {
                         window.location.href = 'account.html';

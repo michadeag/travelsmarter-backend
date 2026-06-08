@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Successful | TravelSmarter</title>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-470B6E2DKF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-470B6E2DKF');
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -213,6 +223,29 @@
             day: 'numeric'
         });
         document.getElementById('date').textContent = dateStr;
+
+        // Track purchase event with Google Analytics
+        // Get subscription tier from localStorage (set during checkout)
+        const subscriptionTier = localStorage.getItem('selectedTier') || 'smart_traveler';
+        const tierName = subscriptionTier === 'elite' ? 'Elite' : 'Smart Traveler';
+        const tierPrice = subscriptionTier === 'elite' ? 49 : 19;
+
+        gtag('event', 'purchase', {
+            'transaction_id': sessionId || Date.now(),
+            'affiliation': 'TravelSmarter',
+            'value': tierPrice,
+            'currency': 'EUR',
+            'tax': 0,
+            'shipping': 0,
+            'items': [{
+                'item_id': subscriptionTier,
+                'item_name': tierName,
+                'affiliation': 'TravelSmarter',
+                'price': tierPrice,
+                'currency': 'EUR',
+                'quantity': 1
+            }]
+        });
 
         // Auto-redirect to home after 5 seconds (user can click button to go sooner)
         setTimeout(() => {
