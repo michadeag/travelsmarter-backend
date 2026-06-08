@@ -29,6 +29,43 @@ exports.getTemplates = async (req, res) => {
   }
 };
 
+// @desc Get single email template by ID
+// @route GET /api/email-templates/templates/:templateId
+// @access Private (Admin)
+exports.getTemplateById = async (req, res) => {
+  try {
+    const { templateId } = req.params;
+
+    const result = await pool.query(
+      `SELECT et.id, et.sequence_id, et.day, et.subject, et.html_content, et.content,
+              et.is_active, es.name as sequence_name, et.created_at, et.updated_at
+       FROM email_templates et
+       LEFT JOIN email_sequences es ON et.sequence_id = es.id
+       WHERE et.id = $1`,
+      [templateId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Template not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Get template by ID error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching template',
+      error: error.message
+    });
+  }
+};
+
 // @desc Get all email sequences
 // @route GET /api/email-templates/sequences
 // @access Private (Admin)

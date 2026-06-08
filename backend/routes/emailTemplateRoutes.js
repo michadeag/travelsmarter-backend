@@ -14,6 +14,7 @@ router.put('/sequences/:sequenceId', protect, emailTemplateController.updateSequ
 
 // Template routes
 router.get('/templates', protect, emailTemplateController.getTemplates);
+router.get('/templates/:templateId', protect, emailTemplateController.getTemplateById);
 router.post('/templates', protect, emailTemplateController.createTemplate);
 router.put('/templates/:templateId', protect, emailTemplateController.updateTemplate);
 router.delete('/templates/:templateId', protect, emailTemplateController.deleteTemplate);
