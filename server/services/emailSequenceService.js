@@ -118,7 +118,7 @@ async function seedEmailSequence() {
  */
 async function initializeEmailSequence(userId, userEmail, firstName) {
   try {
-    console.log(`📧 Initializing email sequence for user ${userId}`);
+    console.log(`📧 Initializing email sequence for user ${userId} (${userEmail})`);
 
     // Get the default "Welcome Email Sequence"
     const sequenceResult = await pool.query(
@@ -132,6 +132,7 @@ async function initializeEmailSequence(userId, userEmail, firstName) {
     }
 
     const sequenceId = sequenceResult.rows[0].id;
+    console.log(`📬 Found email sequence: ${sequenceId}`);
 
     // Get all templates for this sequence ordered by day
     const templatesResult = await pool.query(
@@ -146,21 +147,30 @@ async function initializeEmailSequence(userId, userEmail, firstName) {
       return { success: false, message: 'No email templates found' };
     }
 
+    console.log(`📧 Found ${templatesResult.rows.length} email templates`);
+
     // Schedule all templates for this user
+    let scheduledCount = 0;
     for (const template of templatesResult.rows) {
       const scheduledAt = new Date();
       scheduledAt.setDate(scheduledAt.getDate() + template.day);
       scheduledAt.setHours(9, 0, 0, 0); // 9 AM
 
-      await pool.query(
-        `INSERT INTO scheduled_emails (user_id, template_id, scheduled_at, status, created_at)
-         VALUES ($1, $2, $3, 'pending', CURRENT_TIMESTAMP)`,
-        [userId, template.id, scheduledAt]
-      );
+      try {
+        await pool.query(
+          `INSERT INTO scheduled_emails (user_id, template_id, scheduled_at, status, created_at)
+           VALUES ($1, $2, $3, 'pending', CURRENT_TIMESTAMP)`,
+          [userId, template.id, scheduledAt]
+        );
+        scheduledCount++;
+        console.log(`✅ Scheduled email Day ${template.day} for ${userEmail} at ${scheduledAt}`);
+      } catch (insertError) {
+        console.error(`❌ Failed to schedule Day ${template.day} email:`, insertError.message);
+      }
     }
 
-    console.log(`✅ Email sequence initialized for ${userEmail} (${templatesResult.rows.length} emails scheduled)`);
-    return { success: true, message: `${templatesResult.rows.length} emails scheduled` };
+    console.log(`✅ Email sequence initialized for ${userEmail} (${scheduledCount}/${templatesResult.rows.length} emails scheduled)`);
+    return { success: true, message: `${scheduledCount} emails scheduled`, scheduledCount };
   } catch (error) {
     console.error('❌ Error initializing email sequence:', error);
     throw error;

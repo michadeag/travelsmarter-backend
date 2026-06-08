@@ -280,6 +280,29 @@ const getPlanName = (tier) => {
 
 // Email sending functions
 const emailService = {
+  // Generic email sending function (used by email sequences)
+  async sendEmail(msg) {
+    try {
+      console.log(`📨 Attempting to send email to ${msg.to}`);
+      console.log(`🔑 SendGrid API Key status: ${process.env.SENDGRID_API_KEY ? 'SET' : 'NOT SET'}`);
+
+      // Ensure default from address if not provided
+      if (!msg.from) {
+        msg.from = process.env.SENDGRID_FROM_EMAIL || 'noreply@travelsmarterapp.com';
+      }
+
+      console.log(`📧 Sending email: ${msg.subject} to ${msg.to}`);
+      await sgMail.send(msg);
+      console.log(`✉️ Email sent successfully to ${msg.to}`);
+      return { success: true };
+    } catch (error) {
+      console.error(`❌ Failed to send email to ${msg.to}`);
+      console.error(`Error message: ${error.message}`);
+      console.error(`Full error:`, error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Send welcome email to new users
   async sendWelcomeEmail(user) {
     try {

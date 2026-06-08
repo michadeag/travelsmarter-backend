@@ -185,6 +185,103 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Test email system endpoint - for debugging
+app.get('/api/test/email-system', async (req, res) => {
+  try {
+    console.log('🔍 Testing email system...');
+
+    // Check if SendGrid is configured
+    const sendgridConfigured = !!process.env.SENDGRID_API_KEY;
+    console.log(`SendGrid configured: ${sendgridConfigured}`);
+
+    // Check if email sequence exists
+    const sequenceResult = await pool.query(
+      `SELECT id, name FROM email_sequences WHERE name = 'Welcome Email Sequence' LIMIT 1`
+    );
+    const sequenceExists = sequenceResult.rows.length > 0;
+    console.log(`Email sequence exists: ${sequenceExists}`);
+
+    if (sequenceExists) {
+      console.log(`Sequence ID: ${sequenceResult.rows[0].id}`);
+    }
+
+    // Check email templates
+    const templatesResult = await pool.query(
+      `SELECT COUNT(*) as count FROM email_templates`
+    );
+    const templateCount = parseInt(templatesResult.rows[0].count);
+    console.log(`Email templates: ${templateCount}`);
+
+    // Check scheduled emails
+    const scheduledResult = await pool.query(
+      `SELECT status, COUNT(*) as count FROM scheduled_emails GROUP BY status`
+    );
+    const scheduledByStatus = {};
+    scheduledResult.rows.forEach(row => {
+      scheduledByStatus[row.status] = parseInt(row.count);
+    });
+    console.log(`Scheduled emails by status:`, scheduledByStatus);
+
+    // Check pending emails due to send
+    const pendingDueResult = await pool.query(`
+      SELECT COUNT(*) as count FROM scheduled_emails
+      WHERE status = 'pending' AND scheduled_at <= NOW()
+    `);
+    const pendingDue = parseInt(pendingDueResult.rows[0].count);
+    console.log(`Pending emails due to send: ${pendingDue}`);
+
+    // Get some sample scheduled emails
+    const sampleResult = await pool.query(`
+      SELECT se.id, u.email, et.day, et.subject, se.scheduled_at, se.status
+      FROM scheduled_emails se
+      JOIN users u ON se.user_id = u.id
+      JOIN email_templates et ON se.template_id = et.id
+      ORDER BY se.created_at DESC
+      LIMIT 5
+    `);
+
+    res.status(200).json({
+      success: true,
+      message: 'Email system diagnostics',
+      diagnostics: {
+        sendgridConfigured,
+        sequenceExists,
+        templateCount,
+        scheduledByStatus,
+        pendingDue,
+        recentScheduledEmails: sampleResult.rows
+      }
+    });
+  } catch (error) {
+    console.error('Error in email system test:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error testing email system',
+      error: error.message
+    });
+  }
+});
+
+// Manually trigger pending email sending (for testing)
+app.post('/api/test/send-pending-emails', async (req, res) => {
+  try {
+    console.log('🔄 Manually triggering pending email send...');
+    const result = await emailSequenceService.sendPendingEmails();
+    res.status(200).json({
+      success: true,
+      message: 'Triggered pending email sending',
+      result
+    });
+  } catch (error) {
+    console.error('Error sending pending emails:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error sending pending emails',
+      error: error.message
+    });
+  }
+});
+
 // Home endpoint
 app.get('/', (req, res) => {
   res.status(200).json({

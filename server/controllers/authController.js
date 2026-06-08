@@ -148,6 +148,24 @@ exports.createUser = async (req, res) => {
       [user.id]
     );
 
+    // Initialize email sequence and send welcome email (non-blocking)
+    console.log(`📬 Initializing email sequence for admin-created user ${user.email}...`);
+    emailSequenceService.initializeEmailSequence(
+      user.id,
+      user.email,
+      user.first_name
+    ).catch(err => {
+      console.error('Failed to initialize email sequence:', err.message || err);
+    });
+
+    // Also send welcome email
+    emailService.sendWelcomeEmail({
+      email: user.email,
+      firstName: user.first_name
+    }).catch(err => {
+      console.error('Failed to send welcome email:', err.message || err);
+    });
+
     res.status(201).json({
       success: true,
       message: 'User created successfully',
