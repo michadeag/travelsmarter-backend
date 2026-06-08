@@ -935,31 +935,45 @@ function displayActivities(activities) {
 async function loadSettings() {
     try {
         // Try to fetch from backend API
+        console.log('🔍 Loading settings from:', `${API_URL}/api/admin/settings`);
         const response = await fetch(`${API_URL}/api/admin/settings`, {
             headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
+        console.log('📡 Settings API response status:', response.status);
+
         if (response.ok) {
             const data = await response.json();
+            console.log('📊 Settings API response data:', data);
             const settings = data.data || {};
+
+            console.log('🔧 Found settings:', Object.keys(settings));
 
             // Populate form fields with settings values
             if (settings.sendgrid_api_key?.value) {
+                console.log('✅ Setting SendGrid key');
                 document.getElementById('sendgrid-key').value = settings.sendgrid_api_key.value;
+            } else {
+                console.warn('⚠️ No SendGrid API key value found');
             }
+
             if (settings.sender_email?.value) {
+                console.log('✅ Setting sender email');
                 document.getElementById('sender-email').value = settings.sender_email.value;
             }
             if (settings.stripe_secret_key?.value) {
+                console.log('✅ Setting Stripe secret key');
                 document.getElementById('stripe-key').value = settings.stripe_secret_key.value;
             }
             if (settings.stripe_publishable_key?.value) {
+                console.log('✅ Setting Stripe publishable key');
                 const pubKeyField = document.getElementById('stripe-pub-key');
                 if (pubKeyField) {
                     pubKeyField.value = settings.stripe_publishable_key.value;
                 }
             }
             if (settings.stripe_webhook_secret?.value) {
+                console.log('✅ Setting webhook secret');
                 document.getElementById('webhook-secret').value = settings.stripe_webhook_secret.value;
             }
 
@@ -978,8 +992,12 @@ async function loadSettings() {
                 sendDigest.checked = settings.send_daily_digest?.value === 'true';
             }
 
-            console.log('✅ Settings loaded from backend');
+            console.log('✅ Settings loaded successfully from backend database');
             return; // Success, don't need localStorage fallback
+        } else {
+            console.warn('⚠️ Settings API returned status:', response.status, response.statusText);
+            const errorData = await response.json().catch(() => ({}));
+            console.warn('Error details:', errorData);
         }
     } catch (error) {
         console.warn('Backend API unavailable, trying localStorage fallback:', error.message);

@@ -15,6 +15,32 @@ router.get('/health', (req, res) => {
   });
 });
 
+// Debug endpoint - check all settings in database
+router.get('/debug/settings', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    const result = await pool.query('SELECT key, value, type, description FROM settings ORDER BY key');
+
+    res.status(200).json({
+      success: true,
+      message: `Found ${result.rows.length} settings in database`,
+      settings: result.rows.map(row => ({
+        key: row.key,
+        value: row.value ? `${row.value.substring(0, 20)}...` : '(empty)',
+        type: row.type,
+        description: row.description
+      })),
+      allSettings: result.rows // Full data for debugging
+    });
+  } catch (error) {
+    console.error('Debug settings error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Get all settings
 router.get('/settings', SettingsController.getAllSettings);
 
