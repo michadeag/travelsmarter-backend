@@ -7,8 +7,8 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     // Local development
     API_URL = 'http://localhost:5000';
 } else {
-    // Production - use your live backend API
-    API_URL = 'https://api.travelsmarterapp.com';
+    // Production - use same domain for both frontend and backend
+    API_URL = window.location.origin;
 }
 
 console.log('Admin Dashboard using API:', API_URL);
