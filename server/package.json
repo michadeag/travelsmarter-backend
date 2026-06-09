@@ -33,7 +33,10 @@
     "@anthropic-ai/sdk": "^0.24.3",
     "axios": "^1.6.0",
     "twitter-api-v2": "^1.14.2",
-    "node-cron": "^3.0.2"
+    "node-cron": "^3.0.2",
+    "snoowrap": "^1.25.0",
+    "bull": "^4.11.4",
+    "redis": "^4.6.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
