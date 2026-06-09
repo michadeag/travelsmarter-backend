@@ -1233,6 +1233,306 @@ async function loadAnalytics() {
     }
 }
 
+// TWITTER MANAGEMENT
+let twitterRecentPostings = [];
+
+async function loadTwitterStatus() {
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/status`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            document.getElementById('twitter-status').innerHTML = `
+                <p style="color: #ffcccc;">❌ Twitter service not configured</p>
+                <p style="font-size: 12px; opacity: 0.8;">Add Twitter API credentials to server .env file</p>
+            `;
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.configured) {
+            document.getElementById('twitter-status').innerHTML = `
+                <p style="color: #ccffcc;">✅ Twitter API Connected</p>
+                <p style="font-size: 14px; margin-top: 10px;">
+                    <strong>Scheduled Jobs:</strong> ${data.scheduledJobs}<br>
+                    ${data.jobs.length > 0 ? '<strong>Active Schedules:</strong><br>' + data.jobs.map(j => `• ${j.type} ${j.time ? 'at ' + j.time : ''}`).join('<br>') : 'No active schedule'}
+                </p>
+            `;
+        } else {
+            document.getElementById('twitter-status').innerHTML = `
+                <p style="color: #ffcccc;">⚠️ Twitter Not Configured</p>
+                <p style="font-size: 12px; opacity: 0.8;">Add Twitter API keys to server environment</p>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading Twitter status:', error);
+        document.getElementById('twitter-status').innerHTML = `
+            <p style="color: #ffcccc;">❌ Error loading status</p>
+        `;
+    }
+}
+
+async function loadTwitterTips() {
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/tips`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) throw new Error('Failed to load tips');
+
+        const data = await response.json();
+        const tips = data.tips || [];
+
+        // Group by category
+        const byCategory = {};
+        tips.forEach(tip => {
+            if (!byCategory[tip.category]) {
+                byCategory[tip.category] = [];
+            }
+            byCategory[tip.category].push(tip);
+        });
+
+        let html = '';
+        Object.keys(byCategory).forEach(category => {
+            html += `
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #667eea;">${category.toUpperCase()}</strong>
+                    <div style="margin-top: 8px; font-size: 13px;">
+            `;
+            byCategory[category].forEach(tip => {
+                html += `<p style="margin: 5px 0; padding: 8px; background: #f5f5f5; border-radius: 4px;">${tip.tip.substring(0, 80)}...</p>`;
+            });
+            html += `</div></div>`;
+        });
+
+        document.getElementById('tips-preview').innerHTML = html;
+    } catch (error) {
+        console.error('Error loading tips:', error);
+        document.getElementById('tips-preview').innerHTML = '<p style="color: #ff6b6b;">Error loading tips</p>';
+    }
+}
+
+async function postRandomTip() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Posting...';
+
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/post-random`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert('✅ Tweet posted successfully!', 'success');
+            addRecentPosting('Random Tip', data.text);
+            loadTwitterStatus();
+        } else {
+            showAlert('❌ Failed to post: ' + data.message, 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error posting tweet: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '📱 Post Random Tip';
+    }
+}
+
+async function postByCategory() {
+    const category = document.getElementById('category-select').value;
+
+    if (!category) {
+        showAlert('Please select a category', 'error');
+        return;
+    }
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Posting...';
+
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/post-category`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ category })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert(`✅ ${category} tip posted!`, 'success');
+            addRecentPosting(`Category: ${category}`, data.text);
+            document.getElementById('category-select').value = '';
+            loadTwitterStatus();
+        } else {
+            showAlert('❌ Failed to post: ' + data.message, 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error posting tweet: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Post from Category';
+    }
+}
+
+// Character counter for custom tweet
+document.addEventListener('DOMContentLoaded', () => {
+    const textarea = document.getElementById('custom-tweet');
+    if (textarea) {
+        textarea.addEventListener('input', (e) => {
+            document.getElementById('char-count').textContent = e.target.value.length;
+            if (e.target.value.length > 280) {
+                e.target.style.borderColor = '#ff6b6b';
+            } else {
+                e.target.style.borderColor = '#ddd';
+            }
+        });
+    }
+});
+
+async function postCustomTweet() {
+    const text = document.getElementById('custom-tweet').value;
+
+    if (!text.trim()) {
+        showAlert('Please enter tweet text', 'error');
+        return;
+    }
+
+    if (text.length > 280) {
+        showAlert('Tweet exceeds 280 character limit', 'error');
+        return;
+    }
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Posting...';
+
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/post-custom`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ text })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert('✅ Custom tweet posted!', 'success');
+            addRecentPosting('Custom Tweet', text);
+            document.getElementById('custom-tweet').value = '';
+            document.getElementById('char-count').textContent = '0';
+            loadTwitterStatus();
+        } else {
+            showAlert('❌ Failed to post: ' + data.message, 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error posting tweet: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Post Custom Tweet';
+    }
+}
+
+async function startScheduler() {
+    const schedule = document.getElementById('schedule-type').value;
+    const time = document.getElementById('post-time').value;
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Starting...';
+
+    try {
+        const body = { schedule };
+        if (schedule === 'daily') {
+            body.times = [time];
+        }
+
+        const response = await fetch(`${API_URL}/api/twitter/scheduler/start`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert(`✅ Scheduler started: ${data.message}`, 'success');
+            loadTwitterStatus();
+        } else {
+            showAlert('❌ Failed to start scheduler: ' + data.message, 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '▶️ Start Scheduler';
+    }
+}
+
+async function stopScheduler() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Stopping...';
+
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/scheduler/stop`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert('✅ Scheduler stopped', 'success');
+            loadTwitterStatus();
+        } else {
+            showAlert('❌ Failed to stop scheduler', 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '⏹️ Stop Scheduler';
+    }
+}
+
+function addRecentPosting(type, text) {
+    const posting = {
+        type,
+        text: text.substring(0, 60) + (text.length > 60 ? '...' : ''),
+        time: new Date().toLocaleTimeString()
+    };
+
+    twitterRecentPostings.unshift(posting);
+    if (twitterRecentPostings.length > 5) {
+        twitterRecentPostings.pop();
+    }
+
+    let html = '';
+    twitterRecentPostings.forEach((p, i) => {
+        html += `
+            <div style="padding: 10px; border-left: 3px solid #667eea; margin-bottom: 8px; background: #f9fafb; border-radius: 4px;">
+                <strong style="color: #667eea;">${p.type}</strong> at ${p.time}<br>
+                <span style="font-size: 12px; color: #666;">"${p.text}"</span>
+            </div>
+        `;
+    });
+
+    document.getElementById('recent-postings').innerHTML = html;
+}
+
+// Initialize Twitter panel when tab is clicked
+document.addEventListener('click', (e) => {
+    if (e.target.getAttribute('data-tab') === 'twitter') {
+        loadTwitterStatus();
+        loadTwitterTips();
+    }
+});
+
 // EMAIL TEMPLATES MANAGEMENT
 async function loadEmailTemplates() {
     try {

@@ -596,6 +596,7 @@
                 <a class="nav-link" data-tab="promos">🎟️ Promo Codes</a>
                 <a class="nav-link" data-tab="email-templates">📧 Email Templates</a>
                 <a class="nav-link" data-tab="analytics">📈 Analytics</a>
+                <a class="nav-link" data-tab="twitter">🐦 Twitter</a>
                 <a class="nav-link" data-tab="settings">⚙️ Settings</a>
             </nav>
         </div>
@@ -1012,6 +1013,106 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- TWITTER TAB -->
+            <div id="twitter" class="tab-content">
+                <h3>🐦 Twitter Management</h3>
+
+                <!-- Status Card -->
+                <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h4>Service Status</h4>
+                    <div id="twitter-status" style="margin-top: 15px;">
+                        <p style="opacity: 0.8;">Loading status...</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="cards-grid" style="margin-top: 20px;">
+                    <div class="card">
+                        <h4>📱 Quick Post</h4>
+                        <button class="btn btn-primary" onclick="postRandomTip()" style="width: 100%; margin-top: 10px;">Post Random Tip</button>
+                        <p style="font-size: 12px; color: #666; margin-top: 10px;">Posts a random travel tip immediately</p>
+                    </div>
+
+                    <div class="card">
+                        <h4>📂 Post by Category</h4>
+                        <select id="category-select" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-top: 10px;">
+                            <option value="">Select category...</option>
+                            <option value="flights">✈️ Flights</option>
+                            <option value="hotels">🏨 Hotels</option>
+                            <option value="dining">🍽️ Dining</option>
+                            <option value="transport">🚌 Transport</option>
+                            <option value="activities">🎭 Activities</option>
+                            <option value="general">🌍 General</option>
+                            <option value="seasonal">❄️ Seasonal</option>
+                            <option value="app">📱 App Promo</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="postByCategory()" style="width: 100%; margin-top: 10px;">Post from Category</button>
+                    </div>
+
+                    <div class="card">
+                        <h4>✍️ Custom Tweet</h4>
+                        <textarea id="custom-tweet" placeholder="Type your tweet (max 280 characters)" style="width: 100%; height: 60px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-top: 10px; font-family: monospace; font-size: 12px;"></textarea>
+                        <div style="margin-top: 8px; font-size: 12px; color: #666;">
+                            <span id="char-count">0</span>/280 characters
+                        </div>
+                        <button class="btn btn-primary" onclick="postCustomTweet()" style="width: 100%; margin-top: 10px;">Post Custom Tweet</button>
+                    </div>
+                </div>
+
+                <!-- Scheduler Controls -->
+                <div class="card" style="margin-top: 20px;">
+                    <h4>⏰ Scheduler Controls</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+                        <div>
+                            <label>Schedule Type:</label>
+                            <select id="schedule-type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-top: 8px;">
+                                <option value="recommended">Recommended (3x daily)</option>
+                                <option value="daily">Daily (1x)</option>
+                                <option value="hourly">Hourly</option>
+                                <option value="category">Category Rotation</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>First Post Time:</label>
+                            <input type="time" id="post-time" value="09:00" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-top: 8px;">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn btn-success" onclick="startScheduler()" style="flex: 1;">▶️ Start Scheduler</button>
+                        <button class="btn btn-danger" onclick="stopScheduler()" style="flex: 1;">⏹️ Stop Scheduler</button>
+                    </div>
+                </div>
+
+                <!-- Tips Preview -->
+                <div class="card" style="margin-top: 20px;">
+                    <h4>💡 Available Tips Preview</h4>
+                    <div id="tips-preview" style="margin-top: 15px; max-height: 400px; overflow-y: auto;">
+                        <p style="color: #999;">Loading tips...</p>
+                    </div>
+                </div>
+
+                <!-- Recent Postings -->
+                <div class="card" style="margin-top: 20px;">
+                    <h4>📋 Recent Postings</h4>
+                    <div id="recent-postings" style="margin-top: 15px;">
+                        <p style="color: #999;">No postings yet in this session</p>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #667eea;">
+                    <strong>ℹ️ Twitter Management Tips:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px; font-size: 14px; color: #555;">
+                        <li>Auto-posting posts 3 times daily at optimal engagement times</li>
+                        <li>Each tip is under 280 characters and includes relevant hashtags</li>
+                        <li>Use "Post Random Tip" for immediate posting</li>
+                        <li>Mix categories to show diverse travel hacks</li>
+                        <li>Custom tweets are great for announcements or special offers</li>
+                        <li>Scheduler runs in background - server must be active</li>
+                    </ul>
                 </div>
             </div>
 
