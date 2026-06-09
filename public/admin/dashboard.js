@@ -1282,13 +1282,23 @@ function openTemplateModal() {
 }
 
 function closeTemplateModal() {
-    document.getElementById('template-modal').classList.remove('active');
-    document.getElementById('modal-template-id').value = '';
-    document.getElementById('modal-template-day').value = '';
-    document.getElementById('modal-template-subject').value = '';
-    document.getElementById('modal-template-content').value = '';
-    document.getElementById('template-modal-title').textContent = 'Create Email Template';
-    document.getElementById('template-save-btn').textContent = 'Create Template';
+    const modal = document.getElementById('template-modal');
+    if (modal) modal.classList.remove('active');
+
+    // Safely reset form fields if they exist
+    const templateIdEl = document.getElementById('modal-template-id');
+    const dayEl = document.getElementById('modal-template-day');
+    const subjectEl = document.getElementById('modal-template-subject');
+    const contentEl = document.getElementById('modal-template-content');
+    const titleEl = document.getElementById('template-modal-title');
+    const saveBtnEl = document.getElementById('template-save-btn');
+
+    if (templateIdEl) templateIdEl.value = '';
+    if (dayEl) dayEl.value = '';
+    if (subjectEl) subjectEl.value = '';
+    if (contentEl) contentEl.value = '';
+    if (titleEl) titleEl.textContent = 'Create Email Template';
+    if (saveBtnEl) saveBtnEl.textContent = 'Create Template';
 }
 
 async function saveEmailSequence() {
