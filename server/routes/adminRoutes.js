@@ -50,13 +50,13 @@ router.get('/settings', SettingsController.getAllSettings);
 router.get('/settings/:key', SettingsController.getSetting);
 
 // Update single setting
-router.post('/settings', SettingsController.updateSetting);
+router.post('/settings', verifyAdminToken, SettingsController.updateSetting);
 
 // Update multiple settings at once
-router.post('/settings/batch/update', SettingsController.updateMultipleSettings);
+router.post('/settings/batch/update', verifyAdminToken, SettingsController.updateMultipleSettings);
 
 // Delete setting
-router.delete('/settings/:key', SettingsController.deleteSetting);
+router.delete('/settings/:key', verifyAdminToken, SettingsController.deleteSetting);
 
 // ============================================
 // ADMIN MANAGEMENT ENDPOINTS (Protected by admin auth)
