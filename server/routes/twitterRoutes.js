@@ -22,6 +22,58 @@ router.get('/status', (req, res) => {
 });
 
 /**
+ * POST /api/twitter/reload-settings
+ * Reload Twitter settings from database and reinitialize service
+ * Admin only
+ */
+router.post('/reload-settings', requireAdminRole(['admin', 'moderator']), async (req, res) => {
+  try {
+    const pool = require('../config/database');
+
+    // Fetch Twitter settings from database
+    const result = await pool.query(`
+      SELECT key, value FROM settings
+      WHERE key LIKE 'twitter_%'
+    `);
+
+    const settings = {};
+    result.rows.forEach(row => {
+      settings[row.key] = row.value;
+    });
+
+    if (!settings.twitter_api_key || !settings.twitter_api_secret) {
+      return res.status(400).json({
+        success: false,
+        message: 'Twitter credentials not found in settings'
+      });
+    }
+
+    // Reinitialize Twitter service with settings
+    const success = twitterService.reinitializeWithSettings(settings);
+
+    if (success) {
+      res.json({
+        success: true,
+        message: 'Twitter service reinitialized with database credentials',
+        configured: twitterService.isConfigured()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Failed to initialize Twitter service with provided credentials'
+      });
+    }
+  } catch (error) {
+    console.error('Error reloading Twitter settings:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error reloading Twitter settings',
+      error: error.message
+    });
+  }
+});
+
+/**
  * POST /api/twitter/post-random
  * Post a random travel tip
  * Admin only

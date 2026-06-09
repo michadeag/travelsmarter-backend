@@ -1157,6 +1157,22 @@ async function saveSettings() {
                 body: JSON.stringify(settingsData)
             });
             console.log('✅ Settings also synced to backend database');
+
+            // If Twitter credentials were saved, reload the Twitter service
+            if (twitterApiKey && twitterApiSecret) {
+                try {
+                    await fetch(`${API_URL}/api/twitter/reload-settings`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${getAdminToken()}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    console.log('✅ Twitter service reinitialized with new credentials');
+                } catch (twitterError) {
+                    console.warn('⚠️ Twitter service reload failed (non-blocking):', twitterError.message);
+                }
+            }
         } catch (backendError) {
             console.warn('⚠️ Backend sync failed (non-blocking):', backendError.message);
             // This is OK - localStorage is our primary storage now

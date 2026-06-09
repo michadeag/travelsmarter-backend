@@ -11,12 +11,14 @@ let client = null;
 /**
  * Initialize Twitter API client
  */
-function initializeTwitter() {
-  const apiKey = process.env.TWITTER_API_KEY;
-  const apiSecret = process.env.TWITTER_API_SECRET;
-  const accessToken = process.env.TWITTER_ACCESS_TOKEN;
-  const accessSecret = process.env.TWITTER_ACCESS_SECRET;
-  const bearerToken = process.env.TWITTER_BEARER_TOKEN;
+function initializeTwitter(credentialsOverride = null) {
+  // Try to use provided credentials first (from settings)
+  // Fall back to environment variables
+  const apiKey = credentialsOverride?.apiKey || process.env.TWITTER_API_KEY;
+  const apiSecret = credentialsOverride?.apiSecret || process.env.TWITTER_API_SECRET;
+  const accessToken = credentialsOverride?.accessToken || process.env.TWITTER_ACCESS_TOKEN;
+  const accessSecret = credentialsOverride?.accessSecret || process.env.TWITTER_ACCESS_SECRET;
+  const bearerToken = credentialsOverride?.bearerToken || process.env.TWITTER_BEARER_TOKEN;
 
   if (!apiKey || !apiSecret || !accessToken || !accessSecret) {
     console.warn('⚠️ Twitter API credentials not configured. Auto-posting disabled.');
@@ -139,6 +141,28 @@ function isConfigured() {
   return client !== null;
 }
 
+/**
+ * Reinitialize Twitter with settings from database
+ */
+function reinitializeWithSettings(twitterSettings) {
+  if (twitterSettings && twitterSettings.twitter_api_key && twitterSettings.twitter_api_secret) {
+    const credentials = {
+      apiKey: twitterSettings.twitter_api_key,
+      apiSecret: twitterSettings.twitter_api_secret,
+      accessToken: twitterSettings.twitter_access_token,
+      accessSecret: twitterSettings.twitter_access_secret,
+      bearerToken: twitterSettings.twitter_bearer_token
+    };
+
+    const success = initializeTwitter(credentials);
+    if (success) {
+      console.log('✅ Twitter reinitialized with database credentials');
+    }
+    return success;
+  }
+  return false;
+}
+
 module.exports = {
   initializeTwitter,
   postTip,
@@ -147,5 +171,6 @@ module.exports = {
   postTipByCategory,
   postMultipleTips,
   getClient,
-  isConfigured
+  isConfigured,
+  reinitializeWithSettings
 };
