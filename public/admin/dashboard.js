@@ -199,21 +199,19 @@ async function loadSubscriptionStats() {
 // USERS MANAGEMENT
 async function loadUsers() {
     try {
-        const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken');
-        if (!token) {
-            console.error('No authentication token found');
-            return;
-        }
-
-        const response = await fetch(`${API_URL}/api/auth/users`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+        const response = await fetch(`${API_URL}/api/admin/activities`, {
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
             const data = await response.json();
-            displayUsers(data.users || []);
+            displayUsers(data.activities || []);
+        } else if (response.status === 401) {
+            console.error('Unauthorized - token may be expired');
+            redirectToLogin();
         } else {
             console.error('Failed to load users:', response.status, response.statusText);
+            displayError('users-table', `Error: ${response.status}`);
         }
     } catch (error) {
         console.error('Error loading users:', error);
