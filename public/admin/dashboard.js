@@ -19,8 +19,11 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
 
 console.log('🔒 Admin Dashboard using API:', API_URL);
 
-// Global state for users data
+// Global state for dashboard data
 let usersData = [];
+let dealsData = [];
+let hacksData = [];
+let promosData = [];
 
 // Helper function to get admin JWT token
 function getAdminToken() {
@@ -558,6 +561,9 @@ async function loadDeals() {
 }
 
 function displayDeals(deals) {
+    // Store deals data globally for use in edit/delete operations
+    dealsData = deals;
+
     const tbody = document.getElementById('deals-table');
 
     if (deals.length === 0) {
@@ -670,17 +676,13 @@ async function saveDeal() {
 
 async function editDeal(dealId) {
     try {
-        const response = await fetch(`${API_URL}/api/admin/deals/${dealId}`, {
-            headers: getAuthHeaders()
-        });
+        // Find deal from stored global data
+        const deal = dealsData.find(d => d.id === dealId);
 
-        if (!response.ok) {
-            showAlert('Failed to load deal data', 'error');
+        if (!deal) {
+            showAlert('Deal not found', 'error');
             return;
         }
-
-        const data = await response.json();
-        const deal = data.deal;
 
         document.getElementById('modal-deal-title').value = deal.title;
         document.getElementById('modal-deal-description').value = deal.description || '';
@@ -766,6 +768,9 @@ async function loadPromos() {
 }
 
 function displayPromos(promos) {
+    // Store promos data globally for use in edit/delete operations
+    promosData = promos;
+
     const tbody = document.getElementById('promos-table');
 
     if (promos.length === 0) {
@@ -845,17 +850,8 @@ async function savePromo() {
 
 async function editPromo(promoId) {
     try {
-        const response = await fetch(`${API_URL}/api/admin/promos`, {
-            headers: getAuthHeaders()
-        });
-
-        if (!response.ok) {
-            showAlert('Failed to load promo data', 'error');
-            return;
-        }
-
-        const data = await response.json();
-        const promo = data.data.find(p => p.id === promoId);
+        // Find promo from stored global data
+        const promo = promosData.find(p => p.id === promoId);
 
         if (!promo) {
             showAlert('Promo not found', 'error');
@@ -1505,6 +1501,9 @@ async function loadHacksList() {
             15: 'Food & Dining', 16: 'Shopping & VAT'
         };
 
+        // Store hacks data globally for use in edit/delete operations
+        hacksData = data.hacks || [];
+
         if (data.hacks && data.hacks.length > 0) {
             data.hacks.forEach(hack => {
                 const row = document.createElement('tr');
@@ -1555,13 +1554,8 @@ function openAddHackModal() {
 // Edit hack
 async function editHack(hackId) {
     try {
-        // Get all hacks and find this one
-        const response = await fetch(`${API_URL}/api/admin/hacks`, {
-            headers: getAuthHeaders()
-        });
-
-        const data = await response.json();
-        const hack = data.hacks.find(h => h.id === hackId);
+        // Find hack from stored global data
+        const hack = hacksData.find(h => h.id === hackId);
 
         if (!hack) {
             showAlert('Hack not found', 'error');

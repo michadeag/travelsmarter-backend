@@ -627,20 +627,25 @@ router.delete('/hacks/:id', verifyAdminToken, async (req, res) => {
   }
 });
 
-// Get recent activities for dashboard
-router.get('/activities', async (req, res) => {
+// Get users for dashboard (replaces activities endpoint)
+router.get('/activities', verifyAdminToken, async (req, res) => {
   try {
-    const pool = require('../config/database');
-    const { limit = 10 } = req.query;
+    const { limit = 100 } = req.query;
 
-    // Get recent user signups and activities
+    // Get all users with subscription info for dashboard
     const result = await pool.query(
       `SELECT
         u.id,
         u.email,
         u.first_name,
+        u.last_name,
+        u.subscription_tier,
         u.created_at,
-        'signup' as activity_type
+        u.updated_at,
+        u.last_login,
+        'signup' as action,
+        'success' as status,
+        u.created_at as created_at_activity
       FROM users u
       ORDER BY u.created_at DESC
       LIMIT $1`,
@@ -649,13 +654,7 @@ router.get('/activities', async (req, res) => {
 
     res.status(200).json({
       success: true,
-      activities: result.rows.map(row => ({
-        id: row.id,
-        user: row.first_name || row.email,
-        email: row.email,
-        activity: 'New user signup',
-        timestamp: row.created_at
-      }))
+      activities: result.rows
     });
   } catch (error) {
     console.error('Get activities error:', error);
