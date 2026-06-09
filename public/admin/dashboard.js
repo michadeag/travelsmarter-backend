@@ -19,6 +19,9 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
 
 console.log('🔒 Admin Dashboard using API:', API_URL);
 
+// Global state for users data
+let usersData = [];
+
 // Helper function to get admin JWT token
 function getAdminToken() {
     return localStorage.getItem('adminToken');
@@ -220,6 +223,9 @@ async function loadUsers() {
 }
 
 function displayUsers(users) {
+    // Store users data globally for use in edit/delete operations
+    usersData = users;
+
     const tbody = document.getElementById('users-table');
 
     if (users.length === 0) {
@@ -334,18 +340,8 @@ async function saveUser() {
 
 async function editUser(userId) {
     try {
-        // Fetch user data
-        const response = await fetch(`${API_URL}/api/auth/users`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-
-        if (!response.ok) {
-            showAlert('Failed to load user data', 'error');
-            return;
-        }
-
-        const data = await response.json();
-        const user = data.users.find(u => u.id === userId);
+        // Find user from stored global data
+        const user = usersData.find(u => u.id === userId);
 
         if (!user) {
             showAlert('User not found', 'error');
