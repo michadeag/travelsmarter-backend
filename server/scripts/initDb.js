@@ -118,6 +118,43 @@ CREATE TABLE IF NOT EXISTS expert_contributors (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Email sequences (automated email flows)
+CREATE TABLE IF NOT EXISTS email_sequences (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  is_active BOOLEAN DEFAULT true,
+  trigger_event VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Email templates (individual emails in sequences)
+CREATE TABLE IF NOT EXISTS email_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sequence_id UUID NOT NULL REFERENCES email_sequences(id) ON DELETE CASCADE,
+  day INTEGER NOT NULL,
+  subject VARCHAR(255) NOT NULL,
+  content TEXT,
+  html_content TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Scheduled emails (pending/sent emails for users)
+CREATE TABLE IF NOT EXISTS scheduled_emails (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  template_id UUID NOT NULL REFERENCES email_templates(id) ON DELETE CASCADE,
+  scheduled_at TIMESTAMP NOT NULL,
+  sent_at TIMESTAMP,
+  status VARCHAR(50) DEFAULT 'pending',
+  error_message TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Email logs (for tracking sent emails)
 CREATE TABLE IF NOT EXISTS email_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -166,6 +203,11 @@ CREATE INDEX IF NOT EXISTS idx_deals_active ON deals(is_active);
 CREATE INDEX IF NOT EXISTS idx_community_contributions_status ON community_contributions(status);
 CREATE INDEX IF NOT EXISTS idx_expert_contributors_user ON expert_contributors(user_id);
 CREATE INDEX IF NOT EXISTS idx_promo_codes_active ON promo_codes(is_active);
+CREATE INDEX IF NOT EXISTS idx_email_sequences_active ON email_sequences(is_active);
+CREATE INDEX IF NOT EXISTS idx_email_templates_sequence ON email_templates(sequence_id);
+CREATE INDEX IF NOT EXISTS idx_scheduled_emails_user ON scheduled_emails(user_id);
+CREATE INDEX IF NOT EXISTS idx_scheduled_emails_status ON scheduled_emails(status);
+CREATE INDEX IF NOT EXISTS idx_scheduled_emails_scheduled_at ON scheduled_emails(scheduled_at);
 `;
 
 async function initializeDatabase() {
