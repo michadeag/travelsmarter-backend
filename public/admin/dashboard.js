@@ -1,25 +1,29 @@
 // Admin Dashboard JavaScript
-// Connects to backend API for data management
+// Connects to backend API for data management with JWT authentication
 
 // Determine correct API URL based on current domain
 let API_URL;
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    // Local development
-    API_URL = 'http://localhost:5000';
+    API_URL = localStorage.getItem('apiUrl') || 'http://localhost:5000';
 } else {
-    // Production - use same domain for both frontend and backend
-    API_URL = window.location.origin;
+    API_URL = localStorage.getItem('apiUrl') || window.location.origin;
 }
 
-console.log('Admin Dashboard using API:', API_URL);
+console.log('🔒 Admin Dashboard using API:', API_URL);
 
-// Helper function to get current auth token
-function getAuthToken() {
-    return localStorage.getItem('userToken') || localStorage.getItem('adminToken');
+// Helper function to get admin JWT token
+function getAdminToken() {
+    return localStorage.getItem('adminToken');
 }
 
-// Deprecated: Use getAuthToken() instead
-const API_TOKEN = null;
+// Helper function to get auth headers with JWT token
+function getAuthHeaders() {
+    const token = getAdminToken();
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+    };
+}
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,9 +33,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initDashboard() {
     // Check if logged in
-    if (!getAuthToken()) {
+    if (!getAdminToken()) {
         redirectToLogin();
         return;
+    }
+
+    // Verify token is still valid
+    verifyAdminToken();
+
+    // Setup logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
     }
 
     // Load dashboard data
@@ -1094,15 +1107,55 @@ async function saveSettings() {
 }
 
 // AUTHENTICATION
-function logout() {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminName');
-    localStorage.removeItem('apiUrl');
-    redirectToLogin();
+// Verify admin token is valid
+async function verifyAdminToken() {
+    try {
+        const token = getAdminToken();
+        if (!token) {
+            redirectToLogin();
+            return;
+        }
+
+        const response = await fetch(`${API_URL}/api/admin-auth/verify-token`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            console.warn('Token verification failed');
+            redirectToLogin();
+        }
+    } catch (error) {
+        console.error('Token verification error:', error);
+        redirectToLogin();
+    }
+}
+
+// Handle logout
+async function handleLogout() {
+    try {
+        const token = getAdminToken();
+        await fetch(`${API_URL}/api/admin-auth/logout`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        }).catch(() => {}); // Ignore errors
+
+        // Clear local storage
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminName');
+        localStorage.removeItem('adminEmail');
+        localStorage.removeItem('adminRole');
+        localStorage.removeItem('rememberMe');
+
+        redirectToLogin();
+    } catch (error) {
+        console.error('Logout error:', error);
+        redirectToLogin();
+    }
 }
 
 function redirectToLogin() {
-    window.location.href = 'login.html';
+    window.location.href = 'login-secure.html';
 }
 
 // UTILITIES

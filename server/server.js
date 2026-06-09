@@ -15,6 +15,7 @@ const hacksRoutes = require('./routes/hacksRoutes');
 const dealFiltersRoutes = require('./routes/dealFiltersRoutes');
 const communityRoutes = require('./routes/communityRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const adminAuthRoutes = require('./routes/adminAuthRoutes');
 const promoRoutes = require('./routes/promoRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const seedRoutes = require('./routes/seedRoutes');
@@ -23,6 +24,9 @@ const eliteStatusRoutes = require('./routes/eliteStatusRoutes');
 
 // Email template routes
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
+
+// Import middleware
+const { verifyAdminToken, requireAdminRole } = require('./middleware/adminAuth');
 
 // Import controllers
 const SettingsController = require('./controllers/settingsController');
@@ -61,8 +65,14 @@ app.use('/api/deals', dealsRoutes);
 app.use('/api/hacks', hacksRoutes);
 app.use('/api/user/deal-filters', dealFiltersRoutes);
 app.use('/api/community', communityRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/admin/seed', seedRoutes);
+
+// Admin authentication (public endpoints)
+app.use('/api/admin-auth', adminAuthRoutes);
+
+// Protected admin routes (requires authentication)
+app.use('/api/admin', verifyAdminToken, adminRoutes);
+app.use('/api/admin/seed', verifyAdminToken, seedRoutes);
+
 app.use('/api/award-charts', awardChartsRoutes);
 app.use('/api/elite-status', eliteStatusRoutes);
 app.use('/api/promos', promoRoutes);
