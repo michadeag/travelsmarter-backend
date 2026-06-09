@@ -150,7 +150,7 @@ async function loadDashboardStats() {
             fetch(`${API_URL}/api/subscriptions/stats`, {
                 headers: getAuthHeaders()
             }),
-            fetch(`${API_URL}/api/deals/count`, {
+            fetch(`${API_URL}/api/admin/deals/count`, {
                 headers: getAuthHeaders()
             })
         ]);
@@ -539,7 +539,7 @@ async function saveSubscription() {
 // DEALS
 async function loadDeals() {
     try {
-        const response = await fetch(`${API_URL}/api/deals?limit=50`, {
+        const response = await fetch(`${API_URL}/api/admin/deals?limit=50`, {
             headers: getAuthHeaders()
         });
 
@@ -631,11 +631,11 @@ async function saveDeal() {
     }
 
     try {
-        let url = `${API_URL}/api/deals`;
+        let url = `${API_URL}/api/admin/deals`;
         let method = 'POST';
 
         if (isEditing) {
-            url = `${API_URL}/api/deals/${dealId}`;
+            url = `${API_URL}/api/admin/deals/${dealId}`;
             method = 'PUT';
         }
 
@@ -670,7 +670,7 @@ async function saveDeal() {
 
 async function editDeal(dealId) {
     try {
-        const response = await fetch(`${API_URL}/api/deals/${dealId}`, {
+        const response = await fetch(`${API_URL}/api/admin/deals/${dealId}`, {
             headers: getAuthHeaders()
         });
 
@@ -709,7 +709,7 @@ async function deleteDeal(dealId) {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/deals/${dealId}`, {
+        const response = await fetch(`${API_URL}/api/admin/deals/${dealId}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
