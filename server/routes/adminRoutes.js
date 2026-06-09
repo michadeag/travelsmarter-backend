@@ -234,7 +234,7 @@ router.delete('/subscriptions/:id', verifyAdminToken, async (req, res) => {
 router.get('/promos', verifyAdminToken, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM promos ORDER BY created_at DESC`
+      `SELECT * FROM promo_codes ORDER BY created_at DESC`
     );
     res.status(200).json({
       success: true,
@@ -332,7 +332,7 @@ router.delete('/promos/:id', verifyAdminToken, async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      `DELETE FROM promos WHERE id = $1 RETURNING id`,
+      `DELETE FROM promo_codes WHERE id = $1 RETURNING id`,
       [id]
     );
 

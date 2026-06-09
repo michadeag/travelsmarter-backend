@@ -1561,13 +1561,8 @@ async function editHack(hackId) {
 
         currentEditingHackId = hackId;
         document.getElementById('hack-modal-title').textContent = 'Edit Hack';
-        document.getElementById('modal-hack-module-id').value = hack.module_id;
-        document.getElementById('modal-hack-title-new').value = hack.title;
-        document.getElementById('modal-hack-description').value = hack.description;
-        document.getElementById('modal-hack-category').value = hack.category;
-        document.getElementById('modal-hack-difficulty').value = hack.difficulty;
 
-        // Populate module dropdown
+        // Populate module dropdown FIRST
         const select = document.getElementById('modal-hack-module-id');
         select.innerHTML = '<option value="">Select a module (1-16)</option>';
         for (let i = 1; i <= 16; i++) {
@@ -1576,6 +1571,13 @@ async function editHack(hackId) {
             option.text = `Module ${i}`;
             select.appendChild(option);
         }
+
+        // THEN set form values
+        document.getElementById('modal-hack-module-id').value = hack.module_id;
+        document.getElementById('modal-hack-title-new').value = hack.title;
+        document.getElementById('modal-hack-description').value = hack.description;
+        document.getElementById('modal-hack-category').value = hack.category || '';
+        document.getElementById('modal-hack-difficulty').value = hack.difficulty || 'medium';
 
         document.getElementById('hack-management-modal').classList.add('active');
     } catch (error) {
