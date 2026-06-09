@@ -1441,11 +1441,21 @@ async function editTemplate(templateId) {
         const data = await response.json();
         const template = data.data;
 
-        // Populate form fields
-        document.getElementById('modal-template-day').value = template.day || 0;
-        document.getElementById('modal-template-subject').value = template.subject || '';
-        document.getElementById('modal-template-content').value = template.html_content || template.content || '';
-        document.getElementById('modal-template-sequence').value = template.sequence_id || '';
+        // Populate form fields with error checking
+        const dayField = document.getElementById('modal-template-day');
+        const subjectField = document.getElementById('modal-template-subject');
+        const contentField = document.getElementById('modal-template-content');
+        const sequenceField = document.getElementById('modal-template-sequence');
+
+        if (!dayField || !subjectField || !contentField || !sequenceField) {
+            showAlert('Template modal not found - please reload the page', 'error');
+            return;
+        }
+
+        dayField.value = template.day || 0;
+        subjectField.value = template.subject || '';
+        contentField.value = template.html_content || template.content || '';
+        sequenceField.value = template.sequence_id || '';
 
         // Change modal title and button to Edit
         document.getElementById('template-modal-title').textContent = 'Edit Email Template';
