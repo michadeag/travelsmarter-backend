@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireAdminRole } = require('../middleware/adminAuth');
+const { verifyAdminToken, requireAdminRole } = require('../middleware/adminAuth');
 const twitterService = require('../services/twitterService');
 const twitterScheduler = require('../services/twitterScheduler');
 const travelTips = require('../services/travelTips');
@@ -26,7 +26,7 @@ router.get('/status', (req, res) => {
  * Reload Twitter settings from database and reinitialize service
  * Admin only
  */
-router.post('/reload-settings', requireAdminRole(['admin', 'moderator']), async (req, res) => {
+router.post('/reload-settings', verifyAdminToken, requireAdminRole(['admin', 'moderator']), async (req, res) => {
   try {
     const pool = require('../config/database');
 
@@ -78,7 +78,7 @@ router.post('/reload-settings', requireAdminRole(['admin', 'moderator']), async 
  * Post a random travel tip
  * Admin only
  */
-router.post('/post-random', requireAdminRole(['admin', 'moderator']), async (req, res) => {
+router.post('/post-random', verifyAdminToken, requireAdminRole(['admin', 'moderator']), async (req, res) => {
   if (!twitterService.isConfigured()) {
     return res.status(400).json({
       success: false,
@@ -117,7 +117,7 @@ router.post('/post-random', requireAdminRole(['admin', 'moderator']), async (req
  * Post tip from specific category
  * Admin only
  */
-router.post('/post-category', requireAdminRole(['admin', 'moderator']), async (req, res) => {
+router.post('/post-category', verifyAdminToken, requireAdminRole(['admin', 'moderator']), async (req, res) => {
   const { category } = req.body;
 
   if (!category) {
@@ -165,7 +165,7 @@ router.post('/post-category', requireAdminRole(['admin', 'moderator']), async (r
  * Post custom tweet
  * Admin only
  */
-router.post('/post-custom', requireAdminRole(['admin']), async (req, res) => {
+router.post('/post-custom', verifyAdminToken, requireAdminRole(['admin']), async (req, res) => {
   const { text } = req.body;
 
   if (!text) {
@@ -270,7 +270,7 @@ router.get('/tips/categories', (req, res) => {
  * Start scheduler with specific configuration
  * Admin only
  */
-router.post('/scheduler/start', requireAdminRole(['admin']), (req, res) => {
+router.post('/scheduler/start', verifyAdminToken, requireAdminRole(['admin']), (req, res) => {
   const { schedule = 'recommended', times } = req.body;
 
   if (!twitterService.isConfigured()) {
@@ -347,7 +347,7 @@ router.post('/scheduler/start', requireAdminRole(['admin']), (req, res) => {
  * Stop all scheduled jobs
  * Admin only
  */
-router.post('/scheduler/stop', requireAdminRole(['admin']), (req, res) => {
+router.post('/scheduler/stop', verifyAdminToken, requireAdminRole(['admin']), (req, res) => {
   try {
     twitterScheduler.stopAllJobs();
 
