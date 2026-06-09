@@ -1457,15 +1457,16 @@ async function editTemplate(templateId) {
         contentField.value = template.html_content || template.content || '';
         sequenceField.value = template.sequence_id || '';
 
-        // Change modal title and button to Edit
-        document.getElementById('template-modal-title').textContent = 'Edit Email Template';
-        document.getElementById('template-save-btn').textContent = 'Update Template';
+        // Change modal title and button to Edit - with checks
+        const titleEl = document.getElementById('template-modal-title');
+        const saveBtn = document.getElementById('template-save-btn');
+        const idField = document.getElementById('modal-template-id');
+        const modal = document.getElementById('template-modal');
 
-        // Store the template ID for saving
-        document.getElementById('modal-template-id').value = templateId;
-
-        // Open the modal
-        document.getElementById('template-modal').classList.add('active');
+        if (titleEl) titleEl.textContent = 'Edit Email Template';
+        if (saveBtn) saveBtn.textContent = 'Update Template';
+        if (idField) idField.value = templateId;
+        if (modal) modal.classList.add('active');
     } catch (error) {
         console.error('Error loading template:', error);
         showAlert('Error loading template: ' + error.message, 'error');
