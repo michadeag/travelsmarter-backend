@@ -1333,8 +1333,20 @@ async function saveEmailTemplate() {
     const contentEl = document.getElementById('modal-template-content');
 
     if (!templateIdEl || !sequenceIdEl || !dayEl || !subjectEl || !contentEl) {
-        console.error('Missing form elements:', { templateIdEl, sequenceIdEl, dayEl, subjectEl, contentEl });
-        showAlert('Form elements not found - please reload the page', 'error');
+        console.error('Missing form elements:', {
+            templateIdEl: templateIdEl ? 'EXISTS' : 'MISSING',
+            sequenceIdEl: sequenceIdEl ? 'EXISTS' : 'MISSING',
+            dayEl: dayEl ? 'EXISTS' : 'MISSING',
+            subjectEl: subjectEl ? 'EXISTS' : 'MISSING',
+            contentEl: contentEl ? 'EXISTS' : 'MISSING'
+        });
+        const missing = [];
+        if (!templateIdEl) missing.push('modal-template-id');
+        if (!sequenceIdEl) missing.push('modal-template-sequence');
+        if (!dayEl) missing.push('modal-template-day');
+        if (!subjectEl) missing.push('modal-template-subject');
+        if (!contentEl) missing.push('modal-template-content');
+        showAlert('Missing form elements: ' + missing.join(', '), 'error');
         return;
     }
 
