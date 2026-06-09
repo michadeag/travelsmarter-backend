@@ -1325,11 +1325,24 @@ async function saveEmailSequence() {
 async function saveEmailTemplate() {
     console.log('saveEmailTemplate called');
 
-    const templateId = document.getElementById('modal-template-id').value;
-    const sequenceId = document.getElementById('modal-template-sequence').value;
-    const day = document.getElementById('modal-template-day').value;
-    const subject = document.getElementById('modal-template-subject').value;
-    const content = document.getElementById('modal-template-content').value;
+    // Get elements with null checks
+    const templateIdEl = document.getElementById('modal-template-id');
+    const sequenceIdEl = document.getElementById('modal-template-sequence');
+    const dayEl = document.getElementById('modal-template-day');
+    const subjectEl = document.getElementById('modal-template-subject');
+    const contentEl = document.getElementById('modal-template-content');
+
+    if (!templateIdEl || !sequenceIdEl || !dayEl || !subjectEl || !contentEl) {
+        console.error('Missing form elements:', { templateIdEl, sequenceIdEl, dayEl, subjectEl, contentEl });
+        showAlert('Form elements not found - please reload the page', 'error');
+        return;
+    }
+
+    const templateId = templateIdEl.value;
+    const sequenceId = sequenceIdEl.value;
+    const day = dayEl.value;
+    const subject = subjectEl.value;
+    const content = contentEl.value;
 
     console.log('Form values:', { templateId, sequenceId, day, subject, content });
 
