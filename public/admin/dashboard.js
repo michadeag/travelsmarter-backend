@@ -299,20 +299,17 @@ async function saveUser() {
     }
 
     try {
-        let url = `${API_URL}/api/auth/users`;
+        let url = `${API_URL}/api/admin/users`;
         let method = 'POST';
 
         if (isEditing) {
-            url = `${API_URL}/api/auth/users/${userId}`;
+            url = `${API_URL}/api/admin/users/${userId}`;
             method = 'PUT';
         }
 
         const response = await fetch(url, {
             method,
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 email,
                 firstName,
@@ -378,9 +375,9 @@ async function deleteUser(userId) {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/auth/users/${userId}`, {
+        const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {

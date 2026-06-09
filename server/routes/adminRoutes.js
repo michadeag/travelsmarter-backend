@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const SettingsController = require('../controllers/settingsController');
+const { verifyAdminToken } = require('../middleware/adminAuth');
+const pool = require('../config/database');
 
 /**
  * Admin Settings Routes
@@ -55,6 +57,88 @@ router.post('/settings/batch/update', SettingsController.updateMultipleSettings)
 
 // Delete setting
 router.delete('/settings/:key', SettingsController.deleteSetting);
+
+// ============================================
+// ADMIN USER MANAGEMENT (Protected by admin auth)
+// ============================================
+
+// Update user (admin only)
+router.put('/users/:id', verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email, firstName, lastName, subscriptionTier } = req.body;
+
+    // Validate required fields
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Update user in database
+    const result = await pool.query(
+      `UPDATE users
+       SET email = $1, first_name = $2, last_name = $3, subscription_tier = $4, updated_at = NOW()
+       WHERE id = $5
+       RETURNING id, email, first_name, last_name, subscription_tier, created_at, updated_at`,
+      [email, firstName || null, lastName || null, subscriptionTier || 'free', id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating user',
+      error: error.message
+    });
+  }
+});
+
+// Delete user (admin only)
+router.delete('/users/:id', verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Delete user from database
+    const result = await pool.query(
+      `DELETE FROM users WHERE id = $1 RETURNING id, email`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User deleted successfully',
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting user',
+      error: error.message
+    });
+  }
+});
 
 // Get recent activities for dashboard
 router.get('/activities', async (req, res) => {
