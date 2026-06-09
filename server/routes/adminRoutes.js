@@ -399,6 +399,36 @@ router.get('/email-templates/sequences/:sequenceId', verifyAdminToken, async (re
   }
 });
 
+// Get single email template (admin)
+router.get('/email-templates/templates/:id', verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `SELECT * FROM email_templates WHERE id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Template not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Get template error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching template',
+      error: error.message
+    });
+  }
+});
+
 // Create email template (admin)
 router.post('/email-templates/templates', verifyAdminToken, async (req, res) => {
   try {
