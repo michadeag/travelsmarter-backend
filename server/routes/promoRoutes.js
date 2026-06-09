@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { protectWithAdminFallback } = require('../middleware/auth');
 const {
   getAllPromos,
   getPromoByCode,
@@ -16,10 +17,9 @@ router.get('/:code/validate', validatePromo);
 router.get('/', getAllPromos);
 router.get('/:code', getPromoByCode);
 
-// Admin routes (create, update, delete)
-// Specific paths before parameter routes
-router.post('/', createPromo);
-router.put('/:id', updatePromo);
-router.delete('/:id', deletePromo);
+// Admin routes (create, update, delete) - Protected with admin fallback
+router.post('/', protectWithAdminFallback, createPromo);
+router.put('/:id', protectWithAdminFallback, updatePromo);
+router.delete('/:id', protectWithAdminFallback, deletePromo);
 
 module.exports = router;

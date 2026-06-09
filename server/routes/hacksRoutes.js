@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect, optionalAuth } = require('../middleware/auth');
+const { protect, optionalAuth, protectWithAdminFallback } = require('../middleware/auth');
 const {
   saveHack,
   removeHack,
@@ -27,16 +27,16 @@ router.get('/modules', optionalAuth, getAllModules);
 router.post('/save', protect, saveHack);
 router.get('/saved', protect, getSavedHacks);
 
-// Admin routes
-router.get('/admin/hacks', protect, listHacks);
-router.post('/admin/hacks', protect, createHack);
-router.put('/admin/hacks/:id', protect, updateHack);
-router.delete('/admin/hacks/:id', protect, deleteHack);
+// Admin routes - Works with both user and admin tokens
+router.get('/admin/hacks', protectWithAdminFallback, listHacks);
+router.post('/admin/hacks', protectWithAdminFallback, createHack);
+router.put('/admin/hacks/:id', protectWithAdminFallback, updateHack);
+router.delete('/admin/hacks/:id', protectWithAdminFallback, deleteHack);
 
-// Hack update routes
-router.get('/admin/hack-updates', protect, getUpdateLogs);
-router.post('/admin/hack-updates/trigger', protect, triggerUpdateCycle);
-router.get('/admin/hack-stats', protect, getHackStats);
+// Hack update routes - Works with both user and admin tokens
+router.get('/admin/hack-updates', protectWithAdminFallback, getUpdateLogs);
+router.post('/admin/hack-updates/trigger', protectWithAdminFallback, triggerUpdateCycle);
+router.get('/admin/hack-stats', protectWithAdminFallback, getHackStats);
 
 // Legacy routes (kept for compatibility)
 router.get('/', protect, getHacks);

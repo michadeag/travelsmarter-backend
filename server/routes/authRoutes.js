@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, protectWithAdminFallback } = require('../middleware/auth');
 const {
   signup,
   login,
@@ -18,12 +18,12 @@ const {
 router.post('/signup', signup);
 router.post('/login', login);
 
-// Admin routes (require authentication)
-router.get('/users', protect, getAllUsers);
-router.get('/users/count', protect, getUserCount);
-router.post('/users', protect, createUser);
-router.put('/users/:id', protect, updateUser);
-router.delete('/users/:id', protect, deleteUser);
+// Admin routes - Works with both user and admin tokens
+router.get('/users', protectWithAdminFallback, getAllUsers);
+router.get('/users/count', protectWithAdminFallback, getUserCount);
+router.post('/users', protectWithAdminFallback, createUser);
+router.put('/users/:id', protectWithAdminFallback, updateUser);
+router.delete('/users/:id', protectWithAdminFallback, deleteUser);
 
 // Private routes
 router.get('/me', protect, getMe);

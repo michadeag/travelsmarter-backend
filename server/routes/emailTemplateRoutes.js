@@ -1,25 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protectWithAdminFallback } = require('../middleware/auth');
 const emailTemplateController = require('../controllers/emailTemplateController');
 
-// All routes require authentication and admin access
-// In a full app, add an isAdmin middleware check
+// All routes require authentication - works with both user and admin tokens
 
 // Sequence routes
-router.get('/sequences', protect, emailTemplateController.getSequences);
-router.get('/sequences/:sequenceId', protect, emailTemplateController.getSequenceWithTemplates);
-router.post('/sequences', protect, emailTemplateController.createSequence);
-router.put('/sequences/:sequenceId', protect, emailTemplateController.updateSequence);
+router.get('/sequences', protectWithAdminFallback, emailTemplateController.getSequences);
+router.get('/sequences/:sequenceId', protectWithAdminFallback, emailTemplateController.getSequenceWithTemplates);
+router.post('/sequences', protectWithAdminFallback, emailTemplateController.createSequence);
+router.put('/sequences/:sequenceId', protectWithAdminFallback, emailTemplateController.updateSequence);
 
 // Template routes
-router.get('/templates', protect, emailTemplateController.getTemplates);
-router.get('/templates/:templateId', protect, emailTemplateController.getTemplateById);
-router.post('/templates', protect, emailTemplateController.createTemplate);
-router.put('/templates/:templateId', protect, emailTemplateController.updateTemplate);
-router.delete('/templates/:templateId', protect, emailTemplateController.deleteTemplate);
+router.get('/templates', protectWithAdminFallback, emailTemplateController.getTemplates);
+router.get('/templates/:templateId', protectWithAdminFallback, emailTemplateController.getTemplateById);
+router.post('/templates', protectWithAdminFallback, emailTemplateController.createTemplate);
+router.put('/templates/:templateId', protectWithAdminFallback, emailTemplateController.updateTemplate);
+router.delete('/templates/:templateId', protectWithAdminFallback, emailTemplateController.deleteTemplate);
 
 // Scheduled emails view
-router.get('/scheduled', protect, emailTemplateController.getScheduledEmails);
+router.get('/scheduled', protectWithAdminFallback, emailTemplateController.getScheduledEmails);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, protectWithAdminFallback } = require('../middleware/auth');
 const {
   createCheckoutSession,
   handleWebhook,
@@ -25,9 +25,9 @@ router.post('/checkout', protect, createCheckoutSession);
 router.get('/current', protect, getCurrentSubscription);
 router.post('/cancel', protect, cancelSubscription);
 
-// Admin routes (require authentication)
-router.get('/', protect, getSubscriptions);
-router.put('/:id', protect, updateSubscription);
-router.delete('/:id', protect, deleteSubscription);
+// Admin routes - Works with both user and admin tokens
+router.get('/', protectWithAdminFallback, getSubscriptions);
+router.put('/:id', protectWithAdminFallback, updateSubscription);
+router.delete('/:id', protectWithAdminFallback, deleteSubscription);
 
 module.exports = router;

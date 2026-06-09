@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect, optionalAuth } = require('../middleware/auth');
+const { protect, optionalAuth, protectWithAdminFallback } = require('../middleware/auth');
 const {
   getDeals,
   getDeal,
@@ -30,8 +30,8 @@ router.post('/:id/save', protect, saveDeal);
 
 // Parameter routes LAST
 router.get('/:id', getDeal);
-router.post('/', protect, createDeal);
-router.put('/:id', protect, updateDeal);
-router.delete('/:id', protect, deleteDeal);
+router.post('/', protectWithAdminFallback, createDeal);
+router.put('/:id', protectWithAdminFallback, updateDeal);
+router.delete('/:id', protectWithAdminFallback, deleteDeal);
 
 module.exports = router;
