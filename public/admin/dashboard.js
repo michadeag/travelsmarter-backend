@@ -517,12 +517,9 @@ async function saveSubscription() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/subscriptions/${subId}`, {
+        const response = await fetch(`${API_URL}/api/admin/subscriptions/${subId}`, {
             method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ tier, status })
         });
 
@@ -531,11 +528,13 @@ async function saveSubscription() {
             closeSubscriptionModal();
             loadSubscriptions();
         } else {
-            showAlert('Failed to update subscription', 'error');
+            const errorData = await response.json();
+            console.error('API Error:', errorData);
+            showAlert(errorData.message || 'Failed to update subscription', 'error');
         }
     } catch (error) {
         console.error('Error updating subscription:', error);
-        showAlert('Error updating subscription', 'error');
+        showAlert(error.message || 'Error updating subscription', 'error');
     }
 }
 
@@ -647,10 +646,7 @@ async function saveDeal() {
 
         const response = await fetch(url, {
             method,
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 title,
                 description,
@@ -666,11 +662,13 @@ async function saveDeal() {
             closeDealModal();
             loadDeals();
         } else {
-            showAlert('Failed to save deal', 'error');
+            const errorData = await response.json();
+            console.error('API Error:', errorData);
+            showAlert(errorData.message || 'Failed to save deal', 'error');
         }
     } catch (error) {
         console.error('Error saving deal:', error);
-        showAlert('Error saving deal', 'error');
+        showAlert(error.message || 'Error saving deal', 'error');
     }
 }
 
@@ -822,10 +820,7 @@ async function savePromo() {
 
         const response = await fetch(url, {
             method,
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 code,
                 discount_percent: parseFloat(percent),
@@ -840,11 +835,13 @@ async function savePromo() {
             closePromoModal();
             loadPromos();
         } else {
-            showAlert('Failed to save promo code', 'error');
+            const errorData = await response.json();
+            console.error('API Error:', errorData);
+            showAlert(errorData.message || 'Failed to save promo code', 'error');
         }
     } catch (error) {
         console.error('Error saving promo:', error);
-        showAlert('Error saving promo code', 'error');
+        showAlert(error.message || 'Error saving promo code', 'error');
     }
 }
 
@@ -1595,8 +1592,8 @@ async function saveHackManagement() {
     const category = document.getElementById('modal-hack-category').value;
     const difficulty = document.getElementById('modal-hack-difficulty').value;
 
-    if (!moduleId || !title || !description || !category) {
-        showAlert('Please fill in all required fields', 'error');
+    if (!moduleId || !title || !description) {
+        showAlert('Module, title, and description are required', 'error');
         return;
     }
 
@@ -1609,10 +1606,7 @@ async function saveHackManagement() {
 
         const response = await fetch(url, {
             method,
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 module_id: parseInt(moduleId),
                 title,
