@@ -76,7 +76,7 @@ const travelTips = [
   },
   {
     category: 'dining',
-    tip: '☕ Free water in most European restaurants. Ask for "tap water" - it\\'s always free. Saves €3-5 per meal!',
+    tip: '☕ Free water in most European restaurants. Ask for "tap water" - it\'s always free. Saves €3-5 per meal!',
     hashtags: '#TravelHacks #EuropeTips #BudgetFriendly'
   },
 
