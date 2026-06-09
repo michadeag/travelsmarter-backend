@@ -377,6 +377,133 @@ router.get('/email-templates/sequences', verifyAdminToken, async (req, res) => {
   }
 });
 
+// Get email templates for a sequence (admin)
+router.get('/email-templates/sequences/:sequenceId', verifyAdminToken, async (req, res) => {
+  try {
+    const { sequenceId } = req.params;
+    const result = await pool.query(
+      `SELECT * FROM email_templates WHERE sequence_id = $1 ORDER BY day ASC`,
+      [sequenceId]
+    );
+    res.status(200).json({
+      success: true,
+      templates: result.rows
+    });
+  } catch (error) {
+    console.error('Get templates error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching templates',
+      error: error.message
+    });
+  }
+});
+
+// Create email template (admin)
+router.post('/email-templates/templates', verifyAdminToken, async (req, res) => {
+  try {
+    const { sequence_id, day, subject, html_content, content } = req.body;
+
+    if (!sequence_id || !subject) {
+      return res.status(400).json({
+        success: false,
+        message: 'Sequence ID and subject are required'
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO email_templates (sequence_id, day, subject, html_content, content, is_active, created_at)
+       VALUES ($1, $2, $3, $4, $5, true, NOW())
+       RETURNING *`,
+      [sequence_id, day || 0, subject, html_content || content || null, content || null]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Template created successfully',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Create template error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating template',
+      error: error.message
+    });
+  }
+});
+
+// Update email template (admin)
+router.put('/email-templates/templates/:id', verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { day, subject, html_content, content } = req.body;
+
+    const result = await pool.query(
+      `UPDATE email_templates
+       SET day = COALESCE($1, day),
+           subject = COALESCE($2, subject),
+           html_content = COALESCE($3, html_content),
+           content = COALESCE($4, content),
+           updated_at = NOW()
+       WHERE id = $5
+       RETURNING *`,
+      [day, subject, html_content, content, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Template not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Template updated successfully',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Update template error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating template',
+      error: error.message
+    });
+  }
+});
+
+// Delete email template (admin)
+router.delete('/email-templates/templates/:id', verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `DELETE FROM email_templates WHERE id = $1 RETURNING id`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Template not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Template deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete template error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting template',
+      error: error.message
+    });
+  }
+});
+
 // Get deals (admin)
 router.get('/deals', verifyAdminToken, async (req, res) => {
   try {
