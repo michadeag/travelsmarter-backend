@@ -1210,12 +1210,23 @@ async function loadEmailTemplates() {
 
 function renderSequences(sequences) {
     const tbody = document.getElementById('sequences-table');
+    const dropdown = document.getElementById('modal-template-sequence');
 
     if (!sequences || sequences.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No sequences yet</td></tr>';
+        if (dropdown) {
+            dropdown.innerHTML = '<option value="">Select a sequence</option>';
+        }
         return;
     }
 
+    // Populate the dropdown
+    if (dropdown) {
+        dropdown.innerHTML = '<option value="">Select a sequence</option>' +
+            sequences.map(seq => `<option value="${seq.id}">${seq.name}</option>`).join('');
+    }
+
+    // Populate the table
     tbody.innerHTML = sequences.map(seq => `
         <tr>
             <td><strong>${seq.name}</strong></td>
@@ -1367,9 +1378,11 @@ async function saveEmailTemplate() {
     const content = contentEl.value;
 
     console.log('Form values:', { templateId, sequenceId, day, subject, content });
+    console.log('Dropdown options:', sequenceIdEl.options);
+    console.log('Selected option text:', sequenceIdEl.options[sequenceIdEl.selectedIndex]?.text);
 
     if (!sequenceId || !subject) {
-        console.log('Validation failed: missing sequenceId or subject');
+        console.log('Validation failed: missing sequenceId or subject', { sequenceId, subject });
         showAlert('Sequence and subject are required', 'error');
         return;
     }
