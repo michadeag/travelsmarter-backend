@@ -28,6 +28,9 @@ const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 // Analytics routes
 const analyticsRoutes = require('./routes/analyticsRoutes');
 
+// Twitter routes
+const twitterRoutes = require('./routes/twitterRoutes');
+
 // Import middleware
 const { verifyAdminToken, requireAdminRole } = require('./middleware/adminAuth');
 
@@ -76,6 +79,7 @@ app.use('/api/admin-auth', adminAuthRoutes);
 app.use('/api/admin', verifyAdminToken, adminRoutes);
 app.use('/api/admin/seed', verifyAdminToken, seedRoutes);
 app.use('/api/admin/analytics', analyticsRoutes);
+app.use('/api/twitter', twitterRoutes);
 
 app.use('/api/award-charts', awardChartsRoutes);
 app.use('/api/elite-status', eliteStatusRoutes);
@@ -1060,6 +1064,18 @@ initializeApp().then(() => {
     // Run hack update immediately on startup (optional - comment out to skip)
     // Uncomment next line to run immediately on server start
     // hackUpdateService.runHackUpdateCycle().catch(err => console.error('Initial hack update failed:', err));
+
+    // Twitter auto-posting service
+    console.log('🐦 Initializing Twitter auto-posting service...');
+    const twitterService = require('./services/twitterService');
+    const twitterScheduler = require('./services/twitterScheduler');
+
+    if (twitterService.initializeTwitter()) {
+      twitterScheduler.initializeScheduler();
+      console.log('✅ Twitter service initialized');
+    } else {
+      console.log('ℹ️ Twitter not configured. Manual posting available via API.');
+    }
   });
 }).catch(error => {
   console.error('Failed to initialize app:', error);
