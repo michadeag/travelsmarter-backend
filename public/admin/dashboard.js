@@ -969,6 +969,40 @@ async function loadSettings() {
                 document.getElementById('webhook-secret').value = settings.stripe_webhook_secret.value;
             }
 
+            // Load Twitter settings
+            if (settings.twitter_api_key?.value) {
+                const el = document.getElementById('twitter-api-key');
+                if (el) el.value = settings.twitter_api_key.value;
+            }
+            if (settings.twitter_api_secret?.value) {
+                const el = document.getElementById('twitter-api-secret');
+                if (el) el.value = settings.twitter_api_secret.value;
+            }
+            if (settings.twitter_access_token?.value) {
+                const el = document.getElementById('twitter-access-token');
+                if (el) el.value = settings.twitter_access_token.value;
+            }
+            if (settings.twitter_access_secret?.value) {
+                const el = document.getElementById('twitter-access-secret');
+                if (el) el.value = settings.twitter_access_secret.value;
+            }
+            if (settings.twitter_bearer_token?.value) {
+                const el = document.getElementById('twitter-bearer-token');
+                if (el) el.value = settings.twitter_bearer_token.value;
+            }
+            if (settings.twitter_auto_posting?.value) {
+                const el = document.getElementById('twitter-auto-posting');
+                if (el) el.checked = settings.twitter_auto_posting.value === 'true';
+            }
+            if (settings.twitter_posting_schedule?.value) {
+                const el = document.getElementById('twitter-posting-schedule');
+                if (el) el.value = settings.twitter_posting_schedule.value;
+            }
+            if (settings.twitter_posting_time?.value) {
+                const el = document.getElementById('twitter-posting-time');
+                if (el) el.value = settings.twitter_posting_time.value;
+            }
+
             // Load checkboxes
             const sendSignupEmail = document.getElementById('send-signup');
             const sendSubEmail = document.getElementById('send-sub');
@@ -1044,6 +1078,16 @@ async function saveSettings() {
     const stripePubKey = document.getElementById('stripe-pub-key')?.value || '';
     const webhookSecret = document.getElementById('webhook-secret').value;
 
+    // Twitter settings
+    const twitterApiKey = document.getElementById('twitter-api-key')?.value || '';
+    const twitterApiSecret = document.getElementById('twitter-api-secret')?.value || '';
+    const twitterAccessToken = document.getElementById('twitter-access-token')?.value || '';
+    const twitterAccessSecret = document.getElementById('twitter-access-secret')?.value || '';
+    const twitterBearerToken = document.getElementById('twitter-bearer-token')?.value || '';
+    const twitterAutoPosting = document.getElementById('twitter-auto-posting')?.checked || false;
+    const twitterPostingSchedule = document.getElementById('twitter-posting-schedule')?.value || 'recommended';
+    const twitterPostingTime = document.getElementById('twitter-posting-time')?.value || '09:00';
+
     // Checkbox values
     const sendSignupEmail = document.getElementById('send-signup').checked;
     const sendSubEmail = document.getElementById('send-sub').checked;
@@ -1066,27 +1110,51 @@ async function saveSettings() {
         localStorage.setItem('admin_send_sub_email', sendSubEmail.toString());
         localStorage.setItem('admin_send_digest', sendDigest.toString());
 
+        // Save Twitter settings
+        if (twitterApiKey) localStorage.setItem('admin_twitter_api_key', twitterApiKey);
+        if (twitterApiSecret) localStorage.setItem('admin_twitter_api_secret', twitterApiSecret);
+        if (twitterAccessToken) localStorage.setItem('admin_twitter_access_token', twitterAccessToken);
+        if (twitterAccessSecret) localStorage.setItem('admin_twitter_access_secret', twitterAccessSecret);
+        if (twitterBearerToken) localStorage.setItem('admin_twitter_bearer_token', twitterBearerToken);
+        localStorage.setItem('admin_twitter_auto_posting', twitterAutoPosting.toString());
+        localStorage.setItem('admin_twitter_posting_schedule', twitterPostingSchedule);
+        localStorage.setItem('admin_twitter_posting_time', twitterPostingTime);
+
         console.log('✅ Settings saved to localStorage');
-        showAlert('Settings saved successfully! Stripe key is ready for checkout.', 'success');
+        showAlert('Settings saved successfully!', 'success');
 
         // Optional: Try to sync to backend (non-blocking)
         try {
+            const settingsData = {
+                'sendgrid_api_key': sendgridKey,
+                'sender_email': senderEmail,
+                'stripe_secret_key': stripeKey,
+                'stripe_publishable_key': stripePubKey,
+                'stripe_webhook_secret': webhookSecret,
+                'send_email_on_signup': sendSignupEmail.toString(),
+                'send_email_on_subscription': sendSubEmail.toString(),
+                'send_daily_digest': sendDigest.toString()
+            };
+
+            // Add Twitter settings if provided
+            if (twitterApiKey) {
+                settingsData['twitter_api_key'] = twitterApiKey;
+                settingsData['twitter_api_secret'] = twitterApiSecret;
+                settingsData['twitter_access_token'] = twitterAccessToken;
+                settingsData['twitter_access_secret'] = twitterAccessSecret;
+                settingsData['twitter_bearer_token'] = twitterBearerToken;
+                settingsData['twitter_auto_posting'] = twitterAutoPosting.toString();
+                settingsData['twitter_posting_schedule'] = twitterPostingSchedule;
+                settingsData['twitter_posting_time'] = twitterPostingTime;
+            }
+
             await fetch(`${API_URL}/api/admin/settings/batch/update`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${getAuthToken()}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    'sendgrid_api_key': sendgridKey,
-                    'sender_email': senderEmail,
-                    'stripe_secret_key': stripeKey,
-                    'stripe_publishable_key': stripePubKey,
-                    'stripe_webhook_secret': webhookSecret,
-                    'send_email_on_signup': sendSignupEmail.toString(),
-                    'send_email_on_subscription': sendSubEmail.toString(),
-                    'send_daily_digest': sendDigest.toString()
-                })
+                body: JSON.stringify(settingsData)
             });
             console.log('✅ Settings also synced to backend database');
         } catch (backendError) {

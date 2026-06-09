@@ -1170,6 +1170,65 @@
                         </label>
                     </div>
 
+                    <h4 style="margin-top: 30px; margin-bottom: 20px;">🐦 Twitter Configuration</h4>
+
+                    <div class="form-group">
+                        <label>Twitter API Key</label>
+                        <input type="text" id="twitter-api-key" placeholder="Your API Key from developer.twitter.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Twitter API Secret</label>
+                        <input type="password" id="twitter-api-secret" placeholder="Your API Secret">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Twitter Access Token</label>
+                        <input type="text" id="twitter-access-token" placeholder="Your Access Token">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Twitter Access Secret</label>
+                        <input type="password" id="twitter-access-secret" placeholder="Your Access Token Secret">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Twitter Bearer Token</label>
+                        <input type="text" id="twitter-bearer-token" placeholder="Your Bearer Token">
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="twitter-auto-posting" value="twitter_auto_posting"> Enable Twitter Auto-Posting
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Twitter Posting Schedule</label>
+                        <select id="twitter-posting-schedule" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                            <option value="recommended">Recommended (3x daily)</option>
+                            <option value="daily">Daily (1x)</option>
+                            <option value="hourly">Hourly</option>
+                            <option value="category">Category Rotation</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>First Posting Time (24-hour format)</label>
+                        <input type="time" id="twitter-posting-time" placeholder="09:00">
+                    </div>
+
+                    <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+                        <strong>ℹ️ Twitter Setup:</strong>
+                        <ol style="margin-top: 10px; margin-left: 20px; font-size: 13px; color: #555;">
+                            <li>Go to <a href="https://developer.twitter.com" target="_blank" style="color: #667eea;">developer.twitter.com</a></li>
+                            <li>Create an app and go to "Keys and tokens"</li>
+                            <li>Copy all 5 credentials below</li>
+                            <li>Save settings</li>
+                            <li>Server will automatically initialize Twitter posting</li>
+                        </ol>
+                    </div>
+
                     <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 20px;">Save Settings</button>
                 </div>
             </div>
