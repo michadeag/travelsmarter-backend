@@ -1359,6 +1359,127 @@
                         </ol>
                     </div>
 
+                    <h4 style="margin-top: 30px; margin-bottom: 20px;">📱 Social Media Configuration</h4>
+
+                    <!-- Platform Settings Tabs -->
+                    <div style="margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; display: flex; gap: 10px; overflow-x: auto;">
+                        <button class="platform-tab active" data-platform="twitter" onclick="switchPlatformTab('twitter')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid #667eea; color: #667eea; font-weight: 600;">🐦 Twitter</button>
+                        <button class="platform-tab" data-platform="reddit" onclick="switchPlatformTab('reddit')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">🤖 Reddit</button>
+                        <button class="platform-tab" data-platform="pinterest" onclick="switchPlatformTab('pinterest')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">📌 Pinterest</button>
+                        <button class="platform-tab" data-platform="instagram" onclick="switchPlatformTab('instagram')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">📸 Instagram</button>
+                        <button class="platform-tab" data-platform="linkedin" onclick="switchPlatformTab('linkedin')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">💼 LinkedIn</button>
+                    </div>
+
+                    <!-- Twitter Settings -->
+                    <div class="platform-settings active" id="settings-twitter">
+                        <div class="form-group">
+                            <label>Posting Frequency</label>
+                            <select id="twitter-frequency" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="daily">Once Daily</option>
+                                <option value="multiple_daily" selected>Multiple Times Daily (3x)</option>
+                                <option value="hourly">Hourly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Posts Per Day</label>
+                            <input type="number" id="twitter-max-posts" min="1" max="24" value="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Posting Hours (comma-separated, 24h format)</label>
+                            <input type="text" id="twitter-hours" placeholder="9,14,19" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <!-- Reddit Settings -->
+                    <div class="platform-settings" id="settings-reddit" style="display: none;">
+                        <div class="form-group">
+                            <label>Posting Frequency</label>
+                            <select id="reddit-frequency" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="daily" selected>Once Daily</option>
+                                <option value="multiple_daily">Multiple Times Daily</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Posts Per Day</label>
+                            <input type="number" id="reddit-max-posts" min="1" max="10" value="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Subreddits (comma-separated)</label>
+                            <input type="text" id="reddit-subreddits" placeholder="budgettravel,travel,solotravel" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <!-- Pinterest Settings -->
+                    <div class="platform-settings" id="settings-pinterest" style="display: none;">
+                        <div class="form-group">
+                            <label>Posting Frequency</label>
+                            <select id="pinterest-frequency" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="daily" selected>Once Daily</option>
+                                <option value="multiple_daily">Multiple Times Daily</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Posts Per Day</label>
+                            <input type="number" id="pinterest-max-posts" min="1" max="10" value="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Posting Time (24h format)</label>
+                            <input type="time" id="pinterest-time" value="20:00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <!-- Instagram Settings -->
+                    <div class="platform-settings" id="settings-instagram" style="display: none;">
+                        <div class="form-group">
+                            <label>Posting Frequency</label>
+                            <select id="instagram-frequency" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="daily" selected>Once Daily</option>
+                                <option value="multiple_daily">Multiple Times Daily</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Posts Per Day</label>
+                            <input type="number" id="instagram-max-posts" min="1" max="10" value="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Posting Hours (comma-separated, 24h format)</label>
+                            <input type="text" id="instagram-hours" placeholder="11,18" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <!-- LinkedIn Settings -->
+                    <div class="platform-settings" id="settings-linkedin" style="display: none;">
+                        <div class="form-group">
+                            <label>Posting Frequency</label>
+                            <select id="linkedin-frequency" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="daily" selected>Once Daily</option>
+                                <option value="multiple_daily">Multiple Times Daily</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Posts Per Day</label>
+                            <input type="number" id="linkedin-max-posts" min="1" max="5" value="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Posting Time (24h format)</label>
+                            <input type="time" id="linkedin-time" value="09:00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin-top: 20px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+                        <strong>ℹ️ Social Media Configuration:</strong>
+                        <ul style="margin-top: 10px; margin-left: 20px; font-size: 13px; color: #555;">
+                            <li>Configure posting frequency and timing for each platform</li>
+                            <li>Go to Social Media tab to connect accounts</li>
+                            <li>Accounts must be connected before posting can begin</li>
+                            <li>Settings are applied globally to all connected accounts on each platform</li>
+                        </ul>
+                    </div>
+
                     <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 20px;">Save Settings</button>
                 </div>
             </div>

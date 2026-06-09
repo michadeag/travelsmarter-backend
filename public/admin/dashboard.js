@@ -2160,3 +2160,30 @@ function closeHackManagementModal() {
     document.getElementById('hack-management-modal').classList.remove('active');
     currentEditingHackId = null;
 }
+
+// SOCIAL MEDIA PLATFORM TAB SWITCHING
+function switchPlatformTab(platform) {
+    // Hide all platform settings
+    document.querySelectorAll('.platform-settings').forEach(el => {
+        el.style.display = 'none';
+    });
+
+    // Remove active class from all tabs
+    document.querySelectorAll('.platform-tab').forEach(el => {
+        el.style.borderBottom = '3px solid transparent';
+        el.style.color = '#6b7280';
+    });
+
+    // Show selected platform settings
+    const settingsElement = document.getElementById(`settings-${platform}`);
+    if (settingsElement) {
+        settingsElement.style.display = 'block';
+    }
+
+    // Highlight active tab
+    const activeTab = document.querySelector(`[data-platform="${platform}"]`);
+    if (activeTab) {
+        activeTab.style.borderBottom = '3px solid #667eea';
+        activeTab.style.color = '#667eea';
+    }
+}
