@@ -27,7 +27,7 @@ const travelTips = [
   },
   {
     category: 'flights',
-    tip: '🌍 Flying between Europe and USA? Check Scott\\'s Cheap Flights weekly deals - often under €300 transatlantic!',
+    tip: '🌍 Flying between Europe and USA? Check Scott\'s Cheap Flights weekly deals - often under €300 transatlantic!',
     hashtags: '#CheapFlights #TravelDeals #BudgetTravel'
   },
 
