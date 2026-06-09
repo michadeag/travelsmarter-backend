@@ -1303,10 +1303,7 @@ async function saveEmailSequence() {
     try {
         const response = await fetch(`${API_URL}/api/admin/email-templates/sequences`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ name, description })
         });
 
@@ -1344,10 +1341,7 @@ async function saveEmailTemplate() {
     try {
         const response = await fetch(endpoint, {
             method: method,
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 sequence_id: sequenceId,
                 day: parseInt(day) || 0,
@@ -1377,10 +1371,7 @@ async function createSequence(name) {
     try {
         const response = await fetch(`${API_URL}/api/admin/email-templates/sequences`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ name, description: '' })
         });
 

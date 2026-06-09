@@ -263,7 +263,7 @@ router.post('/promos', verifyAdminToken, async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO promos (code, discount_percent, discount_amount, max_uses, valid_until, is_active, created_at, updated_at)
+      `INSERT INTO promo_codes (code, discount_percent, discount_amount, max_uses, valid_until, is_active, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())
        RETURNING *`,
       [code.toUpperCase(), discount_percent || null, discount_amount || null, max_uses || null, valid_until || null]
@@ -291,7 +291,7 @@ router.put('/promos/:id', verifyAdminToken, async (req, res) => {
     const { code, discount_percent, discount_amount, max_uses, valid_until, is_active } = req.body;
 
     const result = await pool.query(
-      `UPDATE promos
+      `UPDATE promo_codes
        SET code = COALESCE($1, code),
            discount_percent = COALESCE($2, discount_percent),
            discount_amount = COALESCE($3, discount_amount),
