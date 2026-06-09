@@ -282,6 +282,63 @@ app.post('/api/test/send-pending-emails', async (req, res) => {
   }
 });
 
+// Manually initialize email sequence for a user (testing)
+app.post('/api/test/init-email-sequence', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    console.log(`🔍 Finding user with email: ${email}`);
+
+    // Find user by email
+    const userResult = await pool.query(
+      `SELECT id, email, first_name FROM users WHERE email = $1 LIMIT 1`,
+      [email]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `User not found: ${email}`
+      });
+    }
+
+    const user = userResult.rows[0];
+    console.log(`✅ Found user: ${user.id}`);
+
+    // Initialize email sequence
+    const result = await emailSequenceService.initializeEmailSequence(
+      user.id,
+      user.email,
+      user.first_name
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Email sequence initialized',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name
+      },
+      result
+    });
+  } catch (error) {
+    console.error('Error initializing email sequence:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error initializing email sequence',
+      error: error.message
+    });
+  }
+});
+
 // Home endpoint
 app.get('/', (req, res) => {
   res.status(200).json({
