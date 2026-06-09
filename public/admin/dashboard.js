@@ -1323,13 +1323,18 @@ async function saveEmailSequence() {
 }
 
 async function saveEmailTemplate() {
+    console.log('saveEmailTemplate called');
+
     const templateId = document.getElementById('modal-template-id').value;
     const sequenceId = document.getElementById('modal-template-sequence').value;
     const day = document.getElementById('modal-template-day').value;
     const subject = document.getElementById('modal-template-subject').value;
     const content = document.getElementById('modal-template-content').value;
 
+    console.log('Form values:', { templateId, sequenceId, day, subject, content });
+
     if (!sequenceId || !subject) {
+        console.log('Validation failed: missing sequenceId or subject');
         showAlert('Sequence and subject are required', 'error');
         return;
     }
@@ -1337,6 +1342,8 @@ async function saveEmailTemplate() {
     const isEdit = !!templateId;
     const method = isEdit ? 'PUT' : 'POST';
     const endpoint = isEdit ? `${API_URL}/api/admin/email-templates/templates/${templateId}` : `${API_URL}/api/admin/email-templates/templates`;
+
+    console.log('Saving template:', { isEdit, method, endpoint });
 
     try {
         const response = await fetch(endpoint, {
@@ -1350,6 +1357,8 @@ async function saveEmailTemplate() {
                 content: content
             })
         });
+
+        console.log('Save response:', response.status, response.ok);
 
         if (response.ok) {
             const action = isEdit ? 'updated' : 'created';
