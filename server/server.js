@@ -31,6 +31,9 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 // Twitter routes
 const twitterRoutes = require('./routes/twitterRoutes');
 
+// Social Media routes
+const socialMediaRoutes = require('./routes/socialMediaRoutes');
+
 // Import middleware
 const { verifyAdminToken, requireAdminRole } = require('./middleware/adminAuth');
 
@@ -80,6 +83,7 @@ app.use('/api/admin', verifyAdminToken, adminRoutes);
 app.use('/api/admin/seed', verifyAdminToken, seedRoutes);
 app.use('/api/admin/analytics', analyticsRoutes);
 app.use('/api/twitter', twitterRoutes);
+app.use('/api/social', socialMediaRoutes);
 
 app.use('/api/award-charts', awardChartsRoutes);
 app.use('/api/elite-status', eliteStatusRoutes);

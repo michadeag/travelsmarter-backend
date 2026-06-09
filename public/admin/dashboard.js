@@ -1615,6 +1615,9 @@ document.addEventListener('click', (e) => {
         loadTwitterStatus();
         loadTwitterTips();
     }
+    if (e.target.getAttribute('data-tab') === 'social-media') {
+        loadSocialMediaDashboard();
+    }
 });
 
 // EMAIL TEMPLATES MANAGEMENT
