@@ -25,6 +25,9 @@ const eliteStatusRoutes = require('./routes/eliteStatusRoutes');
 // Email template routes
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 
+// Analytics routes
+const analyticsRoutes = require('./routes/analyticsRoutes');
+
 // Import middleware
 const { verifyAdminToken, requireAdminRole } = require('./middleware/adminAuth');
 
@@ -72,6 +75,7 @@ app.use('/api/admin-auth', adminAuthRoutes);
 // Protected admin routes (requires authentication)
 app.use('/api/admin', verifyAdminToken, adminRoutes);
 app.use('/api/admin/seed', verifyAdminToken, seedRoutes);
+app.use('/api/admin/analytics', analyticsRoutes);
 
 app.use('/api/award-charts', awardChartsRoutes);
 app.use('/api/elite-status', eliteStatusRoutes);

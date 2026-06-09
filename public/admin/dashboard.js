@@ -69,6 +69,7 @@ function initDashboard() {
     loadHacks();
     loadPromos();
     loadEmailTemplates();
+    loadAnalytics();
     loadRecentActivities();
     loadSettings();
 
@@ -1182,6 +1183,54 @@ function formatTime(dateString) {
 function displayError(elementId, message) {
     const tbody = document.getElementById(elementId);
     tbody.innerHTML = `<tr><td colspan="10" class="empty-state">${message}</td></tr>`;
+}
+
+// ANALYTICS
+async function loadAnalytics() {
+    try {
+        const response = await fetch(`${API_URL}/api/admin/analytics/summary`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            console.error('Failed to load analytics');
+            return;
+        }
+
+        const data = await response.json();
+        const { signups, conversions, churn, ltv } = data.data;
+
+        // Update signup card
+        document.getElementById('analytics-signups').innerHTML = `
+            <h3>Signups (This Month)</h3>
+            <div class="number">+${signups.thisMonth}</div>
+            <div class="change">${signups.label}</div>
+        `;
+
+        // Update conversion card
+        document.getElementById('analytics-conversions').innerHTML = `
+            <h3>Trial Conversions</h3>
+            <div class="number">${conversions.rate}%</div>
+            <div class="change">${conversions.label}</div>
+        `;
+
+        // Update churn card
+        document.getElementById('analytics-churn').innerHTML = `
+            <h3>Churn Rate</h3>
+            <div class="number">${churn.rate}%</div>
+            <div class="change">${churn.label}</div>
+        `;
+
+        // Update LTV card
+        document.getElementById('analytics-ltv').innerHTML = `
+            <h3>Avg LTV</h3>
+            <div class="number">€${ltv.ltv}</div>
+            <div class="change">${ltv.label}</div>
+        `;
+
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+    }
 }
 
 // EMAIL TEMPLATES MANAGEMENT
