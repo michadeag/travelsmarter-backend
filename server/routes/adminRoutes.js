@@ -59,7 +59,7 @@ router.post('/settings/batch/update', SettingsController.updateMultipleSettings)
 router.delete('/settings/:key', SettingsController.deleteSetting);
 
 // ============================================
-// ADMIN USER MANAGEMENT (Protected by admin auth)
+// ADMIN MANAGEMENT ENDPOINTS (Protected by admin auth)
 // ============================================
 
 // Update user (admin only)
@@ -68,7 +68,6 @@ router.put('/users/:id', verifyAdminToken, async (req, res) => {
     const { id } = req.params;
     const { email, firstName, lastName, subscriptionTier } = req.body;
 
-    // Validate required fields
     if (!email) {
       return res.status(400).json({
         success: false,
@@ -76,7 +75,6 @@ router.put('/users/:id', verifyAdminToken, async (req, res) => {
       });
     }
 
-    // Update user in database
     const result = await pool.query(
       `UPDATE users
        SET email = $1, first_name = $2, last_name = $3, subscription_tier = $4, updated_at = NOW()
@@ -112,7 +110,6 @@ router.delete('/users/:id', verifyAdminToken, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Delete user from database
     const result = await pool.query(
       `DELETE FROM users WHERE id = $1 RETURNING id, email`,
       [id]
@@ -135,6 +132,91 @@ router.delete('/users/:id', verifyAdminToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error deleting user',
+      error: error.message
+    });
+  }
+});
+
+// Proxy admin endpoints - redirect to existing endpoints via database queries
+// This is simpler than trying to make admins work with user-only middleware
+
+// Get subscriptions (admin)
+router.get('/subscriptions', verifyAdminToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT s.*, u.email FROM subscriptions s
+       LEFT JOIN users u ON s.user_id = u.id
+       ORDER BY s.created_at DESC`
+    );
+    res.status(200).json({
+      success: true,
+      subscriptions: result.rows
+    });
+  } catch (error) {
+    console.error('Get subscriptions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching subscriptions',
+      error: error.message
+    });
+  }
+});
+
+// Get promos (admin)
+router.get('/promos', verifyAdminToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM promos ORDER BY created_at DESC`
+    );
+    res.status(200).json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Get promos error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching promos',
+      error: error.message
+    });
+  }
+});
+
+// Get email templates sequences (admin)
+router.get('/email-templates/sequences', verifyAdminToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM email_sequences ORDER BY created_at DESC`
+    );
+    res.status(200).json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Get sequences error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching sequences',
+      error: error.message
+    });
+  }
+});
+
+// Get hacks (admin)
+router.get('/hacks', verifyAdminToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM hacks ORDER BY created_at DESC`
+    );
+    res.status(200).json({
+      success: true,
+      hacks: result.rows
+    });
+  } catch (error) {
+    console.error('Get hacks error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching hacks',
       error: error.message
     });
   }

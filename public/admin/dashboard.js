@@ -145,13 +145,13 @@ async function loadDashboardStats() {
         // Fetch stats from API
         const [usersRes, subsRes, dealsRes] = await Promise.all([
             fetch(`${API_URL}/api/auth/users/count`, {
-                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                headers: getAuthHeaders()
             }),
             fetch(`${API_URL}/api/subscriptions/stats`, {
-                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                headers: getAuthHeaders()
             }),
             fetch(`${API_URL}/api/deals/count`, {
-                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                headers: getAuthHeaders()
             })
         ]);
 
@@ -175,7 +175,7 @@ async function loadDashboardStats() {
 async function loadSubscriptionStats() {
     try {
         const response = await fetch(`${API_URL}/api/subscriptions/stats`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -395,8 +395,8 @@ async function deleteUser(userId) {
 // SUBSCRIPTIONS
 async function loadSubscriptions() {
     try {
-        const response = await fetch(`${API_URL}/api/subscriptions`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/subscriptions`, {
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -454,7 +454,7 @@ function closeSubscriptionModal() {
 async function editSubscription(subId) {
     try {
         const response = await fetch(`${API_URL}/api/subscriptions`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) {
@@ -488,7 +488,7 @@ async function deleteSubscription(subId) {
     try {
         const response = await fetch(`${API_URL}/api/subscriptions/${subId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -540,7 +540,7 @@ async function saveSubscription() {
 async function loadDeals() {
     try {
         const response = await fetch(`${API_URL}/api/deals?limit=50`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -671,7 +671,7 @@ async function saveDeal() {
 async function editDeal(dealId) {
     try {
         const response = await fetch(`${API_URL}/api/deals/${dealId}`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) {
@@ -711,7 +711,7 @@ async function deleteDeal(dealId) {
     try {
         const response = await fetch(`${API_URL}/api/deals/${dealId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -747,8 +747,8 @@ function closePromoModal() {
 
 async function loadPromos() {
     try {
-        const response = await fetch(`${API_URL}/api/promos`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/promos`, {
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -807,11 +807,11 @@ async function savePromo() {
     }
 
     try {
-        let url = `${API_URL}/api/promos`;
+        let url = `${API_URL}/api/admin/promos`;
         let method = 'POST';
 
         if (isEditing) {
-            url = `${API_URL}/api/promos/${promoId}`;
+            url = `${API_URL}/api/admin/promos/${promoId}`;
             method = 'PUT';
         }
 
@@ -845,8 +845,8 @@ async function savePromo() {
 
 async function editPromo(promoId) {
     try {
-        const response = await fetch(`${API_URL}/api/promos`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/promos`, {
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) {
@@ -886,9 +886,9 @@ async function deletePromo(promoId) {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/promos/${promoId}`, {
+        const response = await fetch(`${API_URL}/api/admin/promos/${promoId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -913,7 +913,7 @@ function loadHacks() {
 async function loadRecentActivities() {
     try {
         const response = await fetch(`${API_URL}/api/admin/activities?limit=10`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -948,7 +948,7 @@ async function loadSettings() {
     try {
         // Try to fetch from backend API
         const response = await fetch(`${API_URL}/api/admin/settings`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -1190,8 +1190,8 @@ function displayError(elementId, message) {
 async function loadEmailTemplates() {
     try {
         // Load sequences
-        const sequencesResponse = await fetch(`${API_URL}/api/email-templates/sequences`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const sequencesResponse = await fetch(`${API_URL}/api/admin/email-templates/sequences`, {
+            headers: getAuthHeaders()
         });
 
         if (sequencesResponse.ok) {
@@ -1202,8 +1202,8 @@ async function loadEmailTemplates() {
         }
 
         // Load templates
-        const templatesResponse = await fetch(`${API_URL}/api/email-templates/templates`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const templatesResponse = await fetch(`${API_URL}/api/admin/email-templates/templates`, {
+            headers: getAuthHeaders()
         });
 
         if (templatesResponse.ok) {
@@ -1239,8 +1239,8 @@ function renderSequences(sequences) {
 
 async function viewSequence(sequenceId) {
     try {
-        const response = await fetch(`${API_URL}/api/email-templates/sequences/${sequenceId}`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/email-templates/sequences/${sequenceId}`, {
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -1308,7 +1308,7 @@ async function saveEmailSequence() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/email-templates/sequences`, {
+        const response = await fetch(`${API_URL}/api/admin/email-templates/sequences`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`,
@@ -1346,7 +1346,7 @@ async function saveEmailTemplate() {
 
     const isEdit = !!templateId;
     const method = isEdit ? 'PUT' : 'POST';
-    const endpoint = isEdit ? `${API_URL}/api/email-templates/templates/${templateId}` : `${API_URL}/api/email-templates/templates`;
+    const endpoint = isEdit ? `${API_URL}/api/admin/email-templates/templates/${templateId}` : `${API_URL}/api/admin/email-templates/templates`;
 
     try {
         const response = await fetch(endpoint, {
@@ -1382,7 +1382,7 @@ async function saveEmailTemplate() {
 
 async function createSequence(name) {
     try {
-        const response = await fetch(`${API_URL}/api/email-templates/sequences`, {
+        const response = await fetch(`${API_URL}/api/admin/email-templates/sequences`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`,
@@ -1407,9 +1407,9 @@ async function createSequence(name) {
 async function deleteSequence(sequenceId) {
     if (confirm('Are you sure you want to delete this sequence?')) {
         try {
-            const response = await fetch(`${API_URL}/api/email-templates/sequences/${sequenceId}`, {
+            const response = await fetch(`${API_URL}/api/admin/email-templates/sequences/${sequenceId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                headers: getAuthHeaders()
             });
 
             if (response.ok) {
@@ -1426,9 +1426,9 @@ async function deleteSequence(sequenceId) {
 async function deleteTemplate(templateId) {
     if (confirm('Are you sure you want to delete this template?')) {
         try {
-            const response = await fetch(`${API_URL}/api/email-templates/templates/${templateId}`, {
+            const response = await fetch(`${API_URL}/api/admin/email-templates/templates/${templateId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                headers: getAuthHeaders()
             });
 
             if (response.ok) {
@@ -1445,8 +1445,8 @@ async function deleteTemplate(templateId) {
 async function editTemplate(templateId) {
     try {
         // Fetch the template data
-        const response = await fetch(`${API_URL}/api/email-templates/templates/${templateId}`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/email-templates/templates/${templateId}`, {
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) {
@@ -1487,8 +1487,8 @@ let currentEditingHackId = null;
 // Load and display all hacks
 async function loadHacksList() {
     try {
-        const response = await fetch(`${API_URL}/api/hacks/admin/hacks`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/hacks`, {
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) throw new Error('Failed to load hacks');
@@ -1556,8 +1556,8 @@ function openAddHackModal() {
 async function editHack(hackId) {
     try {
         // Get all hacks and find this one
-        const response = await fetch(`${API_URL}/api/hacks/admin/hacks`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/hacks`, {
+            headers: getAuthHeaders()
         });
 
         const data = await response.json();
@@ -1608,8 +1608,8 @@ async function saveHackManagement() {
 
     try {
         const url = currentEditingHackId
-            ? `${API_URL}/api/hacks/admin/hacks/${currentEditingHackId}`
-            : `${API_URL}/api/hacks/admin/hacks`;
+            ? `${API_URL}/api/admin/hacks/${currentEditingHackId}`
+            : `${API_URL}/api/admin/hacks`;
 
         const method = currentEditingHackId ? 'PUT' : 'POST';
 
@@ -1647,9 +1647,9 @@ async function deleteHack(hackId) {
     if (!confirm('Are you sure you want to delete this hack?')) return;
 
     try {
-        const response = await fetch(`${API_URL}/api/hacks/admin/hacks/${hackId}`, {
+        const response = await fetch(`${API_URL}/api/admin/hacks/${hackId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
