@@ -6,7 +6,15 @@ let API_URL;
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     API_URL = localStorage.getItem('apiUrl') || 'http://localhost:5000';
 } else {
-    API_URL = localStorage.getItem('apiUrl') || window.location.origin;
+    // For production, use api subdomain
+    const apiUrl = localStorage.getItem('apiUrl');
+    if (apiUrl) {
+        API_URL = apiUrl;
+    } else if (window.location.hostname === 'travelsmarterapp.com') {
+        API_URL = 'https://api.travelsmarterapp.com';
+    } else {
+        API_URL = window.location.origin;
+    }
 }
 
 console.log('🔒 Admin Dashboard using API:', API_URL);
