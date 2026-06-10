@@ -23,8 +23,8 @@ router.post('/reload-settings', async (req, res) => {
 router.get('/auth-url', async (req, res) => {
   try {
     await wordpressService.loadSettings();
-    const url = wordpressService.getAuthUrl();
-    res.json({ success: true, url });
+    const authUrl = wordpressService.getAuthUrl();
+    res.json({ success: true, authUrl });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }
@@ -47,6 +47,19 @@ router.get('/sites', async (req, res) => {
     await wordpressService.loadSettings();
     const sites = await wordpressService.fetchSites();
     res.json({ success: true, sites });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/select-site', async (req, res) => {
+  try {
+    const { siteId, siteName } = req.body;
+    if (!siteId) return res.status(400).json({ success: false, error: 'siteId required' });
+    await pool.query(`INSERT INTO settings(key,value) VALUES('wordpress_site_id',$1) ON CONFLICT(key) DO UPDATE SET value=$1`, [String(siteId)]);
+    if (siteName) await pool.query(`INSERT INTO settings(key,value) VALUES('wordpress_site_name',$1) ON CONFLICT(key) DO UPDATE SET value=$1`, [siteName]);
+    await wordpressService.loadSettings();
+    res.json({ success: true, siteId, siteName });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
