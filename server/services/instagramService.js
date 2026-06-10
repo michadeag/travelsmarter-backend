@@ -4,7 +4,7 @@ const pool = require('../config/database');
 // Reuse Pinterest's Ideogram image generation and topic list
 const pinterestService = require('./pinterestService');
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+let anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const GRAPH_API = 'https://graph.facebook.com/v19.0';
 
@@ -19,6 +19,10 @@ class InstagramService {
 
   async loadSettings() {
     try {
+      // Re-initialize Anthropic client with key from DB if available
+      const claudeKeyResult = await pool.query("SELECT value FROM settings WHERE key = 'anthropic_api_key' LIMIT 1");
+      const claudeKey = claudeKeyResult.rows[0]?.value || process.env.ANTHROPIC_API_KEY;
+      if (claudeKey) anthropic = new Anthropic({ apiKey: claudeKey });
       const result = await pool.query(
         `SELECT key, value FROM settings WHERE key LIKE 'instagram_%' OR key = 'ideogram_api_key'`
       );

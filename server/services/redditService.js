@@ -2,7 +2,7 @@ const axios = require('axios');
 const Anthropic = require('@anthropic-ai/sdk');
 const pool = require('../config/database');
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+let anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Article topics and matching subreddits
 const TOPIC_MAP = [
@@ -60,6 +60,10 @@ class RedditService {
 
   async loadSettings() {
     try {
+      // Re-initialize Anthropic client with key from DB if available
+      const claudeKeyResult = await pool.query("SELECT value FROM settings WHERE key = 'anthropic_api_key' LIMIT 1");
+      const claudeKey = claudeKeyResult.rows[0]?.value || process.env.ANTHROPIC_API_KEY;
+      if (claudeKey) anthropic = new Anthropic({ apiKey: claudeKey });
       const result = await pool.query(
         `SELECT key, value FROM settings WHERE key LIKE 'reddit_%'`
       );
