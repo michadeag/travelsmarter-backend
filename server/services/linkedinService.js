@@ -68,7 +68,7 @@ class LinkedInService {
         autoPosting: settings.linkedin_auto_posting === 'true'
       };
 
-      this.isConfigured = !!(this.credentials.accessToken && this.credentials.orgId);
+      this.isConfigured = !!(this.credentials.accessToken);
 
       const counterResult = await pool.query(
         `SELECT value FROM settings WHERE key = 'linkedin_post_counter'`
