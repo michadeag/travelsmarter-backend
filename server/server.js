@@ -6,6 +6,12 @@ require('dotenv').config();
 const pool = require('./config/database');
 const emailSequenceService = require('./services/emailSequenceService');
 const hackUpdateService = require('./services/hackUpdateService');
+const redditService = require('./services/redditService');
+const linkedinService = require('./services/linkedinService');
+const pinterestService = require('./services/pinterestService');
+const instagramService = require('./services/instagramService');
+const mediumService = require('./services/mediumService');
+const quoraService = require('./services/quoraService');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -15,7 +21,6 @@ const hacksRoutes = require('./routes/hacksRoutes');
 const dealFiltersRoutes = require('./routes/dealFiltersRoutes');
 const communityRoutes = require('./routes/communityRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const adminAuthRoutes = require('./routes/adminAuthRoutes');
 const promoRoutes = require('./routes/promoRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const seedRoutes = require('./routes/seedRoutes');
@@ -24,18 +29,14 @@ const eliteStatusRoutes = require('./routes/eliteStatusRoutes');
 
 // Email template routes
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
-
-// Analytics routes
-const analyticsRoutes = require('./routes/analyticsRoutes');
-
-// Twitter routes
-const twitterRoutes = require('./routes/twitterRoutes');
-
-// Social Media routes
-const socialMediaRoutes = require('./routes/socialMediaRoutes');
-
-// Import middleware
-const { verifyAdminToken, requireAdminRole } = require('./middleware/adminAuth');
+const redditRoutes = require('./routes/redditRoutes');
+const linkedinRoutes = require('./routes/linkedinRoutes');
+const pinterestRoutes = require('./routes/pinterestRoutes');
+const instagramRoutes = require('./routes/instagramRoutes');
+const mediumRoutes = require('./routes/mediumRoutes');
+const wordpressRoutes = require('./routes/wordpressRoutes');
+const quoraRoutes = require('./routes/quoraRoutes');
+const bloggerRoutes = require('./routes/bloggerRoutes');
 
 // Import controllers
 const SettingsController = require('./controllers/settingsController');
@@ -74,17 +75,8 @@ app.use('/api/deals', dealsRoutes);
 app.use('/api/hacks', hacksRoutes);
 app.use('/api/user/deal-filters', dealFiltersRoutes);
 app.use('/api/community', communityRoutes);
-
-// Admin authentication (public endpoints)
-app.use('/api/admin-auth', adminAuthRoutes);
-
-// Protected admin routes (requires authentication)
-app.use('/api/admin', verifyAdminToken, adminRoutes);
-app.use('/api/admin/seed', verifyAdminToken, seedRoutes);
-app.use('/api/admin/analytics', analyticsRoutes);
-app.use('/api/twitter', twitterRoutes);
-app.use('/api/social', socialMediaRoutes);
-
+app.use('/api/admin', adminRoutes);
+app.use('/api/admin/seed', seedRoutes);
 app.use('/api/award-charts', awardChartsRoutes);
 app.use('/api/elite-status', eliteStatusRoutes);
 app.use('/api/promos', promoRoutes);
@@ -160,6 +152,14 @@ app.use('/api/contact', contactRoutes);
 
 // Email template routes
 app.use('/api/email-templates', emailTemplateRoutes);
+app.use('/api/reddit', redditRoutes);
+app.use('/api/linkedin', linkedinRoutes);
+app.use('/api/pinterest', pinterestRoutes);
+app.use('/api/instagram', instagramRoutes);
+app.use('/api/medium', mediumRoutes);
+app.use('/api/wordpress', wordpressRoutes);
+app.use('/api/quora', quoraRoutes);
+app.use('/api/blogger', bloggerRoutes);
 
 // Diagnostic endpoint - updated Jun 6 21:57
 app.get('/api/test/version', (req, res) => {
@@ -299,63 +299,6 @@ app.post('/api/test/send-pending-emails', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error sending pending emails',
-      error: error.message
-    });
-  }
-});
-
-// Manually initialize email sequence for a user (testing)
-app.post('/api/test/init-email-sequence', async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is required'
-      });
-    }
-
-    console.log(`🔍 Finding user with email: ${email}`);
-
-    // Find user by email
-    const userResult = await pool.query(
-      `SELECT id, email, first_name FROM users WHERE email = $1 LIMIT 1`,
-      [email]
-    );
-
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `User not found: ${email}`
-      });
-    }
-
-    const user = userResult.rows[0];
-    console.log(`✅ Found user: ${user.id}`);
-
-    // Initialize email sequence
-    const result = await emailSequenceService.initializeEmailSequence(
-      user.id,
-      user.email,
-      user.first_name
-    );
-
-    res.status(200).json({
-      success: true,
-      message: 'Email sequence initialized',
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.first_name
-      },
-      result
-    });
-  } catch (error) {
-    console.error('Error initializing email sequence:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error initializing email sequence',
       error: error.message
     });
   }
@@ -671,6 +614,7 @@ async function seedCommunityDiscussions() {
 // Initialize database tables and settings on startup
 async function initializeApp() {
   try {
+    console.log('🚀 TravelSmarter Backend v2.0 — Reddit/LinkedIn/Pinterest/Instagram/WordPress/Blogger/Quora enabled');
     console.log('🔧 Initializing database...');
 
     // Create all required tables FIRST
@@ -980,6 +924,122 @@ async function initializeApp() {
 
       CREATE INDEX IF NOT EXISTS idx_elite_progress_user ON user_elite_progress(user_id);
       CREATE INDEX IF NOT EXISTS idx_elite_progress_program ON user_elite_progress(program_type, program_name);
+
+      -- Reddit posts log
+      CREATE TABLE IF NOT EXISTS reddit_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(300),
+        body TEXT,
+        subreddit VARCHAR(100),
+        category VARCHAR(50),
+        included_cta BOOLEAN DEFAULT false,
+        reddit_url VARCHAR(500),
+        status VARCHAR(50) DEFAULT 'posted',
+        posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_reddit_posts_posted_at ON reddit_posts(posted_at DESC);
+
+      -- LinkedIn posts log
+      CREATE TABLE IF NOT EXISTS linkedin_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        body TEXT,
+        category VARCHAR(50),
+        included_cta BOOLEAN DEFAULT false,
+        linkedin_post_id VARCHAR(255),
+        status VARCHAR(50) DEFAULT 'posted',
+        posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_linkedin_posts_posted_at ON linkedin_posts(posted_at DESC);
+
+      -- Pinterest posts log
+      CREATE TABLE IF NOT EXISTS pinterest_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(300),
+        category VARCHAR(50),
+        image_url TEXT,
+        description TEXT,
+        pin_id VARCHAR(255),
+        included_cta BOOLEAN DEFAULT false,
+        status VARCHAR(50) DEFAULT 'posted',
+        posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_pinterest_posts_posted_at ON pinterest_posts(posted_at DESC);
+
+      -- Instagram posts log
+      CREATE TABLE IF NOT EXISTS instagram_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(300),
+        category VARCHAR(50),
+        image_url TEXT,
+        caption TEXT,
+        post_id VARCHAR(255),
+        included_cta BOOLEAN DEFAULT false,
+        status VARCHAR(50) DEFAULT 'posted',
+        posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_instagram_posts_posted_at ON instagram_posts(posted_at DESC);
+
+      -- Medium posts log
+      CREATE TABLE IF NOT EXISTS medium_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(300),
+        body TEXT,
+        category VARCHAR(50),
+        tags VARCHAR(500),
+        medium_id VARCHAR(255),
+        medium_url TEXT,
+        included_cta BOOLEAN DEFAULT false,
+        status VARCHAR(50) DEFAULT 'published',
+        posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_medium_posts_posted_at ON medium_posts(posted_at DESC);
+
+      -- Quora generated answers
+      CREATE TABLE IF NOT EXISTS quora_answers (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        question TEXT,
+        answer TEXT,
+        category VARCHAR(50),
+        included_cta BOOLEAN DEFAULT false,
+        posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_quora_answers_posted_at ON quora_answers(posted_at DESC);
+
+      -- Blogger published posts
+      CREATE TABLE IF NOT EXISTS blogger_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title TEXT,
+        body TEXT,
+        category VARCHAR(100),
+        blogger_post_id VARCHAR(255),
+        blogger_url TEXT,
+        included_cta BOOLEAN DEFAULT false,
+        status VARCHAR(50) DEFAULT 'published',
+        posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_blogger_posts_posted_at ON blogger_posts(posted_at DESC);
+
+      -- WordPress.com published posts
+      CREATE TABLE IF NOT EXISTS wordpress_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title TEXT,
+        body TEXT,
+        category VARCHAR(100),
+        wp_post_id VARCHAR(255),
+        wp_url TEXT,
+        included_cta BOOLEAN DEFAULT false,
+        status VARCHAR(50) DEFAULT 'published',
+        posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_wordpress_posts_posted_at ON wordpress_posts(posted_at DESC);
     `;
 
     try {
@@ -1010,20 +1070,112 @@ async function initializeApp() {
     await SettingsController.initializeDefaults();
     console.log('✅ Settings initialized');
 
+    // Initialize Quora service (content generator — no scheduler)
+    try {
+      await quoraService.loadSettings();
+      console.log('✅ Quora content generator initialized');
+    } catch (quoraErr) {
+      console.warn('⚠️ Quora service init failed (non-blocking):', quoraErr.message);
+    }
+
+    // Initialize Medium service and auto-start scheduler if configured
+    try {
+      const mediumConfigured = await mediumService.loadSettings();
+      if (mediumConfigured) {
+        console.log('✅ Medium service initialized');
+        if (mediumService.credentials.autoPosting) {
+          mediumService.startScheduler();
+          console.log('✅ Medium auto-posting scheduler started');
+        }
+      } else {
+        console.log('ℹ️ Medium not configured — add Integration Token in Settings');
+      }
+    } catch (mediumErr) {
+      console.warn('⚠️ Medium service init failed (non-blocking):', mediumErr.message);
+    }
+
+    // Initialize Instagram service and auto-start scheduler if configured
+    try {
+      const instagramConfigured = await instagramService.loadSettings();
+      if (instagramConfigured) {
+        console.log('✅ Instagram service initialized');
+        if (instagramService.credentials.autoPosting) {
+          instagramService.startScheduler();
+          console.log('✅ Instagram auto-posting scheduler started');
+        }
+      } else {
+        console.log('ℹ️ Instagram not configured — add credentials in Settings');
+      }
+    } catch (igErr) {
+      console.warn('⚠️ Instagram service init failed (non-blocking):', igErr.message);
+    }
+
+    // Initialize Pinterest service and auto-start scheduler if configured
+    try {
+      const pinterestConfigured = await pinterestService.loadSettings();
+      if (pinterestConfigured) {
+        console.log('✅ Pinterest service initialized');
+        if (pinterestService.credentials.autoPosting) {
+          pinterestService.startScheduler();
+          console.log('✅ Pinterest auto-posting scheduler started');
+        }
+      } else {
+        console.log('ℹ️ Pinterest not configured — add credentials in Settings');
+      }
+    } catch (pinterestErr) {
+      console.warn('⚠️ Pinterest service init failed (non-blocking):', pinterestErr.message);
+    }
+
+    // Initialize LinkedIn service and auto-start scheduler if configured
+    try {
+      const linkedinConfigured = await linkedinService.loadSettings();
+      if (linkedinConfigured) {
+        console.log('✅ LinkedIn service initialized');
+        if (linkedinService.credentials.autoPosting) {
+          linkedinService.startScheduler();
+          console.log('✅ LinkedIn auto-posting scheduler started');
+        }
+      } else {
+        console.log('ℹ️ LinkedIn not configured — add credentials in Settings');
+      }
+    } catch (linkedinErr) {
+      console.warn('⚠️ LinkedIn service init failed (non-blocking):', linkedinErr.message);
+    }
+
+    // Initialize Reddit service and auto-start scheduler if configured
+    try {
+      const redditConfigured = await redditService.loadSettings();
+      if (redditConfigured) {
+        console.log('✅ Reddit service initialized');
+        if (redditService.credentials.autoPosting) {
+          redditService.startScheduler();
+          console.log('✅ Reddit auto-posting scheduler started');
+        }
+      } else {
+        console.log('ℹ️ Reddit not configured — add credentials in Settings');
+      }
+    } catch (redditErr) {
+      console.warn('⚠️ Reddit service init failed (non-blocking):', redditErr.message);
+    }
+
     // Seed default email sequence
     await emailSequenceService.seedEmailSequence().catch(err => {
       console.warn('⚠️ Error seeding email templates:', err.message);
     });
 
-    // Seed travel hacks if database is empty
-    await seedTravelHacks().catch(err => {
-      console.warn('⚠️ Error seeding travel hacks:', err.message);
-    });
+    // Seed travel hacks if database is empty (skip in production for faster startup)
+    if (process.env.SKIP_SEED !== 'true') {
+      await seedTravelHacks().catch(err => {
+        console.warn('⚠️ Error seeding travel hacks:', err.message);
+      });
 
-    // Seed community discussions if none exist
-    await seedCommunityDiscussions().catch(err => {
-      console.warn('⚠️ Error seeding community discussions:', err.message);
-    });
+      // Seed community discussions if none exist
+      await seedCommunityDiscussions().catch(err => {
+        console.warn('⚠️ Error seeding community discussions:', err.message);
+      });
+    } else {
+      console.log('⏭️ Skipping seed data (SKIP_SEED=true)');
+    }
 
     console.log('✅ App initialization complete');
   } catch (error) {
@@ -1031,59 +1183,49 @@ async function initializeApp() {
   }
 }
 
-// Start server
+// Start server IMMEDIATELY (non-blocking DB init)
 const PORT = process.env.PORT || 5000;
 
-initializeApp().then(() => {
-  app.listen(PORT, () => {
-    console.log(`
+// Start listening FIRST - don't wait for DB initialization
+app.listen(PORT, () => {
+  console.log(`
 ╔════════════════════════════════════════╗
 ║   🚀 TravelSmarter API Server Running  ║
 ║   Port: ${PORT}                         ║
 ║   Environment: ${process.env.NODE_ENV || 'development'}              ║
 ║   Database: ${process.env.DB_NAME}                      ║
 ╚════════════════════════════════════════╝
-    `);
+  `);
 
-    // Email sequence scheduler - runs every hour to send pending emails
-    console.log('📧 Email sequence scheduler started (runs every hour)');
-    setInterval(async () => {
-      try {
-        await emailSequenceService.sendPendingEmails();
-      } catch (error) {
-        console.error('❌ Error in email sequence scheduler:', error);
-      }
-    }, 60 * 60 * 1000);
-
-    // Hack update scheduler - runs biweekly (every 14 days) to search for and update hacks
-    console.log('🤖 Hack update scheduler started (runs biweekly)');
-    setInterval(async () => {
-      try {
-        await hackUpdateService.runHackUpdateCycle();
-      } catch (error) {
-        console.error('❌ Error in hack update scheduler:', error);
-      }
-    }, 14 * 24 * 60 * 60 * 1000); // 14 days
-
-    // Run hack update immediately on startup (optional - comment out to skip)
-    // Uncomment next line to run immediately on server start
-    // hackUpdateService.runHackUpdateCycle().catch(err => console.error('Initial hack update failed:', err));
-
-    // Twitter auto-posting service
-    console.log('🐦 Initializing Twitter auto-posting service...');
-    const twitterService = require('./services/twitterService');
-    const twitterScheduler = require('./services/twitterScheduler');
-
-    if (twitterService.initializeTwitter()) {
-      twitterScheduler.initializeScheduler();
-      console.log('✅ Twitter service initialized');
-    } else {
-      console.log('ℹ️ Twitter not configured. Manual posting available via API.');
+  // Email sequence scheduler - runs every hour to send pending emails
+  console.log('📧 Email sequence scheduler started (runs every hour)');
+  setInterval(async () => {
+    try {
+      await emailSequenceService.sendPendingEmails();
+    } catch (error) {
+      console.error('❌ Error in email sequence scheduler:', error);
     }
-  });
-}).catch(error => {
-  console.error('Failed to initialize app:', error);
-  process.exit(1);
+  }, 60 * 60 * 1000);
+
+  // Hack update scheduler - runs biweekly (every 14 days) to search for and update hacks
+  console.log('🤖 Hack update scheduler started (runs biweekly)');
+  setInterval(async () => {
+    try {
+      await hackUpdateService.runHackUpdateCycle();
+    } catch (error) {
+      console.error('❌ Error in hack update scheduler:', error);
+    }
+  }, 14 * 24 * 60 * 60 * 1000); // 14 days
+
+  // Run hack update immediately on startup (optional - comment out to skip)
+  // Uncomment next line to run immediately on server start
+  // hackUpdateService.runHackUpdateCycle().catch(err => console.error('Initial hack update failed:', err));
+});
+
+// Initialize app in background (non-blocking)
+initializeApp().catch(error => {
+  console.error('❌ Error during app initialization (background):', error);
+  // Don't exit - server is already running and can serve requests
 });
 
 // Handle graceful shutdown
