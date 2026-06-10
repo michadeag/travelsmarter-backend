@@ -173,6 +173,7 @@ Only output valid JSON, nothing else.`;
       );
       return response.data?.id || null;
     } catch (err) {
+      console.error(`💼 LinkedIn API error: ${err.response?.status} — ${JSON.stringify(err.response?.data)}`);
       // If org post fails with 403, fall back to personal profile
       if (err.response?.status === 403 && orgId) {
         console.warn('LinkedIn: org post failed (403), falling back to personal profile');
