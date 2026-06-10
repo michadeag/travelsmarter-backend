@@ -124,35 +124,79 @@ Only output valid JSON, nothing else.`;
     };
   }
 
+  async getMemberUrn(accessToken) {
+    const res = await axios.get('https://api.linkedin.com/v2/me', {
+      headers: { Authorization: `Bearer ${accessToken}`, 'X-Restli-Protocol-Version': '2.0.0' }
+    });
+    return `urn:li:person:${res.data.id}`;
+  }
+
   async postToLinkedIn(text) {
     const { accessToken, orgId } = this.credentials;
-    const authorUrn = `urn:li:organization:${orgId}`;
 
-    const response = await axios.post(
-      'https://api.linkedin.com/v2/ugcPosts',
-      {
-        author: authorUrn,
-        lifecycleState: 'PUBLISHED',
-        specificContent: {
-          'com.linkedin.ugc.ShareContent': {
-            shareCommentary: { text },
-            shareMediaCategory: 'NONE'
+    // Use organization URN if org ID is provided, otherwise post as member
+    let authorUrn;
+    if (orgId) {
+      authorUrn = `urn:li:organization:${orgId}`;
+    } else {
+      authorUrn = await this.getMemberUrn(accessToken);
+    }
+
+    try {
+      const response = await axios.post(
+        'https://api.linkedin.com/v2/ugcPosts',
+        {
+          author: authorUrn,
+          lifecycleState: 'PUBLISHED',
+          specificContent: {
+            'com.linkedin.ugc.ShareContent': {
+              shareCommentary: { text },
+              shareMediaCategory: 'NONE'
+            }
+          },
+          visibility: {
+            'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
           }
         },
-        visibility: {
-          'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'X-Restli-Protocol-Version': '2.0.0'
+          }
         }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          'X-Restli-Protocol-Version': '2.0.0'
-        }
+      );
+      return response.data?.id || null;
+    } catch (err) {
+      // If org post fails with 403, fall back to personal profile
+      if (err.response?.status === 403 && orgId) {
+        console.warn('LinkedIn: org post failed (403), falling back to personal profile');
+        const memberUrn = await this.getMemberUrn(accessToken);
+        const fallback = await axios.post(
+          'https://api.linkedin.com/v2/ugcPosts',
+          {
+            author: memberUrn,
+            lifecycleState: 'PUBLISHED',
+            specificContent: {
+              'com.linkedin.ugc.ShareContent': {
+                shareCommentary: { text },
+                shareMediaCategory: 'NONE'
+              }
+            },
+            visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' }
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+              'X-Restli-Protocol-Version': '2.0.0'
+            }
+          }
+        );
+        return fallback.data?.id || null;
       }
-    );
-
-    return response.data?.id || null;
+      throw err;
+    }
   }
 
   async createAndPost() {
