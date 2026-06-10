@@ -1091,7 +1091,7 @@ async function initializeApp() {
         if (ok) {
           console.log('✅ Twitter service initialized from DB');
           // Auto-restart scheduler if it was running before
-          const schedResult = await pool.query(`SELECT value FROM settings WHERE key IN ('twitter_scheduler_enabled','twitter_scheduler_times')`);
+          const schedResult = await pool.query(`SELECT key, value FROM settings WHERE key IN ('twitter_scheduler_enabled','twitter_scheduler_times')`);
           const schedSettings = {};
           schedResult.rows.forEach(r => { schedSettings[r.key] = r.value; });
           if (schedSettings.twitter_scheduler_enabled === 'true' && schedSettings.twitter_scheduler_times) {

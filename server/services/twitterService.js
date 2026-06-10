@@ -7,6 +7,7 @@ const { ETwitterStreamEvent, TwitterApi } = require('twitter-api-v2');
 const travelTips = require('./travelTips');
 
 let client = null;
+const recentlyPostedTips = new Set();
 
 /**
  * Initialize Twitter API client
@@ -97,7 +98,12 @@ async function postTweet(tweetText) {
  * Post random travel tip
  */
 async function postRandomTip() {
-  const tip = travelTips.getRandomTip();
+  const allTips = travelTips.getAllTips();
+  const available = allTips.filter(t => !recentlyPostedTips.has(t.tip));
+  const pool = available.length > 0 ? available : allTips; // reset if all used
+  if (available.length === 0) recentlyPostedTips.clear();
+  const tip = pool[Math.floor(Math.random() * pool.length)];
+  recentlyPostedTips.add(tip.tip);
   return await postTip(tip);
 }
 
