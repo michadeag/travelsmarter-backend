@@ -113,7 +113,9 @@ Only output valid JSON, nothing else.`;
       messages: [{ role: 'user', content: prompt }]
     });
 
-    const raw = response.content[0].text.trim();
+    let raw = response.content[0].text.trim();
+    // Strip markdown code fences if present
+    raw = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
     const parsed = JSON.parse(raw);
 
     return {
@@ -154,6 +156,7 @@ Only output valid JSON, nothing else.`;
   }
 
   async createAndPost() {
+    await this.loadSettings();
     if (!this.isConfigured) {
       throw new Error('LinkedIn not configured — add credentials in Settings.');
     }
