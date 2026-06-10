@@ -213,36 +213,43 @@ Only output valid JSON, nothing else.`;
   }
 
   startScheduler() {
-    if (this.scheduler) return { started: false, reason: 'Scheduler already running' };
-
-    const { frequency, maxPosts } = this.credentials;
-
-    let intervalMs;
-    if (frequency === 'weekly') {
-      intervalMs = 7 * 24 * 60 * 60 * 1000;
-    } else if (frequency === 'multiple_daily') {
-      intervalMs = Math.floor((14 * 60 * 60 * 1000) / Math.max(maxPosts, 1));
-    } else {
-      intervalMs = 24 * 60 * 60 * 1000;
+    if (this.schedulerJobs && this.schedulerJobs.length > 0) {
+      return { started: false, reason: 'Scheduler already running' };
     }
 
-    console.log(`💼 LinkedIn scheduler started — interval: ${Math.round(intervalMs / 60000)} min`);
+    const cron = require('node-cron');
+    this.schedulerJobs = [];
 
-    this.scheduler = setInterval(async () => {
-      try {
-        const result = await this.createAndPost();
-        console.log(`✅ LinkedIn: posted [${result.category}] — CTA: ${result.includedCTA}`);
-      } catch (err) {
-        console.error('LinkedIn scheduler error:', err.message);
-      }
-    }, intervalMs);
+    // 8:00 AM EST = 13:00 UTC, 5:00 PM EST = 22:00 UTC
+    // Optimal times for US audience (Eastern Time)
+    const cronTimes = ['0 13 * * *', '0 22 * * *'];
+    const labels = ['8:00 AM EST', '5:00 PM EST'];
 
-    return { started: true, intervalMinutes: Math.round(intervalMs / 60000), frequency };
+    cronTimes.forEach((cronExpr, i) => {
+      const job = cron.schedule(cronExpr, async () => {
+        try {
+          const result = await this.createAndPost();
+          console.log(`✅ LinkedIn: posted at ${labels[i]} [${result.category}]`);
+        } catch (err) {
+          console.error('LinkedIn scheduler error:', err.message);
+        }
+      }, { timezone: 'UTC' });
+      this.schedulerJobs.push(job);
+    });
+
+    // Keep legacy this.scheduler truthy for getStatus()
+    this.scheduler = true;
+
+    console.log('💼 LinkedIn scheduler started — 8:00 AM & 5:00 PM EST (US audience)');
+    return { started: true, times: labels };
   }
 
   stopScheduler() {
-    if (!this.scheduler) return { stopped: false, reason: 'No scheduler running' };
-    clearInterval(this.scheduler);
+    if (!this.schedulerJobs || this.schedulerJobs.length === 0) {
+      return { stopped: false, reason: 'No scheduler running' };
+    }
+    this.schedulerJobs.forEach(job => job.stop());
+    this.schedulerJobs = [];
     this.scheduler = null;
     return { stopped: true };
   }
