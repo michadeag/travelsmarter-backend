@@ -933,6 +933,17 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_elite_progress_user ON user_elite_progress(user_id);
       CREATE INDEX IF NOT EXISTS idx_elite_progress_program ON user_elite_progress(program_type, program_name);
 
+      -- Twitter posts log
+      CREATE TABLE IF NOT EXISTS twitter_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        body TEXT,
+        tweet_id VARCHAR(100),
+        included_cta BOOLEAN DEFAULT false,
+        status VARCHAR(50) DEFAULT 'posted',
+        posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_twitter_posts_posted_at ON twitter_posts(posted_at DESC);
+
       -- Reddit posts log
       CREATE TABLE IF NOT EXISTS reddit_posts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -116,6 +116,7 @@ router.get('/analytics/summary', async (req, res) => {
 
     // Social media stats per platform
     const platforms = [
+      { key: 'twitter',   table: 'twitter_posts',   dateCol: 'posted_at' },
       { key: 'reddit',    table: 'reddit_posts',    dateCol: 'posted_at' },
       { key: 'linkedin',  table: 'linkedin_posts',  dateCol: 'posted_at' },
       { key: 'pinterest', table: 'pinterest_posts', dateCol: 'posted_at' },
