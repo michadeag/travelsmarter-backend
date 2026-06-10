@@ -301,6 +301,14 @@ router.post('/scheduler/start', (req, res) => {
           });
         }
         twitterScheduler.startMultipleDailyPostings(times);
+        // Persist scheduler state to DB
+        require('../config/database').query(
+          `INSERT INTO settings(key,value) VALUES('twitter_scheduler_enabled','true') ON CONFLICT(key) DO UPDATE SET value='true'`
+        ).catch(() => {});
+        require('../config/database').query(
+          `INSERT INTO settings(key,value) VALUES('twitter_scheduler_times',$1) ON CONFLICT(key) DO UPDATE SET value=$1`,
+          [JSON.stringify(times)]
+        ).catch(() => {});
         res.json({
           success: true,
           message: `Multiple daily postings started`,
@@ -350,7 +358,10 @@ router.post('/scheduler/start', (req, res) => {
 router.post('/scheduler/stop', (req, res) => {
   try {
     twitterScheduler.stopAllJobs();
-
+    // Persist stopped state to DB
+    require('../config/database').query(
+      `INSERT INTO settings(key,value) VALUES('twitter_scheduler_enabled','false') ON CONFLICT(key) DO UPDATE SET value='false'`
+    ).catch(() => {});
     res.json({
       success: true,
       message: 'All scheduled jobs stopped'

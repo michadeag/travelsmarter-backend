@@ -1086,9 +1086,20 @@ async function initializeApp() {
       if (twitterSettings.twitter_api_key && twitterSettings.twitter_api_secret &&
           twitterSettings.twitter_access_token && twitterSettings.twitter_access_secret) {
         const twitterService = require('./services/twitterService');
+        const twitterScheduler = require('./services/twitterScheduler');
         const ok = twitterService.reinitializeWithSettings(twitterSettings);
-        if (ok) console.log('✅ Twitter service initialized from DB');
-        else console.log('ℹ️ Twitter credentials in DB but init failed');
+        if (ok) {
+          console.log('✅ Twitter service initialized from DB');
+          // Auto-restart scheduler if it was running before
+          const schedResult = await pool.query(`SELECT value FROM settings WHERE key IN ('twitter_scheduler_enabled','twitter_scheduler_times')`);
+          const schedSettings = {};
+          schedResult.rows.forEach(r => { schedSettings[r.key] = r.value; });
+          if (schedSettings.twitter_scheduler_enabled === 'true' && schedSettings.twitter_scheduler_times) {
+            const times = JSON.parse(schedSettings.twitter_scheduler_times);
+            twitterScheduler.startMultipleDailyPostings(times);
+            console.log(`✅ Twitter scheduler auto-restarted (${times.join(', ')})`);
+          }
+        } else console.log('ℹ️ Twitter credentials in DB but init failed');
       } else {
         console.log('ℹ️ Twitter not configured — add credentials in Settings');
       }
