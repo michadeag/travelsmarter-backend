@@ -62,6 +62,7 @@ class LinkedInService {
       this.credentials = {
         accessToken: settings.linkedin_access_token || '',
         orgId: settings.linkedin_org_id || '',
+        personUrn: settings.linkedin_person_urn || '',
         frequency: settings.linkedin_posting_frequency || 'daily',
         maxPosts: parseInt(settings.linkedin_max_posts_per_day || '1'),
         postingTime: settings.linkedin_posting_time || '09:00',
@@ -133,12 +134,15 @@ Only output valid JSON, nothing else.`;
   }
 
   async postToLinkedIn(text) {
-    const { accessToken, orgId } = this.credentials;
+    const { accessToken, orgId, personUrn } = this.credentials;
 
-    // Use organization URN if org ID is provided, otherwise post as member
+    // Priority: org URN > person URN from settings > API lookup
     let authorUrn;
     if (orgId) {
       authorUrn = `urn:li:organization:${orgId}`;
+    } else if (personUrn) {
+      authorUrn = personUrn.startsWith('urn:li:') ? personUrn : `urn:li:person:${personUrn}`;
+      console.log(`💼 LinkedIn: posting as person (from settings): ${authorUrn}`);
     } else {
       authorUrn = await this.getMemberUrn(accessToken);
     }
