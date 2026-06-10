@@ -128,6 +128,7 @@ Only output valid JSON, nothing else.`;
     const res = await axios.get('https://api.linkedin.com/v2/me', {
       headers: { Authorization: `Bearer ${accessToken}`, 'X-Restli-Protocol-Version': '2.0.0' }
     });
+    console.log(`💼 LinkedIn: member URN resolved → urn:li:person:${res.data.id}`);
     return `urn:li:person:${res.data.id}`;
   }
 
@@ -211,7 +212,9 @@ Only output valid JSON, nothing else.`;
     const includeCTA = this.postCounter % 2 === 0;
 
     const post = await this.generatePost(topicEntry, includeCTA);
+    console.log('💼 LinkedIn: generated post, posting to API...');
     const postId = await this.postToLinkedIn(post.text);
+    console.log(`💼 LinkedIn: API returned postId=${postId}`);
 
     await this._logPost({
       body: post.text,
@@ -242,7 +245,7 @@ Only output valid JSON, nothing else.`;
         [String(this.postCounter)]
       );
     } catch (err) {
-      console.error('LinkedIn: failed to log post:', err.message);
+      console.error('LinkedIn: failed to log post to DB:', err.message);
     }
   }
 
