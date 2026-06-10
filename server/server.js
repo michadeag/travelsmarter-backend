@@ -1078,6 +1078,24 @@ async function initializeApp() {
     await SettingsController.initializeDefaults();
     console.log('✅ Settings initialized');
 
+    // Initialize Twitter service from DB credentials
+    try {
+      const twitterSettings = {};
+      const twResult = await pool.query(`SELECT key, value FROM settings WHERE key LIKE 'twitter_%'`);
+      twResult.rows.forEach(r => { twitterSettings[r.key] = r.value; });
+      if (twitterSettings.twitter_api_key && twitterSettings.twitter_api_secret &&
+          twitterSettings.twitter_access_token && twitterSettings.twitter_access_secret) {
+        const twitterService = require('./services/twitterService');
+        const ok = twitterService.reinitializeWithSettings(twitterSettings);
+        if (ok) console.log('✅ Twitter service initialized from DB');
+        else console.log('ℹ️ Twitter credentials in DB but init failed');
+      } else {
+        console.log('ℹ️ Twitter not configured — add credentials in Settings');
+      }
+    } catch (twErr) {
+      console.warn('⚠️ Twitter service init failed (non-blocking):', twErr.message);
+    }
+
     // Initialize Quora service (content generator — no scheduler)
     try {
       await quoraService.loadSettings();
