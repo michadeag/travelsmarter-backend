@@ -2,6 +2,7 @@ const axios = require('axios');
 const Anthropic = require('@anthropic-ai/sdk');
 const pool = require('../config/database');
 const cron = require('node-cron');
+const FormData = require('form-data');
 
 let anthropic = null;
 async function getAnthropicClient() {
@@ -37,6 +38,7 @@ class WordPressService {
     this.siteUrl = null;
     this.username = null;
     this.appPassword = null;
+    this.ideogramKey = null;
     this.frequencyHours = 48;
     this.autoPosting = false;
     this.postCounter = 0;
@@ -53,7 +55,8 @@ class WordPressService {
       const result = await pool.query(
         `SELECT key, value FROM settings WHERE key IN (
           'wordpress_site_url','wordpress_username','wordpress_app_password',
-          'wordpress_frequency_hours','wordpress_auto_posting','wordpress_post_counter'
+          'wordpress_frequency_hours','wordpress_auto_posting','wordpress_post_counter',
+          'ideogram_api_key'
         )`
       );
       result.rows.forEach(({ key, value }) => {
@@ -63,6 +66,7 @@ class WordPressService {
         if (key === 'wordpress_frequency_hours') this.frequencyHours = parseInt(value) || 48;
         if (key === 'wordpress_auto_posting') this.autoPosting = value === 'true';
         if (key === 'wordpress_post_counter') this.postCounter = parseInt(value) || 0;
+        if (key === 'ideogram_api_key') this.ideogramKey = value;
       });
 
       return this.isConfigured();
@@ -117,24 +121,68 @@ Only output the HTML content, nothing else.`;
     return { title: topic.title, body, category: topic.category, tags: topic.tags };
   }
 
-  async publishPost(title, body, tags) {
+  async publishPost(title, body, featuredMediaId = null) {
     if (!this.isConfigured()) throw new Error('WordPress nicht konfiguriert.');
     const auth = Buffer.from(`${this.username}:${this.appPassword}`).toString('base64');
 
+    const payload = { title, content: body, status: 'publish' };
+    if (featuredMediaId) payload.featured_media = featuredMediaId;
+
     const response = await axios.post(
       `${this.siteUrl}/wp-json/wp/v2/posts`,
-      {
-        title,
-        content: body,
-        status: 'publish',
-        tags: [],
-        categories: [],
-        meta: {}
-      },
+      payload,
       { headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' } }
     );
 
     return { id: String(response.data.id), url: response.data.link };
+  }
+
+  async generateFeaturedImage(topic) {
+    if (!this.ideogramKey) return null;
+    const prompt = `Professional travel blog header image for an article titled "${topic.title}".
+Cinematic photography style, wide landscape format, vibrant colors, wanderlust feeling.
+No text, no watermarks, no logos. Suitable for a travel blog featured image.`;
+    try {
+      const response = await axios.post(
+        'https://api.ideogram.ai/generate',
+        {
+          image_request: {
+            prompt,
+            model: 'V_2',
+            aspect_ratio: 'ASPECT_16_9',
+            style_type: 'REALISTIC',
+            magic_prompt_option: 'OFF'
+          }
+        },
+        { headers: { 'Api-Key': this.ideogramKey, 'Content-Type': 'application/json' } }
+      );
+      const imageUrl = response.data?.data?.[0]?.url;
+      if (!imageUrl) return null;
+      console.log(`📝 WordPress: image generated → ${imageUrl.substring(0, 60)}...`);
+      return imageUrl;
+    } catch (err) {
+      console.warn('WordPress: image generation failed:', err.message);
+      return null;
+    }
+  }
+
+  async uploadImageToWordPress(imageUrl, title) {
+    const auth = Buffer.from(`${this.username}:${this.appPassword}`).toString('base64');
+    // Download image buffer
+    const imgRes = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+    const buffer = Buffer.from(imgRes.data);
+    const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50)}.jpg`;
+
+    const form = new FormData();
+    form.append('file', buffer, { filename, contentType: 'image/jpeg' });
+
+    const uploadRes = await axios.post(
+      `${this.siteUrl}/wp-json/wp/v2/media`,
+      form,
+      { headers: { Authorization: `Basic ${auth}`, ...form.getHeaders() } }
+    );
+    console.log(`📝 WordPress: image uploaded, media ID=${uploadRes.data.id}`);
+    return uploadRes.data.id;
   }
 
   async createAndPost(topicIndex = null) {
@@ -147,8 +195,22 @@ Only output the HTML content, nothing else.`;
     const topic = TOPICS[index % TOPICS.length];
 
     console.log(`📝 WordPress: generating "${topic.title}" (CTA: ${includeCTA})`);
-    const { title, body, category, tags } = await this.generateArticle(topic, includeCTA);
-    const { id, url } = await this.publishPost(title, body, tags);
+
+    // Generate article and image in parallel
+    const [articleResult, imageUrl] = await Promise.all([
+      this.generateArticle(topic, includeCTA),
+      this.generateFeaturedImage(topic)
+    ]);
+    const { title, body, category, tags } = articleResult;
+
+    // Upload image, then publish post
+    let featuredMediaId = null;
+    if (imageUrl) {
+      try { featuredMediaId = await this.uploadImageToWordPress(imageUrl, title); }
+      catch (err) { console.warn('WordPress: image upload failed, posting without image:', err.message); }
+    }
+
+    const { id, url } = await this.publishPost(title, body, featuredMediaId);
     console.log(`📝 WordPress: published → ${url}`);
 
     await this._logPost({ title, body, category, wpPostId: id, wpUrl: url, includedCTA: includeCTA });
