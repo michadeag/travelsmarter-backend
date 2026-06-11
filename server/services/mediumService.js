@@ -358,26 +358,43 @@ Format: Markdown only. Start directly with the article content (no meta-commenta
       [String(this.topicIndex)]
     ).catch(() => {});
 
+    // Save to DB immediately so analytics updates right away
+    const dbResult = await pool.query(
+      `INSERT INTO medium_posts (title, body, category, tags, included_cta, status, posted_at)
+       VALUES ($1, $2, $3, $4, $5, 'generated', NOW()) RETURNING id`,
+      [article.title, article.body, article.category, article.tags.join(','), includeCTA]
+    ).catch(() => ({ rows: [] }));
+    const dbId = dbResult.rows[0]?.id || null;
+
     return {
       title: article.title,
       body: article.body,
       tags: article.tags,
       category: article.category,
       imageUrl,
-      includeCTA
+      includeCTA,
+      dbId
     };
   }
 
-  // Log a manually posted article to DB
-  async logManual({ title, body, tags, category, mediumUrl, includeCTA }) {
-    await this._logPost({
-      title, body, category,
-      tags: Array.isArray(tags) ? tags.join(',') : tags,
-      mediumId: null,
-      mediumUrl: mediumUrl || null,
-      includedCTA: !!includeCTA,
-      status: 'manual'
-    });
+  // Update DB entry when user has manually posted to Medium
+  async logManual({ dbId, title, body, tags, category, mediumUrl, includeCTA }) {
+    if (dbId) {
+      await pool.query(
+        `UPDATE medium_posts SET status = 'posted', medium_url = $1 WHERE id = $2`,
+        [mediumUrl || null, dbId]
+      ).catch(() => {});
+    } else {
+      // Fallback: insert if no dbId
+      await this._logPost({
+        title, body, category,
+        tags: Array.isArray(tags) ? tags.join(',') : tags,
+        mediumId: null,
+        mediumUrl: mediumUrl || null,
+        includedCTA: !!includeCTA,
+        status: 'posted'
+      });
+    }
   }
 }
 

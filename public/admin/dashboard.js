@@ -2232,7 +2232,7 @@ async function generateMediumArticle() {
         const data = await res.json();
         if (!data.success) throw new Error(data.error || 'Generation failed');
 
-        mediumCurrentArticle = data;
+        mediumCurrentArticle = data; // includes dbId for later update
 
         document.getElementById('medium-title-text').textContent = data.title;
         document.getElementById('medium-tags-text').textContent = data.tags?.join(', ') || '';
@@ -2265,6 +2265,7 @@ async function markMediumAsPosted() {
             method: 'POST',
             headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                dbId: mediumCurrentArticle.dbId,
                 title: mediumCurrentArticle.title,
                 body: mediumCurrentArticle.body,
                 tags: mediumCurrentArticle.tags,

@@ -62,12 +62,12 @@ router.post('/generate', async (req, res) => {
   }
 });
 
-// POST /api/medium/log-manual — log a manually posted article
+// POST /api/medium/log-manual — mark a generated article as posted
 router.post('/log-manual', async (req, res) => {
   try {
-    const { title, body, tags, category, mediumUrl, includeCTA } = req.body;
-    if (!title) return res.status(400).json({ success: false, error: 'title required' });
-    await mediumService.logManual({ title, body, tags, category, mediumUrl, includeCTA });
+    const { dbId, title, body, tags, category, mediumUrl, includeCTA } = req.body;
+    if (!dbId && !title) return res.status(400).json({ success: false, error: 'dbId or title required' });
+    await mediumService.logManual({ dbId, title, body, tags, category, mediumUrl, includeCTA });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
