@@ -145,17 +145,43 @@ router.post('/fetch-urn', async (req, res) => {
     await linkedinService.loadSettings();
     const token = linkedinService.credentials.accessToken;
     if (!token) return res.status(400).json({ success: false, error: 'No access token saved' });
-    // Decode JWT to extract sub (person ID) without extra API call
-    const parts = token.split('.');
-    if (parts.length !== 3) throw new Error('Token is not a JWT — cannot decode URN automatically');
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
-    const personUrn = payload.sub || payload.id;
-    if (!personUrn) throw new Error('Could not find sub/id in token payload');
+
+    let personId = null;
+    const errors = [];
+
+    // Try /v2/me (works even with w_member_social in many cases)
+    try {
+      const r = await axios.get('https://api.linkedin.com/v2/me', {
+        headers: { Authorization: `Bearer ${token}`, 'X-Restli-Protocol-Version': '2.0.0' }
+      });
+      personId = r.data.id;
+      console.log('💼 LinkedIn fetch-urn /v2/me →', personId, JSON.stringify(r.data));
+    } catch (e) {
+      errors.push('/v2/me: ' + (e.response?.status || e.message));
+    }
+
+    // Try /v2/userinfo (OpenID Connect — works if openid/profile scope)
+    if (!personId) {
+      try {
+        const r = await axios.get('https://api.linkedin.com/v2/userinfo', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        personId = r.data.sub;
+        console.log('💼 LinkedIn fetch-urn /v2/userinfo sub →', personId);
+      } catch (e) {
+        errors.push('/v2/userinfo: ' + (e.response?.status || e.message));
+      }
+    }
+
+    if (!personId) {
+      return res.status(400).json({ success: false, error: 'Could not resolve member ID', tried: errors });
+    }
+
     await pool.query(
       `INSERT INTO settings (key, value, updated_at) VALUES ('linkedin_person_urn', $1, NOW()) ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
-      [personUrn]
+      [personId]
     );
-    res.json({ success: true, personUrn });
+    res.json({ success: true, personUrn: personId, tried: errors });
   } catch (err) {
     const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
     res.status(500).json({ success: false, error: detail });

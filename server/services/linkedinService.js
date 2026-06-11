@@ -176,44 +176,24 @@ Only output valid JSON, nothing else.`;
       'X-Restli-Protocol-Version': '2.0.0'
     };
 
-    // Try ugcPosts first, fall back to /v2/shares on 403
-    try {
-      const response = await axios.post(
-        'https://api.linkedin.com/v2/ugcPosts',
-        {
-          author: authorUrn,
-          lifecycleState: 'PUBLISHED',
-          specificContent: {
-            'com.linkedin.ugc.ShareContent': {
-              shareCommentary: { text },
-              shareMediaCategory: 'NONE'
-            }
-          },
-          visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' }
-        },
-        { headers }
-      );
-      console.log('💼 LinkedIn: ugcPosts success');
-      return response.data?.id || null;
-    } catch (err) {
-      const status = err.response?.status;
-      console.warn(`💼 LinkedIn ugcPosts ${status} — trying /v2/shares fallback`);
-      if (status !== 403 && status !== 422) throw err;
-    }
-
-    // Fallback: older /v2/shares endpoint
-    const sharesRes = await axios.post(
-      'https://api.linkedin.com/v2/shares',
+    console.log(`💼 LinkedIn: ugcPosts with author=${authorUrn}`);
+    const response = await axios.post(
+      'https://api.linkedin.com/v2/ugcPosts',
       {
-        owner: authorUrn,
-        subject: text.substring(0, 70),
-        text: { text },
-        distribution: { linkedInDistributionTarget: { visibleToGuest: true } }
+        author: authorUrn,
+        lifecycleState: 'PUBLISHED',
+        specificContent: {
+          'com.linkedin.ugc.ShareContent': {
+            shareCommentary: { text },
+            shareMediaCategory: 'NONE'
+          }
+        },
+        visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' }
       },
       { headers }
     );
-    console.log('💼 LinkedIn: /v2/shares success');
-    return sharesRes.data?.id || null;
+    console.log('💼 LinkedIn: ugcPosts success');
+    return response.data?.id || null;
   }
 
   async createAndPost() {
