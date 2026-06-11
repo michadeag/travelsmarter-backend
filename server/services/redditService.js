@@ -62,7 +62,8 @@ class RedditService {
     this.scheduler = null;
     this.isConfigured = false;
     this.credentials = {};
-    this.postCounter = 0; // tracks total posts this session for CTA alternation
+    this.postCounter = 0;
+    this.TOPIC_MAP = TOPIC_MAP;
   }
 
   async loadSettings() {
@@ -136,8 +137,14 @@ class RedditService {
   }
 
   async generateArticle(topicEntry, includeCTA) {
+    const CTA_VARIANTS = [
+      `\n\n---\n*P.S. I track flight deals with [TravelSmarter](https://travelsmarterapp.com/welcome.html) — free tool, genuinely useful for finding cheap flights before they spike.*`,
+      `\n\n---\n*Side note: been using [TravelSmarter](https://travelsmarterapp.com/welcome.html) to stay on top of flight deals — no cost, worth checking out if you fly often.*`,
+      `\n\n---\n*Small plug: [TravelSmarter](https://travelsmarterapp.com/welcome.html) is a free app I built for exactly this kind of travel — flight deal tracking, no fluff.*`,
+      `\n\n---\n*Shameless self-plug: if this is useful, you might also like [TravelSmarter](https://travelsmarterapp.com/welcome.html) — free tool for tracking flight deals and travel hacks.*`,
+    ];
     const ctaText = includeCTA
-      ? `\n\n---\n*P.S. I track flight deals and travel hacks with [TravelSmarter](https://travelsmarterapp.com/welcome.html) — completely free and surprisingly useful for finding cheap flights before they disappear.*`
+      ? CTA_VARIANTS[this.postCounter % CTA_VARIANTS.length]
       : '';
 
     const prompt = `You are an experienced traveler writing a genuinely helpful, value-packed Reddit post about: ${topicEntry.topic}
