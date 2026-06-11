@@ -6,7 +6,11 @@ const redditService = require('../services/redditService');
 router.get('/status', async (req, res) => {
   try {
     await redditService.loadSettings();
-    res.json({ success: true, status: redditService.getStatus() });
+    const pool = require('../config/database');
+    const r = await pool.query(`SELECT COUNT(*) AS total FROM reddit_posts`).catch(() => ({ rows: [{ total: 0 }] }));
+    const status = redditService.getStatus();
+    status.totalPosts = parseInt(r.rows[0].total) || 0;
+    res.json({ success: true, status });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

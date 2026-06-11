@@ -6,7 +6,10 @@ const pool = require('../config/database');
 router.get('/status', async (req, res) => {
   try {
     await bloggerService.loadSettings();
-    res.json({ success: true, status: bloggerService.getStatus() });
+    const r = await pool.query(`SELECT COUNT(*) AS total FROM blogger_posts`).catch(() => ({ rows: [{ total: 0 }] }));
+    const status = bloggerService.getStatus();
+    status.totalPosts = parseInt(r.rows[0].total) || 0;
+    res.json({ success: true, status });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
