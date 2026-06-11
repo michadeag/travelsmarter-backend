@@ -94,7 +94,7 @@ router.post('/generate', async (req, res) => {
     const topicEntry = topics[idx];
 
     linkedinService.postCounter = (linkedinService.postCounter || 0) + 1;
-    const includeCTA = linkedinService.postCounter % 2 === 0;
+    const includeCTA = linkedinService.postCounter % 3 === 0;
     const post = await linkedinService.generatePost(topicEntry, includeCTA);
 
     // Save as draft in DB

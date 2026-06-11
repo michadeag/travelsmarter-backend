@@ -94,8 +94,14 @@ class LinkedInService {
   }
 
   async generatePost(topicEntry, includeCTA) {
+    const CTA_VARIANTS = [
+      `\n\n🔗 I use TravelSmarter to track flight deals and travel hacks — completely free: https://travelsmarterapp.com/welcome.html`,
+      `\n\n💡 If you want to travel smarter (literally), I've been using this free tool to find cheap flights before they spike: https://travelsmarterapp.com/welcome.html`,
+      `\n\n✈️ Shameless plug: TravelSmarter is a free app I use to stay ahead of flight deals — worth bookmarking: https://travelsmarterapp.com/welcome.html`,
+      `\n\n📌 Tools I actually use: TravelSmarter for flight deal tracking — no cost, surprisingly good: https://travelsmarterapp.com/welcome.html`,
+    ];
     const ctaText = includeCTA
-      ? `\n\n---\nI personally track flight deals and travel hacks with [TravelSmarter](https://travelsmarterapp.com/welcome.html) — it's completely free and surprisingly useful for finding cheap flights before they disappear.`
+      ? CTA_VARIANTS[this.postCounter % CTA_VARIANTS.length]
       : '';
 
     const prompt = `You are a travel industry professional writing a LinkedIn post about: ${topicEntry.topic}

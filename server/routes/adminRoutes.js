@@ -133,12 +133,14 @@ router.get('/analytics/summary', async (req, res) => {
 
     for (const p of platforms) {
       try {
+        const statusFilter = ['linkedin_posts', 'medium_posts'].includes(p.table)
+          ? `WHERE status = 'posted'` : '';
         const r = await pool.query(`
           SELECT
             COUNT(*) AS total,
             COUNT(*) FILTER (WHERE ${p.dateCol} >= date_trunc('month', NOW())) AS this_month,
             COUNT(*) FILTER (WHERE included_cta = true) AS with_cta
-          FROM ${p.table}
+          FROM ${p.table} ${statusFilter}
         `);
         const row = r.rows[0];
         socialStats[p.key] = {
