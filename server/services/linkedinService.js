@@ -153,9 +153,13 @@ Only output valid JSON, nothing else.`;
     if (orgId) {
       authorUrn = `urn:li:organization:${orgId}`;
     } else if (personUrn) {
-      // Normalize: strip any existing URN prefix and rebuild with urn:li:person:
-      const rawId = personUrn.replace(/^urn:li:(person|member):/, '');
-      authorUrn = `urn:li:person:${rawId}`;
+      // Keep urn:li:member: if already set (new API uses this format)
+      // If plain numeric ID, prefix with urn:li:person:
+      if (personUrn.startsWith('urn:li:')) {
+        authorUrn = personUrn;
+      } else {
+        authorUrn = `urn:li:person:${personUrn}`;
+      }
       console.log(`💼 LinkedIn: posting as person (from settings): ${authorUrn}`);
     } else {
       // Try to decode URN from JWT token
@@ -176,24 +180,33 @@ Only output valid JSON, nothing else.`;
       'X-Restli-Protocol-Version': '2.0.0'
     };
 
-    console.log(`💼 LinkedIn: ugcPosts with author=${authorUrn}`);
+    // Use new REST Posts API (ugcPosts deprecated for new apps)
+    console.log(`💼 LinkedIn: POST /rest/posts with author=${authorUrn}`);
     const response = await axios.post(
-      'https://api.linkedin.com/v2/ugcPosts',
+      'https://api.linkedin.com/rest/posts',
       {
         author: authorUrn,
-        lifecycleState: 'PUBLISHED',
-        specificContent: {
-          'com.linkedin.ugc.ShareContent': {
-            shareCommentary: { text },
-            shareMediaCategory: 'NONE'
-          }
+        commentary: text,
+        visibility: 'PUBLIC',
+        distribution: {
+          feedDistribution: 'MAIN_FEED',
+          targetEntities: [],
+          thirdPartyDistributionChannels: []
         },
-        visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' }
+        lifecycleState: 'PUBLISHED',
+        isReshareDisabledByAuthor: false
       },
-      { headers }
+      {
+        headers: {
+          ...headers,
+          'LinkedIn-Version': '202406',
+          'X-Restli-Protocol-Version': '2.0.0'
+        }
+      }
     );
-    console.log('💼 LinkedIn: ugcPosts success');
-    return response.data?.id || null;
+    console.log('💼 LinkedIn: /rest/posts success, status', response.status);
+    // 201 Created — ID is in the x-restli-id header or response body
+    return response.headers['x-restli-id'] || response.data?.id || null;
   }
 
   async createAndPost() {
