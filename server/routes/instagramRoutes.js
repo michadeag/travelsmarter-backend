@@ -26,6 +26,7 @@ router.post('/reload-settings', async (req, res) => {
 
 router.post('/post', async (req, res) => {
   try {
+    await instagramService.loadSettings();
     const result = await instagramService.createAndPost();
     res.json({ success: true, ...result });
   } catch (err) {

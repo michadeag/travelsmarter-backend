@@ -102,9 +102,11 @@ router.post('/reload-settings', async (req, res) => {
 
 router.post('/post-pin', async (req, res) => {
   try {
+    await pinterestService.loadSettings();
     const result = await pinterestService.createAndPost();
     res.json({ success: true, ...result });
   } catch (err) {
+    console.error('Pinterest post-pin error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });

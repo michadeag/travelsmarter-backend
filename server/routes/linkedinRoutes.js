@@ -26,6 +26,7 @@ router.post('/reload-settings', async (req, res) => {
 
 router.post('/post-article', async (req, res) => {
   try {
+    await linkedinService.loadSettings();
     const result = await linkedinService.createAndPost();
     res.json({ success: true, ...result });
   } catch (err) {
