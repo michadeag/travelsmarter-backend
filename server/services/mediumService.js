@@ -141,7 +141,7 @@ class MediumService {
 
   async generateArticle(topic, includeCTA) {
     const ctaSection = includeCTA
-      ? `\n\n---\n\n*If you want a free tool that tracks flight deals and travel hacks automatically, I've been using [TravelSmarter](https://travelsmarterapp.com/welcome.html). It's completely free and genuinely useful for catching cheap flights before they disappear.*`
+      ? `\n\n---\n\n## One More Thing\n\nIf you found this useful, you might like [TravelSmarter](https://travelsmarterapp.com/welcome.html) — a free tool I use to stay on top of flight deals, travel hacks, and money-saving strategies without spending hours searching. It curates the best tips automatically so you can spend less time planning and more time actually traveling. Completely free, no credit card needed.`
       : '';
 
     const prompt = `You are an experienced travel writer creating a high-quality Medium article.
