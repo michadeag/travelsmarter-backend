@@ -140,8 +140,8 @@ Only output valid JSON, nothing else.`;
       headers: { Authorization: `Bearer ${accessToken}`, 'X-Restli-Protocol-Version': '2.0.0' }
     });
     const id = res.data.id;
-    console.log(`💼 LinkedIn: member URN resolved → urn:li:member:${id}`);
-    return `urn:li:member:${id}`;
+    console.log(`💼 LinkedIn: member URN resolved → urn:li:person:${id}`);
+    return `urn:li:person:${id}`;
   }
 
   async postToLinkedIn(rawText) {
@@ -153,7 +153,9 @@ Only output valid JSON, nothing else.`;
     if (orgId) {
       authorUrn = `urn:li:organization:${orgId}`;
     } else if (personUrn) {
-      authorUrn = personUrn.startsWith('urn:li:') ? personUrn : `urn:li:member:${personUrn}`;
+      // Normalize: strip any existing URN prefix and rebuild with urn:li:person:
+      const rawId = personUrn.replace(/^urn:li:(person|member):/, '');
+      authorUrn = `urn:li:person:${rawId}`;
       console.log(`💼 LinkedIn: posting as person (from settings): ${authorUrn}`);
     } else {
       // Try to decode URN from JWT token
@@ -162,12 +164,19 @@ Only output valid JSON, nothing else.`;
         if (parts.length === 3) {
           const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
           const id = payload.sub || payload.id;
-          if (id) { authorUrn = `urn:li:member:${id}`; console.log(`💼 LinkedIn: URN from JWT: ${authorUrn}`); }
+          if (id) { authorUrn = `urn:li:person:${id}`; console.log(`💼 LinkedIn: URN from JWT: ${authorUrn}`); }
         }
       } catch (e) {}
       if (!authorUrn) authorUrn = await this.getMemberUrn(accessToken);
     }
 
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      'X-Restli-Protocol-Version': '2.0.0'
+    };
+
+    // Try ugcPosts first, fall back to /v2/shares on 403
     try {
       const response = await axios.post(
         'https://api.linkedin.com/v2/ugcPosts',
@@ -180,23 +189,31 @@ Only output valid JSON, nothing else.`;
               shareMediaCategory: 'NONE'
             }
           },
-          visibility: {
-            'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
-          }
+          visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' }
         },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'X-Restli-Protocol-Version': '2.0.0'
-          }
-        }
+        { headers }
       );
+      console.log('💼 LinkedIn: ugcPosts success');
       return response.data?.id || null;
     } catch (err) {
-      console.error(`💼 LinkedIn API error: ${err.response?.status} — ${JSON.stringify(err.response?.data)}`);
-      throw err;
+      const status = err.response?.status;
+      console.warn(`💼 LinkedIn ugcPosts ${status} — trying /v2/shares fallback`);
+      if (status !== 403 && status !== 422) throw err;
     }
+
+    // Fallback: older /v2/shares endpoint
+    const sharesRes = await axios.post(
+      'https://api.linkedin.com/v2/shares',
+      {
+        owner: authorUrn,
+        subject: text.substring(0, 70),
+        text: { text },
+        distribution: { linkedInDistributionTarget: { visibleToGuest: true } }
+      },
+      { headers }
+    );
+    console.log('💼 LinkedIn: /v2/shares success');
+    return sharesRes.data?.id || null;
   }
 
   async createAndPost() {
