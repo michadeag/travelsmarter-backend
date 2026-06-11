@@ -186,7 +186,7 @@ Only output valid JSON, nothing else.`;
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
-            'LinkedIn-Version': '202401'
+            'LinkedIn-Version': '202501'
           }
         }
       );
