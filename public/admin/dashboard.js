@@ -2187,6 +2187,133 @@ function switchPlatformTab(platform) {
         activeTab.style.borderBottom = '3px solid #667eea';
         activeTab.style.color = '#667eea';
     }
+
+    if (platform === 'medium') initMediumTab();
+}
+
+// ─── MEDIUM GENERATOR ────────────────────────────────────────────────────────
+
+let mediumCurrentArticle = null;
+
+async function initMediumTab() {
+    // Load topic list into select
+    try {
+        const res = await fetch(`${API_URL}/api/medium/topics`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        const sel = document.getElementById('medium-topic-select');
+        if (sel && data.topics) {
+            data.topics.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.index;
+                opt.textContent = (t.isNext ? '▶ ' : '') + t.title;
+                sel.appendChild(opt);
+            });
+        }
+    } catch {}
+    loadMediumRecentPosts();
+}
+
+async function generateMediumArticle() {
+    const btn = document.getElementById('medium-generate-btn');
+    const result = document.getElementById('medium-generator-result');
+    const topicIdx = document.getElementById('medium-topic-select')?.value;
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Generiere Artikel...';
+    result.style.display = 'none';
+
+    try {
+        const body = topicIdx !== '' ? { topicIndex: parseInt(topicIdx) } : {};
+        const res = await fetch(`${API_URL}/api/medium/generate`, {
+            method: 'POST',
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Generation failed');
+
+        mediumCurrentArticle = data;
+
+        document.getElementById('medium-title-text').textContent = data.title;
+        document.getElementById('medium-tags-text').textContent = data.tags?.join(', ') || '';
+        document.getElementById('medium-body-text').value = data.body;
+
+        const imgSection = document.getElementById('medium-image-section');
+        if (data.imageUrl) {
+            document.getElementById('medium-cover-img').src = data.imageUrl;
+            document.getElementById('medium-image-download').href = data.imageUrl;
+            imgSection.style.display = 'block';
+        } else {
+            imgSection.style.display = 'none';
+        }
+
+        result.style.display = 'block';
+        result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ Artikel generieren';
+    }
+}
+
+async function markMediumAsPosted() {
+    if (!mediumCurrentArticle) return alert('Kein Artikel generiert.');
+    const mediumUrl = document.getElementById('medium-posted-url')?.value || '';
+    try {
+        const res = await fetch(`${API_URL}/api/medium/log-manual`, {
+            method: 'POST',
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: mediumCurrentArticle.title,
+                body: mediumCurrentArticle.body,
+                tags: mediumCurrentArticle.tags,
+                category: mediumCurrentArticle.category,
+                mediumUrl,
+                includeCTA: mediumCurrentArticle.includeCTA
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('✅ Artikel als gepostet markiert!');
+            document.getElementById('medium-posted-url').value = '';
+            document.getElementById('medium-generator-result').style.display = 'none';
+            mediumCurrentArticle = null;
+            loadMediumRecentPosts();
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+async function loadMediumRecentPosts() {
+    const el = document.getElementById('medium-recent-posts');
+    if (!el) return;
+    try {
+        const res = await fetch(`${API_URL}/api/medium/recent-posts`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (!data.posts?.length) { el.innerHTML = '<p>Noch keine Artikel gepostet.</p>'; return; }
+        el.innerHTML = data.posts.map(p => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f3f4f6;">
+                <div>
+                    <strong style="font-size:13px;">${p.title}</strong>
+                    <span style="color:#9ca3af;font-size:12px;margin-left:8px;">${p.category}</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    ${p.medium_url ? `<a href="${p.medium_url}" target="_blank" style="font-size:12px;color:#1d9bf0;">Ansehen ↗</a>` : ''}
+                    <span style="font-size:12px;color:#6b7280;">${new Date(p.posted_at).toLocaleDateString('de-DE')}</span>
+                </div>
+            </div>`).join('');
+    } catch { el.innerHTML = '<p style="color:#ef4444">Fehler beim Laden</p>'; }
+}
+
+function copyToClipboard(elementId) {
+    const el = document.getElementById(elementId);
+    const text = el.tagName === 'TEXTAREA' ? el.value : el.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = el.previousElementSibling?.querySelector('button') || el.parentElement?.querySelector('button');
+        if (btn) { const orig = btn.textContent; btn.textContent = '✅ Kopiert!'; setTimeout(() => btn.textContent = orig, 1500); }
+    });
 }
 
 // SOCIAL MEDIA SUB-TAB SWITCHING (Accounts | Posts | Analytics)

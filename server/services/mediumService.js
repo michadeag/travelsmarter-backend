@@ -320,6 +320,65 @@ Format: Markdown only. Start directly with the article content (no meta-commenta
       isNext: i === this.topicIndex % TOPICS.length
     }));
   }
+
+  // Generate article + image without publishing (for manual copy-paste workflow)
+  async generateForManual(topicIndex = null) {
+    const idx = topicIndex !== null ? topicIndex : (this.topicIndex % TOPICS.length);
+    const topic = TOPICS[idx];
+
+    this.postCounter++;
+    const includeCTA = this.postCounter % 2 === 0;
+
+    // Generate article text
+    const article = await this.generateArticle(topic, includeCTA);
+
+    // Generate cover image via Ideogram if API key is set
+    let imageUrl = null;
+    try {
+      const settingsResult = await pool.query(`SELECT value FROM settings WHERE key = 'ideogram_api_key'`);
+      const ideogramKey = settingsResult.rows[0]?.value;
+      if (ideogramKey) {
+        const axios = require('axios');
+        const imgPrompt = `Professional travel blog cover image for article titled "${topic.title}". Cinematic photography style, vibrant colors, inspiring wanderlust. No text overlay.`;
+        const imgRes = await axios.post(
+          'https://api.ideogram.ai/generate',
+          { image_request: { prompt: imgPrompt, model: 'V_2', aspect_ratio: 'ASPECT_16_9', style_type: 'REALISTIC', magic_prompt_option: 'OFF' } },
+          { headers: { 'Api-Key': ideogramKey, 'Content-Type': 'application/json' } }
+        );
+        imageUrl = imgRes.data?.data?.[0]?.url || null;
+      }
+    } catch (err) {
+      console.warn('Medium image generation skipped:', err.message);
+    }
+
+    // Advance topic index
+    this.topicIndex = (idx + 1) % TOPICS.length;
+    await pool.query(
+      `INSERT INTO settings (key, value, type) VALUES ('medium_topic_index', $1, 'text') ON CONFLICT (key) DO UPDATE SET value = $1`,
+      [String(this.topicIndex)]
+    ).catch(() => {});
+
+    return {
+      title: article.title,
+      body: article.body,
+      tags: article.tags,
+      category: article.category,
+      imageUrl,
+      includeCTA
+    };
+  }
+
+  // Log a manually posted article to DB
+  async logManual({ title, body, tags, category, mediumUrl, includeCTA }) {
+    await this._logPost({
+      title, body, category,
+      tags: Array.isArray(tags) ? tags.join(',') : tags,
+      mediumId: null,
+      mediumUrl: mediumUrl || null,
+      includedCTA: !!includeCTA,
+      status: 'manual'
+    });
+  }
 }
 
 module.exports = new MediumService();

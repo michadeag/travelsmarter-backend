@@ -1437,6 +1437,7 @@
                         <button class="platform-tab" data-platform="pinterest" onclick="switchPlatformTab('pinterest')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">📌 Pinterest</button>
                         <button class="platform-tab" data-platform="instagram" onclick="switchPlatformTab('instagram')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">📸 Instagram</button>
                         <button class="platform-tab" data-platform="linkedin" onclick="switchPlatformTab('linkedin')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">💼 LinkedIn</button>
+                        <button class="platform-tab" data-platform="medium" onclick="switchPlatformTab('medium')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">✍️ Medium</button>
                     </div>
 
                     <!-- Twitter Settings -->
@@ -1621,6 +1622,75 @@
                             <label>Preferred Posting Time (24h format)</label>
                             <input type="time" id="linkedin-time" value="09:00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
                         </div>
+                    </div>
+
+                    <!-- Medium Settings -->
+                    <div class="platform-settings" id="settings-medium" style="display: none;">
+                        <div style="background:#fff8f0;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:6px;margin-bottom:20px;">
+                            <strong>✍️ Medium — Halbautomatischer Modus</strong><br>
+                            <span style="font-size:13px;color:#666;">Da Medium die API eingestellt hat, generiert die App den Artikel + Cover-Bild für dich. Du kopierst es manuell in Medium und klickst dann "Als gepostet markieren".</span>
+                        </div>
+
+                        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+                            <button onclick="generateMediumArticle()" id="medium-generate-btn"
+                                style="background:#667eea;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600;">
+                                ✨ Artikel generieren
+                            </button>
+                            <select id="medium-topic-select" style="padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+                                <option value="">— Nächstes Thema (automatisch) —</option>
+                            </select>
+                        </div>
+
+                        <div id="medium-generator-result" style="display:none;">
+                            <!-- Title -->
+                            <div style="margin-bottom:16px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                    <strong>📌 Titel</strong>
+                                    <button onclick="copyToClipboard('medium-title-text')" style="font-size:12px;padding:4px 10px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;">📋 Kopieren</button>
+                                </div>
+                                <div id="medium-title-text" style="background:#f8f9fa;padding:12px;border-radius:6px;font-size:15px;font-weight:600;border:1px solid #e5e7eb;"></div>
+                            </div>
+
+                            <!-- Tags -->
+                            <div style="margin-bottom:16px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                    <strong>🏷️ Tags</strong>
+                                    <button onclick="copyToClipboard('medium-tags-text')" style="font-size:12px;padding:4px 10px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;">📋 Kopieren</button>
+                                </div>
+                                <div id="medium-tags-text" style="background:#f8f9fa;padding:10px;border-radius:6px;font-size:13px;color:#555;border:1px solid #e5e7eb;"></div>
+                            </div>
+
+                            <!-- Cover Image -->
+                            <div id="medium-image-section" style="margin-bottom:16px;display:none;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                    <strong>🖼️ Cover-Bild</strong>
+                                    <a id="medium-image-download" href="#" download="medium-cover.jpg" style="font-size:12px;padding:4px 10px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;text-decoration:none;color:#333;">⬇️ Herunterladen</a>
+                                </div>
+                                <img id="medium-cover-img" src="" style="width:100%;max-width:600px;border-radius:8px;border:1px solid #e5e7eb;" />
+                            </div>
+
+                            <!-- Article Body -->
+                            <div style="margin-bottom:16px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                    <strong>📄 Artikel (Markdown)</strong>
+                                    <button onclick="copyToClipboard('medium-body-text')" style="font-size:12px;padding:4px 10px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;">📋 Kopieren</button>
+                                </div>
+                                <textarea id="medium-body-text" rows="18" style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:monospace;resize:vertical;box-sizing:border-box;"></textarea>
+                            </div>
+
+                            <!-- Mark as posted -->
+                            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:16px;">
+                                <strong style="color:#166534;">✅ Schritt 2: Nachdem du in Medium gepostet hast</strong><br>
+                                <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+                                    <input type="text" id="medium-posted-url" placeholder="Medium Artikel URL (optional)" style="flex:1;min-width:200px;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                                    <button onclick="markMediumAsPosted()" style="background:#16a34a;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;">Als gepostet markieren</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr style="margin:24px 0;border:none;border-top:1px solid #e5e7eb;">
+                        <h5 style="margin-bottom:12px;color:#2c3e50;">📊 Zuletzt generierte Artikel</h5>
+                        <div id="medium-recent-posts" style="font-size:13px;color:#6b7280;">Wird geladen...</div>
                     </div>
 
                     <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin-top: 20px; margin-bottom: 20px; border-left: 4px solid #667eea;">

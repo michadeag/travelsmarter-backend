@@ -51,6 +51,29 @@ router.get('/recent-posts', async (req, res) => {
   }
 });
 
+// POST /api/medium/generate — generate article + image for manual copy-paste
+router.post('/generate', async (req, res) => {
+  try {
+    const { topicIndex } = req.body;
+    const result = await mediumService.generateForManual(topicIndex ?? null);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/medium/log-manual — log a manually posted article
+router.post('/log-manual', async (req, res) => {
+  try {
+    const { title, body, tags, category, mediumUrl, includeCTA } = req.body;
+    if (!title) return res.status(400).json({ success: false, error: 'title required' });
+    await mediumService.logManual({ title, body, tags, category, mediumUrl, includeCTA });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.post('/scheduler/start', async (req, res) => {
   try {
     await mediumService.loadSettings();
