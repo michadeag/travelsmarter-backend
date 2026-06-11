@@ -596,6 +596,9 @@
                 <a class="nav-link" data-tab="promos">🎟️ Promo Codes</a>
                 <a class="nav-link" data-tab="email-templates">📧 Email Templates</a>
                 <a class="nav-link" data-tab="analytics">📈 Analytics</a>
+                <a class="nav-link" data-tab="twitter">🐦 Twitter</a>
+                <a class="nav-link" data-tab="medium">✍️ Medium</a>
+                <a class="nav-link" data-tab="social-media">📱 Social Media</a>
                 <a class="nav-link" data-tab="settings">⚙️ Settings</a>
             </nav>
         </div>
@@ -946,25 +949,25 @@
                 <h3>Platform Analytics</h3>
 
                 <div class="cards-grid" style="margin-top: 20px;">
-                    <div class="card">
+                    <div class="card" id="analytics-signups">
                         <h3>Signups (This Month)</h3>
-                        <div class="number">+234</div>
-                        <div class="change">+18.5% vs last month</div>
+                        <div class="number" style="opacity: 0.5;">Loading...</div>
+                        <div class="change">-</div>
                     </div>
-                    <div class="card">
+                    <div class="card" id="analytics-conversions">
                         <h3>Trial Conversions</h3>
-                        <div class="number">28%</div>
-                        <div class="change">Free → Paid</div>
+                        <div class="number" style="opacity: 0.5;">Loading...</div>
+                        <div class="change">-</div>
                     </div>
-                    <div class="card">
+                    <div class="card" id="analytics-churn">
                         <h3>Churn Rate</h3>
-                        <div class="number">4.2%</div>
-                        <div class="change">Monthly churn</div>
+                        <div class="number" style="opacity: 0.5;">Loading...</div>
+                        <div class="change">-</div>
                     </div>
-                    <div class="card">
+                    <div class="card" id="analytics-ltv">
                         <h3>Avg LTV</h3>
-                        <div class="number">€456</div>
-                        <div class="change">Lifetime value per user</div>
+                        <div class="number" style="opacity: 0.5;">Loading...</div>
+                        <div class="change">-</div>
                     </div>
                 </div>
 
@@ -1012,6 +1015,373 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- TWITTER TAB -->
+            <div id="twitter" class="tab-content">
+                <h3>🐦 Twitter Management</h3>
+
+                <!-- Status Card -->
+                <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h4>Service Status</h4>
+                    <div id="twitter-status" style="margin-top: 15px;">
+                        <p style="opacity: 0.8;">Loading status...</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="cards-grid" style="margin-top: 20px;">
+                    <div class="card">
+                        <h4>📱 Quick Post</h4>
+                        <button class="btn btn-primary" onclick="postRandomTip()" style="width: 100%; margin-top: 10px;">Post Random Tip</button>
+                        <p style="font-size: 12px; color: #666; margin-top: 10px;">Posts a random travel tip immediately</p>
+                    </div>
+
+                    <div class="card">
+                        <h4>📂 Post by Category</h4>
+                        <select id="category-select" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-top: 10px;">
+                            <option value="">Select category...</option>
+                            <option value="flights">✈️ Flights</option>
+                            <option value="hotels">🏨 Hotels</option>
+                            <option value="dining">🍽️ Dining</option>
+                            <option value="transport">🚌 Transport</option>
+                            <option value="activities">🎭 Activities</option>
+                            <option value="general">🌍 General</option>
+                            <option value="seasonal">❄️ Seasonal</option>
+                            <option value="app">📱 App Promo</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="postByCategory()" style="width: 100%; margin-top: 10px;">Post from Category</button>
+                    </div>
+
+                    <div class="card">
+                        <h4>✍️ Custom Tweet</h4>
+                        <textarea id="custom-tweet" placeholder="Type your tweet (max 280 characters)" style="width: 100%; height: 60px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-top: 10px; font-family: monospace; font-size: 12px;"></textarea>
+                        <div style="margin-top: 8px; font-size: 12px; color: #666;">
+                            <span id="char-count">0</span>/280 characters
+                        </div>
+                        <button class="btn btn-primary" onclick="postCustomTweet()" style="width: 100%; margin-top: 10px;">Post Custom Tweet</button>
+                    </div>
+                </div>
+
+                <!-- Scheduler Controls -->
+                <div class="card" style="margin-top: 20px;">
+                    <h4>⏰ Scheduler Controls</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+                        <div>
+                            <label>Schedule Type:</label>
+                            <select id="schedule-type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-top: 8px;">
+                                <option value="recommended">Recommended (3x daily)</option>
+                                <option value="daily">Daily (1x)</option>
+                                <option value="hourly">Hourly</option>
+                                <option value="category">Category Rotation</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>First Post Time:</label>
+                            <input type="time" id="post-time" value="09:00" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-top: 8px;">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn btn-success" onclick="startScheduler()" style="flex: 1;">▶️ Start Scheduler</button>
+                        <button class="btn btn-danger" onclick="stopScheduler()" style="flex: 1;">⏹️ Stop Scheduler</button>
+                    </div>
+                </div>
+
+                <!-- Tips Preview -->
+                <div class="card" style="margin-top: 20px;">
+                    <h4>💡 Available Tips Preview</h4>
+                    <div id="tips-preview" style="margin-top: 15px; max-height: 400px; overflow-y: auto;">
+                        <p style="color: #999;">Loading tips...</p>
+                    </div>
+                </div>
+
+                <!-- Recent Postings -->
+                <div class="card" style="margin-top: 20px;">
+                    <h4>📋 Recent Postings</h4>
+                    <div id="recent-postings" style="margin-top: 15px;">
+                        <p style="color: #999;">No postings yet in this session</p>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #667eea;">
+                    <strong>ℹ️ Twitter Management Tips:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px; font-size: 14px; color: #555;">
+                        <li>Auto-posting posts 3 times daily at optimal engagement times</li>
+                        <li>Each tip is under 280 characters and includes relevant hashtags</li>
+                        <li>Use "Post Random Tip" for immediate posting</li>
+                        <li>Mix categories to show diverse travel hacks</li>
+                        <li>Custom tweets are great for announcements or special offers</li>
+                        <li>Scheduler runs in background - server must be active</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- MEDIUM TAB -->
+            <div id="medium" class="tab-content">
+                <h3 style="margin-bottom:6px;">✍️ Medium Content Generator</h3>
+                <p style="color:#6b7280;margin-bottom:24px;font-size:14px;">Artikel + Cover-Bild generieren → in Medium einfügen → als gepostet markieren</p>
+
+                <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center;">
+                    <button onclick="generateMediumArticle()" id="medium-generate-btn"
+                        style="background:#667eea;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600;">
+                        ✨ Artikel generieren
+                    </button>
+                    <select id="medium-topic-select" style="padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px;min-width:260px;">
+                        <option value="">— Nächstes Thema (automatisch) —</option>
+                    </select>
+                </div>
+
+                <div id="medium-generator-result" style="display:none;">
+                    <!-- Title -->
+                    <div style="margin-bottom:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <strong>📌 Titel</strong>
+                            <button onclick="copyMediumField('medium-title-text')" style="font-size:12px;padding:4px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;">📋 Kopieren</button>
+                        </div>
+                        <div id="medium-title-text" style="background:#f8f9fa;padding:12px 16px;border-radius:6px;font-size:15px;font-weight:600;border:1px solid #e5e7eb;"></div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div style="margin-bottom:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <strong>🏷️ Tags</strong>
+                            <button onclick="copyMediumField('medium-tags-text')" style="font-size:12px;padding:4px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;">📋 Kopieren</button>
+                        </div>
+                        <div id="medium-tags-text" style="background:#f8f9fa;padding:10px 16px;border-radius:6px;font-size:13px;color:#555;border:1px solid #e5e7eb;"></div>
+                    </div>
+
+                    <!-- Cover Image -->
+                    <div id="medium-image-section" style="margin-bottom:16px;display:none;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <strong>🖼️ Cover-Bild</strong>
+                            <a id="medium-image-download" href="#" target="_blank" style="font-size:12px;padding:4px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;text-decoration:none;color:#333;">⬇️ Herunterladen</a>
+                        </div>
+                        <img id="medium-cover-img" src="" style="width:100%;max-width:680px;border-radius:8px;border:1px solid #e5e7eb;" />
+                    </div>
+
+                    <!-- Article Body -->
+                    <div style="margin-bottom:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <strong>📄 Artikel (Markdown)</strong>
+                            <button onclick="copyMediumField('medium-body-text')" style="font-size:12px;padding:4px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;">📋 Kopieren</button>
+                        </div>
+                        <textarea id="medium-body-text" rows="20" style="width:100%;padding:14px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:monospace;resize:vertical;box-sizing:border-box;"></textarea>
+                    </div>
+
+                    <!-- Mark as posted -->
+                    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:16px;margin-bottom:24px;">
+                        <strong style="color:#166534;">✅ Nachdem du in Medium gepostet hast:</strong>
+                        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+                            <input type="text" id="medium-posted-url" placeholder="Medium Artikel URL (optional)" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                            <button onclick="markMediumAsPosted()" style="background:#16a34a;color:#fff;border:none;padding:10px 22px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Als gepostet markieren</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Posts -->
+                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;">
+                    <h5 style="margin:0 0 14px;color:#2c3e50;">📊 Generierte Artikel</h5>
+                    <div id="medium-recent-posts" style="font-size:13px;color:#6b7280;">Wird geladen...</div>
+                </div>
+            </div>
+
+            <!-- SOCIAL MEDIA TAB -->
+            <div id="social-media" class="tab-content">
+                <!-- Create New Post (Always visible) -->
+                <div class="card" style="margin-bottom: 30px;">
+                    <h3>📝 Create & Publish Post</h3>
+                    <div class="form-group">
+                        <label>Post Type</label>
+                        <select id="post-type">
+                            <option value="travel_tip">Travel Tip</option>
+                            <option value="deal">Deal Alert</option>
+                            <option value="hack">Hack</option>
+                            <option value="engagement">Engagement</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="post-title" placeholder="Post title (optional)">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Content</label>
+                        <textarea id="post-content" placeholder="Write your post content here..."></textarea>
+                        <small id="char-count">0/280 characters</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Image URL (optional)</label>
+                        <input type="url" id="post-image" placeholder="https://example.com/image.jpg">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Platforms to Post To</label>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                <input type="checkbox" name="platforms" value="twitter"> 🐦 Twitter
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                <input type="checkbox" name="platforms" value="reddit"> 🤖 Reddit
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                <input type="checkbox" name="platforms" value="pinterest"> 📌 Pinterest
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                <input type="checkbox" name="platforms" value="instagram"> 📸 Instagram
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                                <input type="checkbox" name="platforms" value="linkedin"> 💼 LinkedIn
+                            </label>
+                        </div>
+                    </div>
+
+                    <button onclick="publishPost()" class="btn btn-primary" style="width: 100%;">
+                        📤 Publish Post
+                    </button>
+                </div>
+
+                <!-- Sub-Tabs Navigation -->
+                <div style="margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; display: flex; gap: 10px;">
+                    <button class="social-sub-tab active" data-tab="accounts" onclick="switchSocialTab('accounts')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid #667eea; color: #667eea; font-weight: 600;">🔗 Accounts</button>
+                    <button class="social-sub-tab" data-tab="posts" onclick="switchSocialTab('posts')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">📋 Posts</button>
+                    <button class="social-sub-tab" data-tab="analytics" onclick="switchSocialTab('analytics')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">📊 Analytics</button>
+                </div>
+
+                <!-- ACCOUNTS TAB -->
+                <div class="social-sub-content active" id="content-accounts">
+                    <div class="card">
+                        <h3>🔗 Connected Accounts</h3>
+                        <div id="accounts-list" style="margin-bottom: 20px;"></div>
+                        <button onclick="openConnectModal()" class="btn btn-secondary">
+                            + Connect New Account
+                        </button>
+                    </div>
+
+                    <div class="card" style="margin-top: 20px;">
+                        <h3>📋 Account Details</h3>
+                        <div id="account-details" style="color: #6b7280; padding: 20px; text-align: center;">
+                            Select an account to view details
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POSTS TAB -->
+                <div class="social-sub-content" id="content-posts" style="display: none;">
+                    <div class="card">
+                        <h3>📋 Recent Posts</h3>
+                        <div class="table-container">
+                            <table id="recent-posts-table">
+                                <thead>
+                                    <tr>
+                                        <th>Posted</th>
+                                        <th>Platform</th>
+                                        <th>Content</th>
+                                        <th>Engagement</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="posts-tbody">
+                                    <tr><td colspan="6" style="text-align: center; padding: 20px;">Loading posts...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ANALYTICS TAB -->
+                <div class="social-sub-content" id="content-analytics" style="display: none;">
+                    <div class="stats-overview" style="margin-bottom: 30px;">
+                        <div class="stat-card">
+                            <h4>Total Posts</h4>
+                            <div class="number" id="analytics-total-posts">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Total Engagement</h4>
+                            <div class="number" id="analytics-total-engagement">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Avg Engagement Rate</h4>
+                            <div class="number" id="analytics-avg-rate">0%</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Total Impressions</h4>
+                            <div class="number" id="analytics-impressions">0</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📊 Performance by Platform</h3>
+                        <div id="platform-analytics" style="padding: 20px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                                <div style="padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                    <h4>🐦 Twitter</h4>
+                                    <p><small>Posts:</small> <strong id="analytics-twitter-posts">0</strong></p>
+                                    <p><small>Engagement:</small> <strong id="analytics-twitter-engagement">0</strong></p>
+                                </div>
+                                <div style="padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                    <h4>🤖 Reddit</h4>
+                                    <p><small>Posts:</small> <strong id="analytics-reddit-posts">0</strong></p>
+                                    <p><small>Engagement:</small> <strong id="analytics-reddit-engagement">0</strong></p>
+                                </div>
+                                <div style="padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                    <h4>📌 Pinterest</h4>
+                                    <p><small>Posts:</small> <strong id="analytics-pinterest-posts">0</strong></p>
+                                    <p><small>Engagement:</small> <strong id="analytics-pinterest-engagement">0</strong></p>
+                                </div>
+                                <div style="padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                    <h4>📸 Instagram</h4>
+                                    <p><small>Posts:</small> <strong id="analytics-instagram-posts">0</strong></p>
+                                    <p><small>Engagement:</small> <strong id="analytics-instagram-engagement">0</strong></p>
+                                </div>
+                                <div style="padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                    <h4>💼 LinkedIn</h4>
+                                    <p><small>Posts:</small> <strong id="analytics-linkedin-posts">0</strong></p>
+                                    <p><small>Engagement:</small> <strong id="analytics-linkedin-engagement">0</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connect Account Modal -->
+            <div id="connect-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Connect Social Media Account</h3>
+                        <button class="close-modal" onclick="closeConnectModal()">×</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Platform</label>
+                        <select id="connect-platform">
+                            <option value="">Select a platform...</option>
+                            <option value="twitter">🐦 Twitter</option>
+                            <option value="reddit">🤖 Reddit</option>
+                            <option value="pinterest">📌 Pinterest</option>
+                            <option value="instagram">📸 Instagram</option>
+                            <option value="linkedin">💼 LinkedIn</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Account Name</label>
+                        <input type="text" id="connect-account-name" placeholder="e.g., TravelSmarter Official">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Access Token</label>
+                        <input type="password" id="connect-token" placeholder="Paste your API token here">
+                    </div>
+
+                    <button onclick="connectAccount()" class="btn btn-primary" style="width: 100%; margin-top: 15px;">
+                        Connect Account
+                    </button>
                 </div>
             </div>
 
@@ -1067,6 +1437,340 @@
                         <label>
                             <input type="checkbox" id="send-digest" value="send_digest"> Send daily digest
                         </label>
+                    </div>
+
+                    <h4 style="margin-top: 30px; margin-bottom: 20px;">🐦 Twitter Configuration</h4>
+
+                    <div class="form-group">
+                        <label>Twitter API Key</label>
+                        <input type="text" id="twitter-api-key" placeholder="Your API Key from developer.twitter.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Twitter API Secret</label>
+                        <input type="password" id="twitter-api-secret" placeholder="Your API Secret">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Twitter Access Token</label>
+                        <input type="text" id="twitter-access-token" placeholder="Your Access Token">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Twitter Access Secret</label>
+                        <input type="password" id="twitter-access-secret" placeholder="Your Access Token Secret">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Twitter Bearer Token</label>
+                        <input type="text" id="twitter-bearer-token" placeholder="Your Bearer Token">
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="twitter-auto-posting" value="twitter_auto_posting"> Enable Twitter Auto-Posting
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Twitter Posting Schedule</label>
+                        <select id="twitter-posting-schedule" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                            <option value="recommended">Recommended (3x daily)</option>
+                            <option value="daily">Daily (1x)</option>
+                            <option value="hourly">Hourly</option>
+                            <option value="category">Category Rotation</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>First Posting Time (24-hour format)</label>
+                        <input type="time" id="twitter-posting-time" placeholder="09:00">
+                    </div>
+
+                    <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+                        <strong>ℹ️ Twitter Setup:</strong>
+                        <ol style="margin-top: 10px; margin-left: 20px; font-size: 13px; color: #555;">
+                            <li>Go to <a href="https://developer.twitter.com" target="_blank" style="color: #667eea;">developer.twitter.com</a></li>
+                            <li>Create an app and go to "Keys and tokens"</li>
+                            <li>Copy all 5 credentials below</li>
+                            <li>Save settings</li>
+                            <li>Server will automatically initialize Twitter posting</li>
+                        </ol>
+                    </div>
+
+                    <h4 style="margin-top: 30px; margin-bottom: 20px;">📱 Social Media Configuration</h4>
+
+                    <!-- Platform Settings Tabs -->
+                    <div style="margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; display: flex; gap: 10px; overflow-x: auto;">
+                        <button class="platform-tab active" data-platform="twitter" onclick="switchPlatformTab('twitter')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid #667eea; color: #667eea; font-weight: 600;">🐦 Twitter</button>
+                        <button class="platform-tab" data-platform="reddit" onclick="switchPlatformTab('reddit')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">🤖 Reddit</button>
+                        <button class="platform-tab" data-platform="pinterest" onclick="switchPlatformTab('pinterest')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">📌 Pinterest</button>
+                        <button class="platform-tab" data-platform="instagram" onclick="switchPlatformTab('instagram')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">📸 Instagram</button>
+                        <button class="platform-tab" data-platform="linkedin" onclick="switchPlatformTab('linkedin')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">💼 LinkedIn</button>
+                        <button class="platform-tab" data-platform="medium" onclick="switchPlatformTab('medium')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">✍️ Medium</button>
+                    </div>
+
+                    <!-- Twitter Settings -->
+                    <div class="platform-settings active" id="settings-twitter">
+                        <h5 style="margin-bottom: 15px; color: #2c3e50;">🔐 API Credentials</h5>
+                        <div class="form-group">
+                            <label>Twitter API Key</label>
+                            <input type="text" id="twitter-api-key" placeholder="Your API Key" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Twitter API Secret</label>
+                            <input type="password" id="twitter-api-secret" placeholder="Your API Secret" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Twitter Access Token</label>
+                            <input type="text" id="twitter-access-token" placeholder="Your Access Token" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Twitter Access Token Secret</label>
+                            <input type="password" id="twitter-access-secret" placeholder="Your Access Token Secret" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Twitter Bearer Token</label>
+                            <input type="text" id="twitter-bearer-token" placeholder="Your Bearer Token" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+
+                        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+                        <h5 style="margin-bottom: 15px; color: #2c3e50;">⏱️ Posting Schedule</h5>
+                        <div class="form-group">
+                            <label>Posting Frequency</label>
+                            <select id="twitter-frequency" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="daily">Once Daily</option>
+                                <option value="multiple_daily" selected>Multiple Times Daily (3x)</option>
+                                <option value="hourly">Hourly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Posts Per Day</label>
+                            <input type="number" id="twitter-max-posts" min="1" max="24" value="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Posting Hours (comma-separated, 24h format)</label>
+                            <input type="text" id="twitter-hours" placeholder="9,14,19" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <!-- Reddit Settings -->
+                    <div class="platform-settings" id="settings-reddit" style="display: none;">
+                        <h5 style="margin-bottom: 15px; color: #2c3e50;">🔐 API Credentials</h5>
+                        <div class="form-group">
+                            <label>Reddit Client ID</label>
+                            <input type="text" id="reddit-client-id" placeholder="Your Client ID" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Reddit Client Secret</label>
+                            <input type="password" id="reddit-client-secret" placeholder="Your Client Secret" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Reddit Username</label>
+                            <input type="text" id="reddit-username" placeholder="Your Reddit Username" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Reddit Password</label>
+                            <input type="password" id="reddit-password" placeholder="Your Reddit Password" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+
+                        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+                        <h5 style="margin-bottom: 15px; color: #2c3e50;">⏱️ Posting Schedule</h5>
+                        <div class="form-group">
+                            <label>Posting Frequency</label>
+                            <select id="reddit-frequency" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="daily" selected>Once Daily</option>
+                                <option value="multiple_daily">Multiple Times Daily</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Posts Per Day</label>
+                            <input type="number" id="reddit-max-posts" min="1" max="10" value="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Subreddits (comma-separated)</label>
+                            <input type="text" id="reddit-subreddits" placeholder="budgettravel,travel,solotravel" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <!-- Pinterest Settings -->
+                    <div class="platform-settings" id="settings-pinterest" style="display: none;">
+                        <h5 style="margin-bottom: 15px; color: #2c3e50;">🔐 API Credentials</h5>
+                        <div class="form-group">
+                            <label>Pinterest Access Token</label>
+                            <input type="password" id="pinterest-access-token" placeholder="Your Access Token" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Pinterest Business Account ID</label>
+                            <input type="text" id="pinterest-account-id" placeholder="Your Business Account ID" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Pinterest Board ID</label>
+                            <input type="text" id="pinterest-board-id" placeholder="Your Board ID" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+
+                        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+                        <h5 style="margin-bottom: 15px; color: #2c3e50;">⏱️ Posting Schedule</h5>
+                        <div class="form-group">
+                            <label>Posting Frequency</label>
+                            <select id="pinterest-frequency" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="daily" selected>Once Daily</option>
+                                <option value="multiple_daily">Multiple Times Daily</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Posts Per Day</label>
+                            <input type="number" id="pinterest-max-posts" min="1" max="10" value="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Posting Time (24h format)</label>
+                            <input type="time" id="pinterest-time" value="20:00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <!-- Instagram Settings -->
+                    <div class="platform-settings" id="settings-instagram" style="display: none;">
+                        <h5 style="margin-bottom: 15px; color: #2c3e50;">🔐 API Credentials</h5>
+                        <div class="form-group">
+                            <label>Instagram Access Token</label>
+                            <input type="password" id="instagram-access-token" placeholder="Your Access Token" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Instagram Business Account ID</label>
+                            <input type="text" id="instagram-account-id" placeholder="Your Business Account ID" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+
+                        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+                        <h5 style="margin-bottom: 15px; color: #2c3e50;">⏱️ Posting Schedule</h5>
+                        <div class="form-group">
+                            <label>Posting Frequency</label>
+                            <select id="instagram-frequency" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="daily" selected>Once Daily</option>
+                                <option value="multiple_daily">Multiple Times Daily</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Posts Per Day</label>
+                            <input type="number" id="instagram-max-posts" min="1" max="10" value="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Posting Hours (comma-separated, 24h format)</label>
+                            <input type="text" id="instagram-hours" placeholder="11,18" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <!-- LinkedIn Settings -->
+                    <div class="platform-settings" id="settings-linkedin" style="display: none;">
+                        <h5 style="margin-bottom: 15px; color: #2c3e50;">🔐 API Credentials</h5>
+                        <div class="form-group">
+                            <label>LinkedIn Access Token</label>
+                            <input type="password" id="linkedin-access-token" placeholder="Your Access Token" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>LinkedIn Organization ID</label>
+                            <input type="text" id="linkedin-org-id" placeholder="Your Organization ID" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+
+                        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+                        <h5 style="margin-bottom: 15px; color: #2c3e50;">⏱️ Posting Schedule</h5>
+                        <div class="form-group">
+                            <label>Posting Frequency</label>
+                            <select id="linkedin-frequency" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="daily" selected>Once Daily</option>
+                                <option value="multiple_daily">Multiple Times Daily</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Posts Per Day</label>
+                            <input type="number" id="linkedin-max-posts" min="1" max="5" value="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Posting Time (24h format)</label>
+                            <input type="time" id="linkedin-time" value="09:00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <!-- Medium Settings -->
+                    <div class="platform-settings" id="settings-medium" style="display: none;">
+                        <div style="background:#fff8f0;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:6px;margin-bottom:20px;">
+                            <strong>✍️ Medium — Halbautomatischer Modus</strong><br>
+                            <span style="font-size:13px;color:#666;">Da Medium die API eingestellt hat, generiert die App den Artikel + Cover-Bild für dich. Du kopierst es manuell in Medium und klickst dann "Als gepostet markieren".</span>
+                        </div>
+
+                        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+                            <button onclick="generateMediumArticle()" id="medium-generate-btn"
+                                style="background:#667eea;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600;">
+                                ✨ Artikel generieren
+                            </button>
+                            <select id="medium-topic-select" style="padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+                                <option value="">— Nächstes Thema (automatisch) —</option>
+                            </select>
+                        </div>
+
+                        <div id="medium-generator-result" style="display:none;">
+                            <!-- Title -->
+                            <div style="margin-bottom:16px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                    <strong>📌 Titel</strong>
+                                    <button onclick="copyToClipboard('medium-title-text')" style="font-size:12px;padding:4px 10px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;">📋 Kopieren</button>
+                                </div>
+                                <div id="medium-title-text" style="background:#f8f9fa;padding:12px;border-radius:6px;font-size:15px;font-weight:600;border:1px solid #e5e7eb;"></div>
+                            </div>
+
+                            <!-- Tags -->
+                            <div style="margin-bottom:16px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                    <strong>🏷️ Tags</strong>
+                                    <button onclick="copyToClipboard('medium-tags-text')" style="font-size:12px;padding:4px 10px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;">📋 Kopieren</button>
+                                </div>
+                                <div id="medium-tags-text" style="background:#f8f9fa;padding:10px;border-radius:6px;font-size:13px;color:#555;border:1px solid #e5e7eb;"></div>
+                            </div>
+
+                            <!-- Cover Image -->
+                            <div id="medium-image-section" style="margin-bottom:16px;display:none;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                    <strong>🖼️ Cover-Bild</strong>
+                                    <a id="medium-image-download" href="#" download="medium-cover.jpg" style="font-size:12px;padding:4px 10px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;text-decoration:none;color:#333;">⬇️ Herunterladen</a>
+                                </div>
+                                <img id="medium-cover-img" src="" style="width:100%;max-width:600px;border-radius:8px;border:1px solid #e5e7eb;" />
+                            </div>
+
+                            <!-- Article Body -->
+                            <div style="margin-bottom:16px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                    <strong>📄 Artikel (Markdown)</strong>
+                                    <button onclick="copyToClipboard('medium-body-text')" style="font-size:12px;padding:4px 10px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;">📋 Kopieren</button>
+                                </div>
+                                <textarea id="medium-body-text" rows="18" style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:monospace;resize:vertical;box-sizing:border-box;"></textarea>
+                            </div>
+
+                            <!-- Mark as posted -->
+                            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:16px;">
+                                <strong style="color:#166534;">✅ Schritt 2: Nachdem du in Medium gepostet hast</strong><br>
+                                <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+                                    <input type="text" id="medium-posted-url" placeholder="Medium Artikel URL (optional)" style="flex:1;min-width:200px;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                                    <button onclick="markMediumAsPosted()" style="background:#16a34a;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;">Als gepostet markieren</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr style="margin:24px 0;border:none;border-top:1px solid #e5e7eb;">
+                        <h5 style="margin-bottom:12px;color:#2c3e50;">📊 Zuletzt generierte Artikel</h5>
+                        <div id="medium-recent-posts" style="font-size:13px;color:#6b7280;">Wird geladen...</div>
+                    </div>
+
+                    <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin-top: 20px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+                        <strong>ℹ️ Social Media Configuration:</strong>
+                        <ul style="margin-top: 10px; margin-left: 20px; font-size: 13px; color: #555;">
+                            <li>Configure posting frequency and timing for each platform</li>
+                            <li>Go to Social Media tab to connect accounts</li>
+                            <li>Accounts must be connected before posting can begin</li>
+                            <li>Settings are applied globally to all connected accounts on each platform</li>
+                        </ul>
                     </div>
 
                     <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 20px;">Save Settings</button>
@@ -1356,5 +2060,6 @@
     </div>
 
     <script src="dashboard.js"></script>
+    <script src="components/socialMedia.js"></script>
 </body>
 </html>

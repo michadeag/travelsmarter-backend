@@ -1,25 +1,43 @@
 // Admin Dashboard JavaScript
-// Connects to backend API for data management
+// Connects to backend API for data management with JWT authentication
 
 // Determine correct API URL based on current domain
 let API_URL;
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    // Local development
-    API_URL = 'http://localhost:5000';
+    API_URL = localStorage.getItem('apiUrl') || 'http://localhost:5000';
 } else {
-    // Production - use same domain for both frontend and backend
-    API_URL = window.location.origin;
+    // For production, use api subdomain
+    const apiUrl = localStorage.getItem('apiUrl');
+    if (apiUrl) {
+        API_URL = apiUrl;
+    } else if (window.location.hostname === 'travelsmarterapp.com') {
+        API_URL = 'https://api.travelsmarterapp.com';
+    } else {
+        API_URL = window.location.origin;
+    }
 }
 
-console.log('Admin Dashboard using API:', API_URL);
+console.log('🔒 Admin Dashboard using API:', API_URL);
 
-// Helper function to get current auth token
-function getAuthToken() {
-    return localStorage.getItem('userToken') || localStorage.getItem('adminToken');
+// Global state for dashboard data
+let usersData = [];
+let dealsData = [];
+let hacksData = [];
+let promosData = [];
+
+// Helper function to get admin JWT token
+function getAdminToken() {
+    return localStorage.getItem('adminToken');
 }
 
-// Deprecated: Use getAuthToken() instead
-const API_TOKEN = null;
+// Helper function to get auth headers with JWT token
+function getAuthHeaders() {
+    const token = getAdminToken();
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+    };
+}
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,9 +47,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initDashboard() {
     // Check if logged in
-    if (!getAuthToken()) {
+    if (!getAdminToken()) {
         redirectToLogin();
         return;
+    }
+
+    // Verify token is still valid
+    verifyAdminToken();
+
+    // Setup logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
     }
 
     // Load dashboard data
@@ -42,6 +69,7 @@ function initDashboard() {
     loadHacks();
     loadPromos();
     loadEmailTemplates();
+    loadAnalytics();
     loadRecentActivities();
     loadSettings();
 
@@ -121,13 +149,13 @@ async function loadDashboardStats() {
         // Fetch stats from API
         const [usersRes, subsRes, dealsRes] = await Promise.all([
             fetch(`${API_URL}/api/auth/users/count`, {
-                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                headers: getAuthHeaders()
             }),
             fetch(`${API_URL}/api/subscriptions/stats`, {
-                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                headers: getAuthHeaders()
             }),
-            fetch(`${API_URL}/api/deals/count`, {
-                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            fetch(`${API_URL}/api/admin/deals/count`, {
+                headers: getAuthHeaders()
             })
         ]);
 
@@ -151,7 +179,7 @@ async function loadDashboardStats() {
 async function loadSubscriptionStats() {
     try {
         const response = await fetch(`${API_URL}/api/subscriptions/stats`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -178,21 +206,19 @@ async function loadSubscriptionStats() {
 // USERS MANAGEMENT
 async function loadUsers() {
     try {
-        const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken');
-        if (!token) {
-            console.error('No authentication token found');
-            return;
-        }
-
-        const response = await fetch(`${API_URL}/api/auth/users`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+        const response = await fetch(`${API_URL}/api/admin/activities`, {
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
             const data = await response.json();
-            displayUsers(data.users || []);
+            displayUsers(data.activities || []);
+        } else if (response.status === 401) {
+            console.error('Unauthorized - token may be expired');
+            redirectToLogin();
         } else {
             console.error('Failed to load users:', response.status, response.statusText);
+            displayError('users-table', `Error: ${response.status}`);
         }
     } catch (error) {
         console.error('Error loading users:', error);
@@ -201,6 +227,9 @@ async function loadUsers() {
 }
 
 function displayUsers(users) {
+    // Store users data globally for use in edit/delete operations
+    usersData = users;
+
     const tbody = document.getElementById('users-table');
 
     if (users.length === 0) {
@@ -274,20 +303,17 @@ async function saveUser() {
     }
 
     try {
-        let url = `${API_URL}/api/auth/users`;
+        let url = `${API_URL}/api/admin/users`;
         let method = 'POST';
 
         if (isEditing) {
-            url = `${API_URL}/api/auth/users/${userId}`;
+            url = `${API_URL}/api/admin/users/${userId}`;
             method = 'PUT';
         }
 
         const response = await fetch(url, {
             method,
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 email,
                 firstName,
@@ -315,18 +341,8 @@ async function saveUser() {
 
 async function editUser(userId) {
     try {
-        // Fetch user data
-        const response = await fetch(`${API_URL}/api/auth/users`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-
-        if (!response.ok) {
-            showAlert('Failed to load user data', 'error');
-            return;
-        }
-
-        const data = await response.json();
-        const user = data.users.find(u => u.id === userId);
+        // Find user from stored global data
+        const user = usersData.find(u => u.id === userId);
 
         if (!user) {
             showAlert('User not found', 'error');
@@ -363,9 +379,9 @@ async function deleteUser(userId) {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/auth/users/${userId}`, {
+        const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -383,8 +399,8 @@ async function deleteUser(userId) {
 // SUBSCRIPTIONS
 async function loadSubscriptions() {
     try {
-        const response = await fetch(`${API_URL}/api/subscriptions`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/subscriptions`, {
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -442,7 +458,7 @@ function closeSubscriptionModal() {
 async function editSubscription(subId) {
     try {
         const response = await fetch(`${API_URL}/api/subscriptions`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) {
@@ -476,7 +492,7 @@ async function deleteSubscription(subId) {
     try {
         const response = await fetch(`${API_URL}/api/subscriptions/${subId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -502,12 +518,9 @@ async function saveSubscription() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/subscriptions/${subId}`, {
+        const response = await fetch(`${API_URL}/api/admin/subscriptions/${subId}`, {
             method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ tier, status })
         });
 
@@ -516,19 +529,21 @@ async function saveSubscription() {
             closeSubscriptionModal();
             loadSubscriptions();
         } else {
-            showAlert('Failed to update subscription', 'error');
+            const errorData = await response.json();
+            console.error('API Error:', errorData);
+            showAlert(errorData.message || 'Failed to update subscription', 'error');
         }
     } catch (error) {
         console.error('Error updating subscription:', error);
-        showAlert('Error updating subscription', 'error');
+        showAlert(error.message || 'Error updating subscription', 'error');
     }
 }
 
 // DEALS
 async function loadDeals() {
     try {
-        const response = await fetch(`${API_URL}/api/deals?limit=50`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/deals?limit=50`, {
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -546,6 +561,9 @@ async function loadDeals() {
 }
 
 function displayDeals(deals) {
+    // Store deals data globally for use in edit/delete operations
+    dealsData = deals;
+
     const tbody = document.getElementById('deals-table');
 
     if (deals.length === 0) {
@@ -619,20 +637,17 @@ async function saveDeal() {
     }
 
     try {
-        let url = `${API_URL}/api/deals`;
+        let url = `${API_URL}/api/admin/deals`;
         let method = 'POST';
 
         if (isEditing) {
-            url = `${API_URL}/api/deals/${dealId}`;
+            url = `${API_URL}/api/admin/deals/${dealId}`;
             method = 'PUT';
         }
 
         const response = await fetch(url, {
             method,
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 title,
                 description,
@@ -648,27 +663,25 @@ async function saveDeal() {
             closeDealModal();
             loadDeals();
         } else {
-            showAlert('Failed to save deal', 'error');
+            const errorData = await response.json();
+            console.error('API Error:', errorData);
+            showAlert(errorData.message || 'Failed to save deal', 'error');
         }
     } catch (error) {
         console.error('Error saving deal:', error);
-        showAlert('Error saving deal', 'error');
+        showAlert(error.message || 'Error saving deal', 'error');
     }
 }
 
 async function editDeal(dealId) {
     try {
-        const response = await fetch(`${API_URL}/api/deals/${dealId}`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
+        // Find deal from stored global data
+        const deal = dealsData.find(d => d.id === dealId);
 
-        if (!response.ok) {
-            showAlert('Failed to load deal data', 'error');
+        if (!deal) {
+            showAlert('Deal not found', 'error');
             return;
         }
-
-        const data = await response.json();
-        const deal = data.deal;
 
         document.getElementById('modal-deal-title').value = deal.title;
         document.getElementById('modal-deal-description').value = deal.description || '';
@@ -697,9 +710,9 @@ async function deleteDeal(dealId) {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/deals/${dealId}`, {
+        const response = await fetch(`${API_URL}/api/admin/deals/${dealId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -735,8 +748,8 @@ function closePromoModal() {
 
 async function loadPromos() {
     try {
-        const response = await fetch(`${API_URL}/api/promos`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/promos`, {
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -754,6 +767,9 @@ async function loadPromos() {
 }
 
 function displayPromos(promos) {
+    // Store promos data globally for use in edit/delete operations
+    promosData = promos;
+
     const tbody = document.getElementById('promos-table');
 
     if (promos.length === 0) {
@@ -795,20 +811,17 @@ async function savePromo() {
     }
 
     try {
-        let url = `${API_URL}/api/promos`;
+        let url = `${API_URL}/api/admin/promos`;
         let method = 'POST';
 
         if (isEditing) {
-            url = `${API_URL}/api/promos/${promoId}`;
+            url = `${API_URL}/api/admin/promos/${promoId}`;
             method = 'PUT';
         }
 
         const response = await fetch(url, {
             method,
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 code,
                 discount_percent: parseFloat(percent),
@@ -823,27 +836,20 @@ async function savePromo() {
             closePromoModal();
             loadPromos();
         } else {
-            showAlert('Failed to save promo code', 'error');
+            const errorData = await response.json();
+            console.error('API Error:', errorData);
+            showAlert(errorData.message || 'Failed to save promo code', 'error');
         }
     } catch (error) {
         console.error('Error saving promo:', error);
-        showAlert('Error saving promo code', 'error');
+        showAlert(error.message || 'Error saving promo code', 'error');
     }
 }
 
 async function editPromo(promoId) {
     try {
-        const response = await fetch(`${API_URL}/api/promos`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-
-        if (!response.ok) {
-            showAlert('Failed to load promo data', 'error');
-            return;
-        }
-
-        const data = await response.json();
-        const promo = data.data.find(p => p.id === promoId);
+        // Find promo from stored global data
+        const promo = promosData.find(p => p.id === promoId);
 
         if (!promo) {
             showAlert('Promo not found', 'error');
@@ -874,9 +880,9 @@ async function deletePromo(promoId) {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/promos/${promoId}`, {
+        const response = await fetch(`${API_URL}/api/admin/promos/${promoId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -901,7 +907,7 @@ function loadHacks() {
 async function loadRecentActivities() {
     try {
         const response = await fetch(`${API_URL}/api/admin/activities?limit=10`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -935,46 +941,66 @@ function displayActivities(activities) {
 async function loadSettings() {
     try {
         // Try to fetch from backend API
-        console.log('🔍 Loading settings from:', `${API_URL}/api/admin/settings`);
         const response = await fetch(`${API_URL}/api/admin/settings`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
-
-        console.log('📡 Settings API response status:', response.status);
 
         if (response.ok) {
             const data = await response.json();
-            console.log('📊 Settings API response data:', data);
             const settings = data.data || {};
-
-            console.log('🔧 Found settings:', Object.keys(settings));
 
             // Populate form fields with settings values
             if (settings.sendgrid_api_key?.value) {
-                console.log('✅ Setting SendGrid key');
                 document.getElementById('sendgrid-key').value = settings.sendgrid_api_key.value;
-            } else {
-                console.warn('⚠️ No SendGrid API key value found');
             }
-
             if (settings.sender_email?.value) {
-                console.log('✅ Setting sender email');
                 document.getElementById('sender-email').value = settings.sender_email.value;
             }
             if (settings.stripe_secret_key?.value) {
-                console.log('✅ Setting Stripe secret key');
                 document.getElementById('stripe-key').value = settings.stripe_secret_key.value;
             }
             if (settings.stripe_publishable_key?.value) {
-                console.log('✅ Setting Stripe publishable key');
                 const pubKeyField = document.getElementById('stripe-pub-key');
                 if (pubKeyField) {
                     pubKeyField.value = settings.stripe_publishable_key.value;
                 }
             }
             if (settings.stripe_webhook_secret?.value) {
-                console.log('✅ Setting webhook secret');
                 document.getElementById('webhook-secret').value = settings.stripe_webhook_secret.value;
+            }
+
+            // Load Twitter settings
+            if (settings.twitter_api_key?.value) {
+                const el = document.getElementById('twitter-api-key');
+                if (el) el.value = settings.twitter_api_key.value;
+            }
+            if (settings.twitter_api_secret?.value) {
+                const el = document.getElementById('twitter-api-secret');
+                if (el) el.value = settings.twitter_api_secret.value;
+            }
+            if (settings.twitter_access_token?.value) {
+                const el = document.getElementById('twitter-access-token');
+                if (el) el.value = settings.twitter_access_token.value;
+            }
+            if (settings.twitter_access_secret?.value) {
+                const el = document.getElementById('twitter-access-secret');
+                if (el) el.value = settings.twitter_access_secret.value;
+            }
+            if (settings.twitter_bearer_token?.value) {
+                const el = document.getElementById('twitter-bearer-token');
+                if (el) el.value = settings.twitter_bearer_token.value;
+            }
+            if (settings.twitter_auto_posting?.value) {
+                const el = document.getElementById('twitter-auto-posting');
+                if (el) el.checked = settings.twitter_auto_posting.value === 'true';
+            }
+            if (settings.twitter_posting_schedule?.value) {
+                const el = document.getElementById('twitter-posting-schedule');
+                if (el) el.value = settings.twitter_posting_schedule.value;
+            }
+            if (settings.twitter_posting_time?.value) {
+                const el = document.getElementById('twitter-posting-time');
+                if (el) el.value = settings.twitter_posting_time.value;
             }
 
             // Load checkboxes
@@ -992,12 +1018,8 @@ async function loadSettings() {
                 sendDigest.checked = settings.send_daily_digest?.value === 'true';
             }
 
-            console.log('✅ Settings loaded successfully from backend database');
+            console.log('✅ Settings loaded from backend');
             return; // Success, don't need localStorage fallback
-        } else {
-            console.warn('⚠️ Settings API returned status:', response.status, response.statusText);
-            const errorData = await response.json().catch(() => ({}));
-            console.warn('Error details:', errorData);
         }
     } catch (error) {
         console.warn('Backend API unavailable, trying localStorage fallback:', error.message);
@@ -1056,6 +1078,16 @@ async function saveSettings() {
     const stripePubKey = document.getElementById('stripe-pub-key')?.value || '';
     const webhookSecret = document.getElementById('webhook-secret').value;
 
+    // Twitter settings
+    const twitterApiKey = document.getElementById('twitter-api-key')?.value || '';
+    const twitterApiSecret = document.getElementById('twitter-api-secret')?.value || '';
+    const twitterAccessToken = document.getElementById('twitter-access-token')?.value || '';
+    const twitterAccessSecret = document.getElementById('twitter-access-secret')?.value || '';
+    const twitterBearerToken = document.getElementById('twitter-bearer-token')?.value || '';
+    const twitterAutoPosting = document.getElementById('twitter-auto-posting')?.checked || false;
+    const twitterPostingSchedule = document.getElementById('twitter-posting-schedule')?.value || 'recommended';
+    const twitterPostingTime = document.getElementById('twitter-posting-time')?.value || '09:00';
+
     // Checkbox values
     const sendSignupEmail = document.getElementById('send-signup').checked;
     const sendSubEmail = document.getElementById('send-sub').checked;
@@ -1078,29 +1110,69 @@ async function saveSettings() {
         localStorage.setItem('admin_send_sub_email', sendSubEmail.toString());
         localStorage.setItem('admin_send_digest', sendDigest.toString());
 
+        // Save Twitter settings
+        if (twitterApiKey) localStorage.setItem('admin_twitter_api_key', twitterApiKey);
+        if (twitterApiSecret) localStorage.setItem('admin_twitter_api_secret', twitterApiSecret);
+        if (twitterAccessToken) localStorage.setItem('admin_twitter_access_token', twitterAccessToken);
+        if (twitterAccessSecret) localStorage.setItem('admin_twitter_access_secret', twitterAccessSecret);
+        if (twitterBearerToken) localStorage.setItem('admin_twitter_bearer_token', twitterBearerToken);
+        localStorage.setItem('admin_twitter_auto_posting', twitterAutoPosting.toString());
+        localStorage.setItem('admin_twitter_posting_schedule', twitterPostingSchedule);
+        localStorage.setItem('admin_twitter_posting_time', twitterPostingTime);
+
         console.log('✅ Settings saved to localStorage');
-        showAlert('Settings saved successfully! Stripe key is ready for checkout.', 'success');
+        showAlert('Settings saved successfully!', 'success');
 
         // Optional: Try to sync to backend (non-blocking)
         try {
+            const settingsData = {
+                'sendgrid_api_key': sendgridKey,
+                'sender_email': senderEmail,
+                'stripe_secret_key': stripeKey,
+                'stripe_publishable_key': stripePubKey,
+                'stripe_webhook_secret': webhookSecret,
+                'send_email_on_signup': sendSignupEmail.toString(),
+                'send_email_on_subscription': sendSubEmail.toString(),
+                'send_daily_digest': sendDigest.toString()
+            };
+
+            // Add Twitter settings if provided
+            if (twitterApiKey) {
+                settingsData['twitter_api_key'] = twitterApiKey;
+                settingsData['twitter_api_secret'] = twitterApiSecret;
+                settingsData['twitter_access_token'] = twitterAccessToken;
+                settingsData['twitter_access_secret'] = twitterAccessSecret;
+                settingsData['twitter_bearer_token'] = twitterBearerToken;
+                settingsData['twitter_auto_posting'] = twitterAutoPosting.toString();
+                settingsData['twitter_posting_schedule'] = twitterPostingSchedule;
+                settingsData['twitter_posting_time'] = twitterPostingTime;
+            }
+
             await fetch(`${API_URL}/api/admin/settings/batch/update`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${getAuthToken()}`,
+                    'Authorization': `Bearer ${getAdminToken()}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    'sendgrid_api_key': sendgridKey,
-                    'sender_email': senderEmail,
-                    'stripe_secret_key': stripeKey,
-                    'stripe_publishable_key': stripePubKey,
-                    'stripe_webhook_secret': webhookSecret,
-                    'send_email_on_signup': sendSignupEmail.toString(),
-                    'send_email_on_subscription': sendSubEmail.toString(),
-                    'send_daily_digest': sendDigest.toString()
-                })
+                body: JSON.stringify(settingsData)
             });
             console.log('✅ Settings also synced to backend database');
+
+            // If Twitter credentials were saved, reload the Twitter service
+            if (twitterApiKey && twitterApiSecret) {
+                try {
+                    await fetch(`${API_URL}/api/twitter/reload-settings`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${getAdminToken()}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    console.log('✅ Twitter service reinitialized with new credentials');
+                } catch (twitterError) {
+                    console.warn('⚠️ Twitter service reload failed (non-blocking):', twitterError.message);
+                }
+            }
         } catch (backendError) {
             console.warn('⚠️ Backend sync failed (non-blocking):', backendError.message);
             // This is OK - localStorage is our primary storage now
@@ -1112,15 +1184,60 @@ async function saveSettings() {
 }
 
 // AUTHENTICATION
+// Verify admin token is valid
+async function verifyAdminToken() {
+    try {
+        const token = getAdminToken();
+        if (!token) {
+            redirectToLogin();
+            return;
+        }
+
+        const response = await fetch(`${API_URL}/api/admin-auth/verify-token`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            console.warn('Token verification failed');
+            redirectToLogin();
+        }
+    } catch (error) {
+        console.error('Token verification error:', error);
+        redirectToLogin();
+    }
+}
+
+// Handle logout
+async function handleLogout() {
+    try {
+        const token = getAdminToken();
+        await fetch(`${API_URL}/api/admin-auth/logout`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        }).catch(() => {}); // Ignore errors
+
+        // Clear local storage
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminName');
+        localStorage.removeItem('adminEmail');
+        localStorage.removeItem('adminRole');
+        localStorage.removeItem('rememberMe');
+
+        redirectToLogin();
+    } catch (error) {
+        console.error('Logout error:', error);
+        redirectToLogin();
+    }
+}
+
+// Wrapper function for logout button
 function logout() {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminName');
-    localStorage.removeItem('apiUrl');
-    redirectToLogin();
+    handleLogout();
 }
 
 function redirectToLogin() {
-    window.location.href = 'login.html';
+    window.location.href = 'login-secure.html';
 }
 
 // UTILITIES
@@ -1152,12 +1269,367 @@ function displayError(elementId, message) {
     tbody.innerHTML = `<tr><td colspan="10" class="empty-state">${message}</td></tr>`;
 }
 
+// ANALYTICS
+async function loadAnalytics() {
+    try {
+        const response = await fetch(`${API_URL}/api/admin/analytics/summary`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            console.error('Failed to load analytics');
+            return;
+        }
+
+        const data = await response.json();
+        const { signups, conversions, churn, ltv } = data.data;
+
+        // Update signup card
+        document.getElementById('analytics-signups').innerHTML = `
+            <h3>Signups (This Month)</h3>
+            <div class="number">+${signups.thisMonth}</div>
+            <div class="change">${signups.label}</div>
+        `;
+
+        // Update conversion card
+        document.getElementById('analytics-conversions').innerHTML = `
+            <h3>Trial Conversions</h3>
+            <div class="number">${conversions.rate}%</div>
+            <div class="change">${conversions.label}</div>
+        `;
+
+        // Update churn card
+        document.getElementById('analytics-churn').innerHTML = `
+            <h3>Churn Rate</h3>
+            <div class="number">${churn.rate}%</div>
+            <div class="change">${churn.label}</div>
+        `;
+
+        // Update LTV card
+        document.getElementById('analytics-ltv').innerHTML = `
+            <h3>Avg LTV</h3>
+            <div class="number">€${ltv.ltv}</div>
+            <div class="change">${ltv.label}</div>
+        `;
+
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+    }
+}
+
+// TWITTER MANAGEMENT
+let twitterRecentPostings = [];
+
+async function loadTwitterStatus() {
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/status`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            document.getElementById('twitter-status').innerHTML = `
+                <p style="color: #ffcccc;">❌ Twitter service not configured</p>
+                <p style="font-size: 12px; opacity: 0.8;">Add Twitter API credentials to server .env file</p>
+            `;
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.configured) {
+            document.getElementById('twitter-status').innerHTML = `
+                <p style="color: #ccffcc;">✅ Twitter API Connected</p>
+                <p style="font-size: 14px; margin-top: 10px;">
+                    <strong>Scheduled Jobs:</strong> ${data.scheduledJobs}<br>
+                    <strong>Total Posts:</strong> ${data.totalPosts || 0}<br>
+                    ${data.jobs.length > 0 ? '<strong>Active Schedules:</strong><br>' + data.jobs.map(j => `• ${j.type} ${j.time ? 'at ' + j.time : ''}`).join('<br>') : 'No active schedule'}
+                </p>
+            `;
+        } else {
+            document.getElementById('twitter-status').innerHTML = `
+                <p style="color: #ffcccc;">⚠️ Twitter Not Configured</p>
+                <p style="font-size: 12px; opacity: 0.8;">Add Twitter API keys to server environment</p>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading Twitter status:', error);
+        document.getElementById('twitter-status').innerHTML = `
+            <p style="color: #ffcccc;">❌ Error loading status</p>
+        `;
+    }
+}
+
+async function loadTwitterTips() {
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/tips`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) throw new Error('Failed to load tips');
+
+        const data = await response.json();
+        const tips = data.tips || [];
+
+        // Group by category
+        const byCategory = {};
+        tips.forEach(tip => {
+            if (!byCategory[tip.category]) {
+                byCategory[tip.category] = [];
+            }
+            byCategory[tip.category].push(tip);
+        });
+
+        let html = '';
+        Object.keys(byCategory).forEach(category => {
+            html += `
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #667eea;">${category.toUpperCase()}</strong>
+                    <div style="margin-top: 8px; font-size: 13px;">
+            `;
+            byCategory[category].forEach(tip => {
+                html += `<p style="margin: 5px 0; padding: 8px; background: #f5f5f5; border-radius: 4px;">${tip.tip.substring(0, 80)}...</p>`;
+            });
+            html += `</div></div>`;
+        });
+
+        document.getElementById('tips-preview').innerHTML = html;
+    } catch (error) {
+        console.error('Error loading tips:', error);
+        document.getElementById('tips-preview').innerHTML = '<p style="color: #ff6b6b;">Error loading tips</p>';
+    }
+}
+
+async function postRandomTip() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Posting...';
+
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/post-random`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert('✅ Tweet posted successfully!', 'success');
+            addRecentPosting('Random Tip', data.text);
+            loadTwitterStatus();
+        } else {
+            showAlert('❌ Failed to post: ' + data.message, 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error posting tweet: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '📱 Post Random Tip';
+    }
+}
+
+async function postByCategory() {
+    const category = document.getElementById('category-select').value;
+
+    if (!category) {
+        showAlert('Please select a category', 'error');
+        return;
+    }
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Posting...';
+
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/post-category`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ category })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert(`✅ ${category} tip posted!`, 'success');
+            addRecentPosting(`Category: ${category}`, data.text);
+            document.getElementById('category-select').value = '';
+            loadTwitterStatus();
+        } else {
+            showAlert('❌ Failed to post: ' + data.message, 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error posting tweet: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Post from Category';
+    }
+}
+
+// Character counter for custom tweet
+document.addEventListener('DOMContentLoaded', () => {
+    const textarea = document.getElementById('custom-tweet');
+    if (textarea) {
+        textarea.addEventListener('input', (e) => {
+            document.getElementById('char-count').textContent = e.target.value.length;
+            if (e.target.value.length > 280) {
+                e.target.style.borderColor = '#ff6b6b';
+            } else {
+                e.target.style.borderColor = '#ddd';
+            }
+        });
+    }
+});
+
+async function postCustomTweet() {
+    const text = document.getElementById('custom-tweet').value;
+
+    if (!text.trim()) {
+        showAlert('Please enter tweet text', 'error');
+        return;
+    }
+
+    if (text.length > 280) {
+        showAlert('Tweet exceeds 280 character limit', 'error');
+        return;
+    }
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Posting...';
+
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/post-custom`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ text })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert('✅ Custom tweet posted!', 'success');
+            addRecentPosting('Custom Tweet', text);
+            document.getElementById('custom-tweet').value = '';
+            document.getElementById('char-count').textContent = '0';
+            loadTwitterStatus();
+        } else {
+            showAlert('❌ Failed to post: ' + data.message, 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error posting tweet: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Post Custom Tweet';
+    }
+}
+
+async function startScheduler() {
+    const schedule = document.getElementById('schedule-type').value;
+    const time = document.getElementById('post-time').value;
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Starting...';
+
+    try {
+        const body = { schedule };
+        if (schedule === 'daily') {
+            body.times = [time];
+        }
+
+        const response = await fetch(`${API_URL}/api/twitter/scheduler/start`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert(`✅ Scheduler started: ${data.message}`, 'success');
+            loadTwitterStatus();
+        } else {
+            showAlert('❌ Failed to start scheduler: ' + data.message, 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '▶️ Start Scheduler';
+    }
+}
+
+async function stopScheduler() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Stopping...';
+
+    try {
+        const response = await fetch(`${API_URL}/api/twitter/scheduler/stop`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert('✅ Scheduler stopped', 'success');
+            loadTwitterStatus();
+        } else {
+            showAlert('❌ Failed to stop scheduler', 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '⏹️ Stop Scheduler';
+    }
+}
+
+function addRecentPosting(type, text) {
+    const posting = {
+        type,
+        text: text.substring(0, 60) + (text.length > 60 ? '...' : ''),
+        time: new Date().toLocaleTimeString()
+    };
+
+    twitterRecentPostings.unshift(posting);
+    if (twitterRecentPostings.length > 5) {
+        twitterRecentPostings.pop();
+    }
+
+    let html = '';
+    twitterRecentPostings.forEach((p, i) => {
+        html += `
+            <div style="padding: 10px; border-left: 3px solid #667eea; margin-bottom: 8px; background: #f9fafb; border-radius: 4px;">
+                <strong style="color: #667eea;">${p.type}</strong> at ${p.time}<br>
+                <span style="font-size: 12px; color: #666;">"${p.text}"</span>
+            </div>
+        `;
+    });
+
+    document.getElementById('recent-postings').innerHTML = html;
+}
+
+// Initialize Twitter panel when tab is clicked
+document.addEventListener('click', (e) => {
+    if (e.target.getAttribute('data-tab') === 'twitter') {
+        loadTwitterStatus();
+        loadTwitterTips();
+    }
+    if (e.target.getAttribute('data-tab') === 'social-media') {
+        loadSocialMediaDashboard();
+    }
+    if (e.target.getAttribute('data-tab') === 'medium') {
+        initMediumTab();
+    }
+});
+
 // EMAIL TEMPLATES MANAGEMENT
 async function loadEmailTemplates() {
     try {
         // Load sequences
-        const sequencesResponse = await fetch(`${API_URL}/api/email-templates/sequences`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const sequencesResponse = await fetch(`${API_URL}/api/admin/email-templates/sequences`, {
+            headers: getAuthHeaders()
         });
 
         if (sequencesResponse.ok) {
@@ -1168,8 +1640,8 @@ async function loadEmailTemplates() {
         }
 
         // Load templates
-        const templatesResponse = await fetch(`${API_URL}/api/email-templates/templates`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const templatesResponse = await fetch(`${API_URL}/api/admin/email-templates/templates`, {
+            headers: getAuthHeaders()
         });
 
         if (templatesResponse.ok) {
@@ -1183,12 +1655,23 @@ async function loadEmailTemplates() {
 
 function renderSequences(sequences) {
     const tbody = document.getElementById('sequences-table');
+    const dropdown = document.getElementById('modal-template-sequence');
 
     if (!sequences || sequences.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No sequences yet</td></tr>';
+        if (dropdown) {
+            dropdown.innerHTML = '<option value="">Select a sequence</option>';
+        }
         return;
     }
 
+    // Populate the dropdown
+    if (dropdown) {
+        dropdown.innerHTML = '<option value="">Select a sequence</option>' +
+            sequences.map(seq => `<option value="${seq.id}">${seq.name}</option>`).join('');
+    }
+
+    // Populate the table
     tbody.innerHTML = sequences.map(seq => `
         <tr>
             <td><strong>${seq.name}</strong></td>
@@ -1205,8 +1688,8 @@ function renderSequences(sequences) {
 
 async function viewSequence(sequenceId) {
     try {
-        const response = await fetch(`${API_URL}/api/email-templates/sequences/${sequenceId}`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/email-templates/sequences/${sequenceId}`, {
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -1255,13 +1738,23 @@ function openTemplateModal() {
 }
 
 function closeTemplateModal() {
-    document.getElementById('template-modal').classList.remove('active');
-    document.getElementById('modal-template-id').value = '';
-    document.getElementById('modal-template-day').value = '';
-    document.getElementById('modal-template-subject').value = '';
-    document.getElementById('modal-template-content').value = '';
-    document.getElementById('template-modal-title').textContent = 'Create Email Template';
-    document.getElementById('template-save-btn').textContent = 'Create Template';
+    const modal = document.getElementById('template-modal');
+    if (modal) modal.classList.remove('active');
+
+    // Safely reset form fields if they exist
+    const templateIdEl = document.getElementById('modal-template-id');
+    const dayEl = document.getElementById('modal-template-day');
+    const subjectEl = document.getElementById('modal-template-subject');
+    const contentEl = document.getElementById('modal-template-content');
+    const titleEl = document.getElementById('template-modal-title');
+    const saveBtnEl = document.getElementById('template-save-btn');
+
+    if (templateIdEl) templateIdEl.value = '';
+    if (dayEl) dayEl.value = '';
+    if (subjectEl) subjectEl.value = '';
+    if (contentEl) contentEl.value = '';
+    if (titleEl) titleEl.textContent = 'Create Email Template';
+    if (saveBtnEl) saveBtnEl.textContent = 'Create Template';
 }
 
 async function saveEmailSequence() {
@@ -1274,12 +1767,9 @@ async function saveEmailSequence() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/email-templates/sequences`, {
+        const response = await fetch(`${API_URL}/api/admin/email-templates/sequences`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ name, description })
         });
 
@@ -1299,28 +1789,59 @@ async function saveEmailSequence() {
 }
 
 async function saveEmailTemplate() {
-    const templateId = document.getElementById('modal-template-id').value;
-    const sequenceId = document.getElementById('modal-template-sequence').value;
-    const day = document.getElementById('modal-template-day').value;
-    const subject = document.getElementById('modal-template-subject').value;
-    const content = document.getElementById('modal-template-content').value;
+    console.log('saveEmailTemplate called');
+
+    // Get elements with null checks
+    const templateIdEl = document.getElementById('modal-template-id');
+    const sequenceIdEl = document.getElementById('modal-template-sequence');
+    const dayEl = document.getElementById('modal-template-day');
+    const subjectEl = document.getElementById('modal-template-subject');
+    const contentEl = document.getElementById('modal-template-content');
+
+    if (!templateIdEl || !sequenceIdEl || !dayEl || !subjectEl || !contentEl) {
+        console.error('Missing form elements:', {
+            templateIdEl: templateIdEl ? 'EXISTS' : 'MISSING',
+            sequenceIdEl: sequenceIdEl ? 'EXISTS' : 'MISSING',
+            dayEl: dayEl ? 'EXISTS' : 'MISSING',
+            subjectEl: subjectEl ? 'EXISTS' : 'MISSING',
+            contentEl: contentEl ? 'EXISTS' : 'MISSING'
+        });
+        const missing = [];
+        if (!templateIdEl) missing.push('modal-template-id');
+        if (!sequenceIdEl) missing.push('modal-template-sequence');
+        if (!dayEl) missing.push('modal-template-day');
+        if (!subjectEl) missing.push('modal-template-subject');
+        if (!contentEl) missing.push('modal-template-content');
+        showAlert('Missing form elements: ' + missing.join(', '), 'error');
+        return;
+    }
+
+    const templateId = templateIdEl.value;
+    const sequenceId = sequenceIdEl.value;
+    const day = dayEl.value;
+    const subject = subjectEl.value;
+    const content = contentEl.value;
+
+    console.log('Form values:', { templateId, sequenceId, day, subject, content });
+    console.log('Dropdown options:', sequenceIdEl.options);
+    console.log('Selected option text:', sequenceIdEl.options[sequenceIdEl.selectedIndex]?.text);
 
     if (!sequenceId || !subject) {
+        console.log('Validation failed: missing sequenceId or subject', { sequenceId, subject });
         showAlert('Sequence and subject are required', 'error');
         return;
     }
 
     const isEdit = !!templateId;
     const method = isEdit ? 'PUT' : 'POST';
-    const endpoint = isEdit ? `${API_URL}/api/email-templates/templates/${templateId}` : `${API_URL}/api/email-templates/templates`;
+    const endpoint = isEdit ? `${API_URL}/api/admin/email-templates/templates/${templateId}` : `${API_URL}/api/admin/email-templates/templates`;
+
+    console.log('Saving template:', { isEdit, method, endpoint });
 
     try {
         const response = await fetch(endpoint, {
             method: method,
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 sequence_id: sequenceId,
                 day: parseInt(day) || 0,
@@ -1329,6 +1850,8 @@ async function saveEmailTemplate() {
                 content: content
             })
         });
+
+        console.log('Save response:', response.status, response.ok);
 
         if (response.ok) {
             const action = isEdit ? 'updated' : 'created';
@@ -1348,12 +1871,9 @@ async function saveEmailTemplate() {
 
 async function createSequence(name) {
     try {
-        const response = await fetch(`${API_URL}/api/email-templates/sequences`, {
+        const response = await fetch(`${API_URL}/api/admin/email-templates/sequences`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ name, description: '' })
         });
 
@@ -1373,9 +1893,9 @@ async function createSequence(name) {
 async function deleteSequence(sequenceId) {
     if (confirm('Are you sure you want to delete this sequence?')) {
         try {
-            const response = await fetch(`${API_URL}/api/email-templates/sequences/${sequenceId}`, {
+            const response = await fetch(`${API_URL}/api/admin/email-templates/sequences/${sequenceId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                headers: getAuthHeaders()
             });
 
             if (response.ok) {
@@ -1392,9 +1912,9 @@ async function deleteSequence(sequenceId) {
 async function deleteTemplate(templateId) {
     if (confirm('Are you sure you want to delete this template?')) {
         try {
-            const response = await fetch(`${API_URL}/api/email-templates/templates/${templateId}`, {
+            const response = await fetch(`${API_URL}/api/admin/email-templates/templates/${templateId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                headers: getAuthHeaders()
             });
 
             if (response.ok) {
@@ -1411,8 +1931,8 @@ async function deleteTemplate(templateId) {
 async function editTemplate(templateId) {
     try {
         // Fetch the template data
-        const response = await fetch(`${API_URL}/api/email-templates/templates/${templateId}`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/email-templates/templates/${templateId}`, {
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) {
@@ -1423,21 +1943,32 @@ async function editTemplate(templateId) {
         const data = await response.json();
         const template = data.data;
 
-        // Populate form fields
-        document.getElementById('modal-template-day').value = template.day || 0;
-        document.getElementById('modal-template-subject').value = template.subject || '';
-        document.getElementById('modal-template-content').value = template.html_content || template.content || '';
-        document.getElementById('modal-template-sequence').value = template.sequence_id || '';
+        // Populate form fields with error checking
+        const dayField = document.getElementById('modal-template-day');
+        const subjectField = document.getElementById('modal-template-subject');
+        const contentField = document.getElementById('modal-template-content');
+        const sequenceField = document.getElementById('modal-template-sequence');
 
-        // Change modal title and button to Edit
-        document.getElementById('template-modal-title').textContent = 'Edit Email Template';
-        document.getElementById('template-save-btn').textContent = 'Update Template';
+        if (!dayField || !subjectField || !contentField || !sequenceField) {
+            showAlert('Template modal not found - please reload the page', 'error');
+            return;
+        }
 
-        // Store the template ID for saving
-        document.getElementById('modal-template-id').value = templateId;
+        dayField.value = template.day || 0;
+        subjectField.value = template.subject || '';
+        contentField.value = template.html_content || template.content || '';
+        sequenceField.value = template.sequence_id || '';
 
-        // Open the modal
-        document.getElementById('template-modal').classList.add('active');
+        // Change modal title and button to Edit - with checks
+        const titleEl = document.getElementById('template-modal-title');
+        const saveBtn = document.getElementById('template-save-btn');
+        const idField = document.getElementById('modal-template-id');
+        const modal = document.getElementById('template-modal');
+
+        if (titleEl) titleEl.textContent = 'Edit Email Template';
+        if (saveBtn) saveBtn.textContent = 'Update Template';
+        if (idField) idField.value = templateId;
+        if (modal) modal.classList.add('active');
     } catch (error) {
         console.error('Error loading template:', error);
         showAlert('Error loading template: ' + error.message, 'error');
@@ -1453,8 +1984,8 @@ let currentEditingHackId = null;
 // Load and display all hacks
 async function loadHacksList() {
     try {
-        const response = await fetch(`${API_URL}/api/hacks/admin/hacks`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch(`${API_URL}/api/admin/hacks`, {
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) throw new Error('Failed to load hacks');
@@ -1470,6 +2001,9 @@ async function loadHacksList() {
             12: 'Accommodations', 13: 'Ground Transport', 14: 'Travel Bookings',
             15: 'Food & Dining', 16: 'Shopping & VAT'
         };
+
+        // Store hacks data globally for use in edit/delete operations
+        hacksData = data.hacks || [];
 
         if (data.hacks && data.hacks.length > 0) {
             data.hacks.forEach(hack => {
@@ -1521,13 +2055,8 @@ function openAddHackModal() {
 // Edit hack
 async function editHack(hackId) {
     try {
-        // Get all hacks and find this one
-        const response = await fetch(`${API_URL}/api/hacks/admin/hacks`, {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-
-        const data = await response.json();
-        const hack = data.hacks.find(h => h.id === hackId);
+        // Find hack from stored global data
+        const hack = hacksData.find(h => h.id === hackId);
 
         if (!hack) {
             showAlert('Hack not found', 'error');
@@ -1536,13 +2065,8 @@ async function editHack(hackId) {
 
         currentEditingHackId = hackId;
         document.getElementById('hack-modal-title').textContent = 'Edit Hack';
-        document.getElementById('modal-hack-module-id').value = hack.module_id;
-        document.getElementById('modal-hack-title-new').value = hack.title;
-        document.getElementById('modal-hack-description').value = hack.description;
-        document.getElementById('modal-hack-category').value = hack.category;
-        document.getElementById('modal-hack-difficulty').value = hack.difficulty;
 
-        // Populate module dropdown
+        // Populate module dropdown FIRST
         const select = document.getElementById('modal-hack-module-id');
         select.innerHTML = '<option value="">Select a module (1-16)</option>';
         for (let i = 1; i <= 16; i++) {
@@ -1551,6 +2075,13 @@ async function editHack(hackId) {
             option.text = `Module ${i}`;
             select.appendChild(option);
         }
+
+        // THEN set form values
+        document.getElementById('modal-hack-module-id').value = hack.module_id;
+        document.getElementById('modal-hack-title-new').value = hack.title;
+        document.getElementById('modal-hack-description').value = hack.description;
+        document.getElementById('modal-hack-category').value = hack.category || '';
+        document.getElementById('modal-hack-difficulty').value = hack.difficulty || 'medium';
 
         document.getElementById('hack-management-modal').classList.add('active');
     } catch (error) {
@@ -1567,24 +2098,21 @@ async function saveHackManagement() {
     const category = document.getElementById('modal-hack-category').value;
     const difficulty = document.getElementById('modal-hack-difficulty').value;
 
-    if (!moduleId || !title || !description || !category) {
-        showAlert('Please fill in all required fields', 'error');
+    if (!moduleId || !title || !description) {
+        showAlert('Module, title, and description are required', 'error');
         return;
     }
 
     try {
         const url = currentEditingHackId
-            ? `${API_URL}/api/hacks/admin/hacks/${currentEditingHackId}`
-            : `${API_URL}/api/hacks/admin/hacks`;
+            ? `${API_URL}/api/admin/hacks/${currentEditingHackId}`
+            : `${API_URL}/api/admin/hacks`;
 
         const method = currentEditingHackId ? 'PUT' : 'POST';
 
         const response = await fetch(url, {
             method,
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 module_id: parseInt(moduleId),
                 title,
@@ -1613,9 +2141,9 @@ async function deleteHack(hackId) {
     if (!confirm('Are you sure you want to delete this hack?')) return;
 
     try {
-        const response = await fetch(`${API_URL}/api/hacks/admin/hacks/${hackId}`, {
+        const response = await fetch(`${API_URL}/api/admin/hacks/${hackId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -1635,4 +2163,225 @@ async function deleteHack(hackId) {
 function closeHackManagementModal() {
     document.getElementById('hack-management-modal').classList.remove('active');
     currentEditingHackId = null;
+}
+
+// SOCIAL MEDIA PLATFORM TAB SWITCHING (Settings)
+function switchPlatformTab(platform) {
+    // Hide all platform settings
+    document.querySelectorAll('.platform-settings').forEach(el => {
+        el.style.display = 'none';
+    });
+
+    // Remove active class from all tabs
+    document.querySelectorAll('.platform-tab').forEach(el => {
+        el.style.borderBottom = '3px solid transparent';
+        el.style.color = '#6b7280';
+    });
+
+    // Show selected platform settings
+    const settingsElement = document.getElementById(`settings-${platform}`);
+    if (settingsElement) {
+        settingsElement.style.display = 'block';
+    }
+
+    // Highlight active tab
+    const activeTab = document.querySelector(`[data-platform="${platform}"]`);
+    if (activeTab) {
+        activeTab.style.borderBottom = '3px solid #667eea';
+        activeTab.style.color = '#667eea';
+    }
+
+    if (platform === 'medium') initMediumTab();
+}
+
+// ─── MEDIUM GENERATOR ────────────────────────────────────────────────────────
+
+let mediumCurrentArticle = null;
+
+async function initMediumTab() {
+    // Load topic list into select
+    try {
+        const res = await fetch(`${API_URL}/api/medium/topics`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        const sel = document.getElementById('medium-topic-select');
+        if (sel && data.topics) {
+            data.topics.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.index;
+                opt.textContent = (t.isNext ? '▶ ' : '') + t.title;
+                sel.appendChild(opt);
+            });
+        }
+    } catch {}
+    loadMediumRecentPosts();
+}
+
+async function generateMediumArticle() {
+    const btn = document.getElementById('medium-generate-btn');
+    const result = document.getElementById('medium-generator-result');
+    const topicIdx = document.getElementById('medium-topic-select')?.value;
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Generiere Artikel...';
+    result.style.display = 'none';
+
+    try {
+        const body = topicIdx !== '' ? { topicIndex: parseInt(topicIdx) } : {};
+        const res = await fetch(`${API_URL}/api/medium/generate`, {
+            method: 'POST',
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Generation failed');
+
+        mediumCurrentArticle = data; // includes dbId for later update
+
+        document.getElementById('medium-title-text').textContent = data.title;
+        document.getElementById('medium-tags-text').textContent = data.tags?.join(', ') || '';
+        document.getElementById('medium-body-text').value = data.body;
+
+        const imgSection = document.getElementById('medium-image-section');
+        if (data.imageUrl) {
+            document.getElementById('medium-cover-img').src = data.imageUrl;
+            document.getElementById('medium-image-download').href = data.imageUrl;
+            imgSection.style.display = 'block';
+        } else {
+            imgSection.style.display = 'none';
+        }
+
+        result.style.display = 'block';
+        result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ Artikel generieren';
+    }
+}
+
+async function markMediumAsPosted() {
+    if (!mediumCurrentArticle) return alert('Kein Artikel generiert.');
+    const mediumUrl = document.getElementById('medium-posted-url')?.value || '';
+    try {
+        const res = await fetch(`${API_URL}/api/medium/log-manual`, {
+            method: 'POST',
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                dbId: mediumCurrentArticle.dbId,
+                title: mediumCurrentArticle.title,
+                body: mediumCurrentArticle.body,
+                tags: mediumCurrentArticle.tags,
+                category: mediumCurrentArticle.category,
+                mediumUrl,
+                includeCTA: mediumCurrentArticle.includeCTA
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('✅ Artikel als gepostet markiert!');
+            document.getElementById('medium-posted-url').value = '';
+            document.getElementById('medium-generator-result').style.display = 'none';
+            mediumCurrentArticle = null;
+            loadMediumRecentPosts();
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+async function loadMediumRecentPosts() {
+    const el = document.getElementById('medium-recent-posts');
+    if (!el) return;
+    try {
+        const res = await fetch(`${API_URL}/api/medium/recent-posts`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (!data.posts?.length) { el.innerHTML = '<p>Noch keine Artikel gepostet.</p>'; return; }
+        el.innerHTML = data.posts.map(p => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f3f4f6;">
+                <div>
+                    <strong style="font-size:13px;">${p.title}</strong>
+                    <span style="color:#9ca3af;font-size:12px;margin-left:8px;">${p.category}</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    ${p.medium_url ? `<a href="${p.medium_url}" target="_blank" style="font-size:12px;color:#1d9bf0;">Ansehen ↗</a>` : ''}
+                    <span style="font-size:12px;color:#6b7280;">${new Date(p.posted_at).toLocaleDateString('de-DE')}</span>
+                </div>
+            </div>`).join('');
+    } catch { el.innerHTML = '<p style="color:#ef4444">Fehler beim Laden</p>'; }
+}
+
+function copyToClipboard(elementId) {
+    const el = document.getElementById(elementId);
+    const text = el.tagName === 'TEXTAREA' ? el.value : el.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = el.previousElementSibling?.querySelector('button') || el.parentElement?.querySelector('button');
+        if (btn) { const orig = btn.textContent; btn.textContent = '✅ Kopiert!'; setTimeout(() => btn.textContent = orig, 1500); }
+    });
+}
+
+// SOCIAL MEDIA SUB-TAB SWITCHING (Accounts | Posts | Analytics)
+function switchSocialTab(tabName) {
+    // Hide all social media sub-content
+    document.querySelectorAll('.social-sub-content').forEach(el => {
+        el.style.display = 'none';
+    });
+
+    // Remove active class from all sub-tabs
+    document.querySelectorAll('.social-sub-tab').forEach(el => {
+        el.style.borderBottom = '3px solid transparent';
+        el.style.color = '#6b7280';
+    });
+
+    // Show selected content
+    const contentElement = document.getElementById(`content-${tabName}`);
+    if (contentElement) {
+        contentElement.style.display = 'block';
+    }
+
+    // Highlight active tab
+    const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeTab) {
+        activeTab.style.borderBottom = '3px solid #667eea';
+        activeTab.style.color = '#667eea';
+    }
+
+    // Load data for the selected tab
+    if (tabName === 'accounts') {
+        loadConnectedAccounts();
+    } else if (tabName === 'posts') {
+        loadRecentPosts();
+    } else if (tabName === 'analytics') {
+        loadAnalytics();
+    }
+}
+
+// Load analytics data
+async function loadAnalytics() {
+    try {
+        const res = await fetch(`${API_URL}/api/admin/analytics/summary`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (!data.success) return;
+
+        const el = id => document.getElementById(id);
+        if (el('analytics-total-posts')) el('analytics-total-posts').textContent = data.social?.totalPosts ?? 0;
+        if (el('analytics-total-engagement')) el('analytics-total-engagement').textContent = '—';
+        if (el('analytics-avg-rate')) el('analytics-avg-rate').textContent = '—';
+        if (el('analytics-impressions')) el('analytics-impressions').textContent = '—';
+
+        // Per-platform breakdown
+        const tbody = document.getElementById('analytics-platforms');
+        if (tbody && data.social?.platforms) {
+            const icons = { twitter:'🐦', reddit:'🤖', linkedin:'💼', pinterest:'📌', instagram:'📸', wordpress:'📝', blogger:'📰', quora:'❓' };
+            tbody.innerHTML = Object.entries(data.social.platforms).map(([key, p]) => `
+                <tr>
+                    <td>${icons[key] || ''} ${key.charAt(0).toUpperCase() + key.slice(1)}</td>
+                    <td>${p.total}</td>
+                    <td>${p.thisMonth}</td>
+                    <td>${p.withCTA}</td>
+                </tr>`).join('');
+        }
+    } catch (err) {
+        console.error('Error loading analytics:', err);
+    }
 }
