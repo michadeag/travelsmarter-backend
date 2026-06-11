@@ -170,58 +170,29 @@ Only output valid JSON, nothing else.`;
 
     try {
       const response = await axios.post(
-        'https://api.linkedin.com/v2/ugcPosts',
+        'https://api.linkedin.com/rest/posts',
         {
           author: authorUrn,
           lifecycleState: 'PUBLISHED',
-          specificContent: {
-            'com.linkedin.ugc.ShareContent': {
-              shareCommentary: { text },
-              shareMediaCategory: 'NONE'
-            }
-          },
-          visibility: {
-            'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
+          visibility: 'PUBLIC',
+          commentary: text,
+          distribution: {
+            feedDistribution: 'MAIN_FEED',
+            targetEntities: [],
+            thirdPartyDistributionChannels: []
           }
         },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
-            'X-Restli-Protocol-Version': '2.0.0'
+            'LinkedIn-Version': '202401'
           }
         }
       );
-      return response.data?.id || null;
+      return response.headers['x-restli-id'] || response.data?.id || null;
     } catch (err) {
       console.error(`💼 LinkedIn API error: ${err.response?.status} — ${JSON.stringify(err.response?.data)}`);
-      // If org post fails with 403, fall back to personal profile
-      if (err.response?.status === 403 && orgId) {
-        console.warn('LinkedIn: org post failed (403), falling back to personal profile');
-        const memberUrn = await this.getMemberUrn(accessToken);
-        const fallback = await axios.post(
-          'https://api.linkedin.com/v2/ugcPosts',
-          {
-            author: memberUrn,
-            lifecycleState: 'PUBLISHED',
-            specificContent: {
-              'com.linkedin.ugc.ShareContent': {
-                shareCommentary: { text },
-                shareMediaCategory: 'NONE'
-              }
-            },
-            visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' }
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-              'X-Restli-Protocol-Version': '2.0.0'
-            }
-          }
-        );
-        return fallback.data?.id || null;
-      }
       throw err;
     }
   }
