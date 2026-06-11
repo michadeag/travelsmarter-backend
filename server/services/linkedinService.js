@@ -180,33 +180,40 @@ Only output valid JSON, nothing else.`;
       'X-Restli-Protocol-Version': '2.0.0'
     };
 
-    // Use new REST Posts API (ugcPosts deprecated for new apps)
-    console.log(`💼 LinkedIn: POST /rest/posts with author=${authorUrn}`);
-    const response = await axios.post(
-      'https://api.linkedin.com/rest/posts',
-      {
-        author: authorUrn,
-        commentary: text,
-        visibility: 'PUBLIC',
-        distribution: {
-          feedDistribution: 'MAIN_FEED',
-          targetEntities: [],
-          thirdPartyDistributionChannels: []
-        },
-        lifecycleState: 'PUBLISHED',
-        isReshareDisabledByAuthor: false
+    // Use new REST Posts API — try recent versions until one is active
+    const versionsToTry = ['202506', '202505', '202504', '202503', '202502'];
+    const body = {
+      author: authorUrn,
+      commentary: text,
+      visibility: 'PUBLIC',
+      distribution: {
+        feedDistribution: 'MAIN_FEED',
+        targetEntities: [],
+        thirdPartyDistributionChannels: []
       },
-      {
-        headers: {
-          ...headers,
-          'LinkedIn-Version': '202501',
-          'X-Restli-Protocol-Version': '2.0.0'
+      lifecycleState: 'PUBLISHED',
+      isReshareDisabledByAuthor: false
+    };
+
+    for (const version of versionsToTry) {
+      try {
+        console.log(`💼 LinkedIn: POST /rest/posts version=${version} author=${authorUrn}`);
+        const response = await axios.post('https://api.linkedin.com/rest/posts', body, {
+          headers: { ...headers, 'LinkedIn-Version': version, 'X-Restli-Protocol-Version': '2.0.0' }
+        });
+        console.log(`💼 LinkedIn: /rest/posts ${version} success`);
+        return response.headers['x-restli-id'] || response.data?.id || null;
+      } catch (err) {
+        const code = err.response?.data?.code;
+        if (code === 'NONEXISTENT_VERSION') {
+          console.warn(`💼 LinkedIn version ${version} not active, trying next`);
+          continue;
         }
+        console.error(`💼 LinkedIn /rest/posts error: ${err.response?.status} — ${JSON.stringify(err.response?.data)}`);
+        throw err;
       }
-    );
-    console.log('💼 LinkedIn: /rest/posts success, status', response.status);
-    // 201 Created — ID is in the x-restli-id header or response body
-    return response.headers['x-restli-id'] || response.data?.id || null;
+    }
+    throw new Error('No active LinkedIn API version found in range 202502–202506');
   }
 
   async createAndPost() {
