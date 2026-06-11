@@ -35,6 +35,20 @@ router.get('/auth-url', async (req, res) => {
   }
 });
 
+// OAuth callback (Google redirects here)
+router.get('/callback', async (req, res) => {
+  try {
+    const { code, error } = req.query;
+    if (error) return res.send(`<h2>❌ Google Auth Error: ${error}</h2>`);
+    if (!code) return res.send('<h2>No code received</h2>');
+    await bloggerService.loadSettings();
+    await bloggerService.exchangeCodeForToken(code);
+    res.send(`<h2>✅ Google Blogger connected!</h2><p>Refresh Token saved. You can close this window.</p><script>setTimeout(()=>window.close(),3000)</script>`);
+  } catch (err) {
+    res.send(`<h2>❌ Error: ${err.message}</h2>`);
+  }
+});
+
 // Step 2: exchange auth code for refresh token
 router.post('/exchange-token', async (req, res) => {
   try {

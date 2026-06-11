@@ -1,6 +1,7 @@
 const axios = require('axios');
 const Anthropic = require('@anthropic-ai/sdk');
 const pool = require('../config/database');
+const cron = require('node-cron');
 
 let anthropic = null;
 async function getAnthropicClient() {
@@ -30,11 +31,13 @@ class BloggerService {
     this.clientSecret = null;
     this.refreshToken = null;
     this.blogId = null;
+    this.ideogramKey = null;
     this.frequencyHours = 48;
     this.autoPosting = false;
     this.postCounter = 0;
-    this.schedulerInterval = null;
-    this.redirectUri = null;
+    this.schedulerJobs = [];
+    this.redirectUri = 'https://api.travelsmarterapp.com/api/blogger/callback';
+    this.TOPICS = TOPICS;
   }
 
   async loadSettings() {
@@ -47,7 +50,7 @@ class BloggerService {
         `SELECT key, value FROM settings WHERE key IN (
           'google_client_id','google_client_secret','google_refresh_token',
           'blogger_blog_id','blogger_frequency_hours','blogger_auto_posting',
-          'blogger_post_counter','blogger_redirect_uri'
+          'blogger_post_counter','ideogram_api_key'
         )`
       );
       result.rows.forEach(({ key, value }) => {
@@ -58,7 +61,7 @@ class BloggerService {
         if (key === 'blogger_frequency_hours') this.frequencyHours = parseInt(value) || 48;
         if (key === 'blogger_auto_posting') this.autoPosting = value === 'true';
         if (key === 'blogger_post_counter') this.postCounter = parseInt(value) || 0;
-        if (key === 'blogger_redirect_uri') this.redirectUri = value;
+        if (key === 'ideogram_api_key') this.ideogramKey = value;
       });
     } catch (err) {
       console.error('Blogger: loadSettings error:', err.message);
@@ -80,10 +83,9 @@ class BloggerService {
 
   getAuthUrl() {
     if (!this.clientId) throw new Error('Google Client ID not configured.');
-    const redirectUri = this.redirectUri || 'urn:ietf:wg:oauth:2.0:oob';
     const params = new URLSearchParams({
       client_id: this.clientId,
-      redirect_uri: redirectUri,
+      redirect_uri: this.redirectUri,
       response_type: 'code',
       scope: 'https://www.googleapis.com/auth/blogger',
       access_type: 'offline',
@@ -93,20 +95,16 @@ class BloggerService {
   }
 
   async exchangeCodeForToken(code) {
-    if (!this.clientId || !this.clientSecret) {
-      throw new Error('Google OAuth2 credentials not configured.');
-    }
-    const redirectUri = this.redirectUri || 'urn:ietf:wg:oauth:2.0:oob';
+    if (!this.clientId || !this.clientSecret) throw new Error('Google OAuth2 credentials not configured.');
     const response = await axios.post('https://oauth2.googleapis.com/token', {
       client_id: this.clientId,
       client_secret: this.clientSecret,
       code,
-      redirect_uri: redirectUri,
+      redirect_uri: this.redirectUri,
       grant_type: 'authorization_code'
     });
     const { refresh_token, access_token } = response.data;
     if (!refresh_token) throw new Error('No refresh_token returned — ensure access_type=offline and prompt=consent.');
-
     this.refreshToken = refresh_token;
     await pool.query(
       `INSERT INTO settings (key, value, type) VALUES ('google_refresh_token', $1, 'text')
@@ -125,10 +123,32 @@ class BloggerService {
     return blogs.map(b => ({ id: b.id, name: b.name, url: b.url }));
   }
 
-  async generateArticle(topic, includeCTA) {
-    const ctaSection = includeCTA
-      ? `\n\n<p><em>One tool that makes all of this much easier: <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> — it's completely free and automatically tracks flight deals, travel hacks, and money-saving tips so you never miss out. Worth bookmarking before your next trip.</em></p>`
-      : '';
+  async generateImage(topic) {
+    if (!this.ideogramKey) return null;
+    try {
+      const response = await axios.post(
+        'https://api.ideogram.ai/generate',
+        { image_request: { prompt: `Professional travel blog header image for "${topic.title}". Cinematic photography, vibrant colors, wanderlust feeling. No text, no watermarks.`, model: 'V_2', aspect_ratio: 'ASPECT_16_9', style_type: 'REALISTIC', magic_prompt_option: 'OFF' } },
+        { headers: { 'Api-Key': this.ideogramKey, 'Content-Type': 'application/json' } }
+      );
+      return response.data?.data?.[0]?.url || null;
+    } catch (err) { console.warn('Blogger: image generation failed:', err.message); return null; }
+  }
+
+  async generateArticle(topic) {
+    const softPitchVariants = [
+      `Tools like <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> make this effortless — it tracks flight deals automatically so you never miss a cheap window.`,
+      `This is where <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> helps — a free app that monitors prices and surfaces deals before they disappear.`,
+      `<a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> is a free tool built exactly for this — it watches flight prices and alerts you at the right moment.`,
+      `Apps like <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> do the heavy lifting here — free to use and great at catching deals most travelers miss.`,
+      `That's the kind of edge <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> gives you — a free flight deal tracker that works quietly in the background.`,
+    ];
+    const c = this.postCounter;
+    const picks = [
+      softPitchVariants[c % softPitchVariants.length],
+      softPitchVariants[(c + 2) % softPitchVariants.length],
+      softPitchVariants[(c + 4) % softPitchVariants.length],
+    ];
 
     const prompt = `You are a travel expert writing a high-quality SEO blog post for Blogger.
 
@@ -136,28 +156,29 @@ Title: "${topic.title}"
 Category: ${topic.category}
 
 Write a complete blog post that:
-- Opens with an engaging 2-3 sentence intro (no "In this article" or "Today we'll cover" phrases)
+- Opens with an engaging 2-3 sentence intro (no "In this article" phrases)
 - Has 5–7 clear H2 sections, each with 150–200 words of useful, specific content
 - Includes real examples, numbers, and actionable tips throughout
-- Uses natural, conversational tone — not corporate or listicle-style
-- Closes with a 2-3 sentence conclusion that encourages action
+- Uses natural, conversational tone
+- Closes with a 2-3 sentence conclusion
 - Total length: 900–1200 words
 
-Format as clean HTML using only these tags: <h2>, <p>, <ul>, <li>, <strong>, <em>, <a>
-Do NOT include <html>, <head>, <body>, or <article> wrapper tags.
-Do NOT add inline styles.`;
+IMPORTANT — weave these 3 sentences naturally into the body, one per section:
+1. "${picks[0]}"
+2. "${picks[1]}"
+3. "${picks[2]}"
+
+Format as clean HTML using only: <h2>, <p>, <ul>, <li>, <strong>, <em>, <a>
+Do NOT include wrapper tags. No inline styles. Only output the HTML.`;
 
     anthropic = await getAnthropicClient();
-
-
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }]
     });
 
-    const body = response.content[0].text.trim() + ctaSection;
-    return { title: topic.title, body, category: topic.category };
+    return { title: topic.title, body: response.content[0].text.trim(), category: topic.category };
   }
 
   async publishPost(accessToken, title, body, labels) {
@@ -172,17 +193,31 @@ Do NOT add inline styles.`;
 
   async createAndPost(topicIndex = null) {
     await this.loadSettings();
+    if (!this.refreshToken) throw new Error('Google account not connected — authorize in the Blogger tab first.');
+    if (!this.blogId) throw new Error('Blog ID not set — load blogs and select one first.');
+
     const index = topicIndex !== null ? topicIndex : this.postCounter % TOPICS.length;
     this.postCounter++;
-    const includeCTA = this.postCounter % 2 === 0;
     const topic = TOPICS[index % TOPICS.length];
 
-    const { title, body, category } = await this.generateArticle(topic, includeCTA);
+    console.log(`📰 Blogger: generating "${topic.title}"`);
+    const [articleResult, imageUrl] = await Promise.all([
+      this.generateArticle(topic),
+      this.generateImage(topic)
+    ]);
+    let { title, body, category } = articleResult;
+
+    // Prepend image to content if available
+    if (imageUrl) {
+      body = `<img src="${imageUrl}" alt="${title}" style="width:100%;max-width:800px;height:auto;border-radius:8px;margin-bottom:20px;">\n\n${body}`;
+    }
+
     const accessToken = await this.getAccessToken();
     const { id, url } = await this.publishPost(accessToken, title, body, [category, 'travel', 'travel tips']);
+    console.log(`📰 Blogger: published → ${url}`);
 
-    await this._logPost({ title, body, category, bloggerPostId: id, bloggerUrl: url, includedCTA: includeCTA });
-    return { title, body, category, bloggerPostId: id, bloggerUrl: url, includedCTA: includeCTA };
+    await this._logPost({ title, body, category, bloggerPostId: id, bloggerUrl: url, includedCTA: true });
+    return { title, category, bloggerPostId: id, bloggerUrl: url };
   }
 
   async _logPost({ title, body, category, bloggerPostId, bloggerUrl, includedCTA }) {
@@ -203,29 +238,29 @@ Do NOT add inline styles.`;
   }
 
   startScheduler() {
-    if (this.schedulerInterval) return { started: false, reason: 'Scheduler already running' };
-    if (!this.autoPosting) return { started: false, reason: 'Auto-posting is disabled' };
+    if (this.schedulerJobs.length > 0) return { started: false, reason: 'Scheduler läuft bereits' };
     if (!this.refreshToken) return { started: false, reason: 'Google account not connected' };
     if (!this.blogId) return { started: false, reason: 'Blog ID not configured' };
 
-    const ms = this.frequencyHours * 60 * 60 * 1000;
-    this.schedulerInterval = setInterval(async () => {
+    // Post every 2 days at 11:00 AM UTC (offset from WordPress at 10:00)
+    const job = cron.schedule('0 11 */2 * *', async () => {
       try {
-        await this.createAndPost();
-        console.log(`Blogger: scheduled post published`);
+        const result = await this.createAndPost();
+        console.log(`✅ Blogger: auto-published "${result.title}"`);
       } catch (err) {
         console.error('Blogger scheduler error:', err.message);
       }
-    }, ms);
+    }, { timezone: 'UTC' });
 
-    console.log(`Blogger: scheduler started — every ${this.frequencyHours}h`);
-    return { started: true, intervalHours: this.frequencyHours };
+    this.schedulerJobs.push(job);
+    console.log('📰 Blogger: scheduler started — every 2 days at 11:00 UTC');
+    return { started: true, schedule: 'every 2 days at 11:00 UTC' };
   }
 
   stopScheduler() {
-    if (!this.schedulerInterval) return { stopped: false, reason: 'Scheduler not running' };
-    clearInterval(this.schedulerInterval);
-    this.schedulerInterval = null;
+    if (this.schedulerJobs.length === 0) return { stopped: false, reason: 'Scheduler nicht aktiv' };
+    this.schedulerJobs.forEach(j => j.stop());
+    this.schedulerJobs = [];
     return { stopped: true };
   }
 
@@ -248,7 +283,7 @@ Do NOT add inline styles.`;
     return {
       configured: !!(this.clientId && this.clientSecret && this.refreshToken && this.blogId),
       connected: !!this.refreshToken,
-      schedulerRunning: !!this.schedulerInterval,
+      schedulerRunning: this.schedulerJobs.length > 0,
       autoPosting: this.autoPosting,
       frequencyHours: this.frequencyHours,
       postCounter: this.postCounter,
