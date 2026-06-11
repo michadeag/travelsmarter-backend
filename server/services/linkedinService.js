@@ -140,8 +140,8 @@ Only output valid JSON, nothing else.`;
       headers: { Authorization: `Bearer ${accessToken}`, 'X-Restli-Protocol-Version': '2.0.0' }
     });
     const id = res.data.id;
-    console.log(`💼 LinkedIn: member URN resolved → urn:li:person:${id}`);
-    return `urn:li:person:${id}`;
+    console.log(`💼 LinkedIn: member URN resolved → urn:li:member:${id}`);
+    return `urn:li:member:${id}`;
   }
 
   async postToLinkedIn(text) {
@@ -152,7 +152,7 @@ Only output valid JSON, nothing else.`;
     if (orgId) {
       authorUrn = `urn:li:organization:${orgId}`;
     } else if (personUrn) {
-      authorUrn = personUrn.startsWith('urn:li:') ? personUrn : `urn:li:person:${personUrn}`;
+      authorUrn = personUrn.startsWith('urn:li:') ? personUrn : `urn:li:member:${personUrn}`;
       console.log(`💼 LinkedIn: posting as person (from settings): ${authorUrn}`);
     } else {
       // Try to decode URN from JWT token
@@ -161,7 +161,7 @@ Only output valid JSON, nothing else.`;
         if (parts.length === 3) {
           const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
           const id = payload.sub || payload.id;
-          if (id) { authorUrn = `urn:li:person:${id}`; console.log(`💼 LinkedIn: URN from JWT: ${authorUrn}`); }
+          if (id) { authorUrn = `urn:li:member:${id}`; console.log(`💼 LinkedIn: URN from JWT: ${authorUrn}`); }
         }
       } catch (e) {}
       if (!authorUrn) authorUrn = await this.getMemberUrn(accessToken);
