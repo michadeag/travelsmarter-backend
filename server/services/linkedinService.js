@@ -180,10 +180,14 @@ Only output valid JSON, nothing else.`;
       'X-Restli-Protocol-Version': '2.0.0'
     };
 
+    // /rest/posts requires urn:li:person: format (not urn:li:member:)
+    const personAuthor = authorUrn.replace(/^urn:li:member:/, 'urn:li:person:');
+    console.log(`💼 LinkedIn: authorUrn=${authorUrn} → personAuthor=${personAuthor}`);
+
     // Use new REST Posts API — try recent versions until one is active
     const versionsToTry = ['202506', '202505', '202504', '202503', '202502'];
     const body = {
-      author: authorUrn,
+      author: personAuthor,
       commentary: text,
       visibility: 'PUBLIC',
       distribution: {
