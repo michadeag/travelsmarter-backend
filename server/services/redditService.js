@@ -172,7 +172,8 @@ Only output valid JSON, nothing else.`;
       messages: [{ role: 'user', content: prompt }]
     });
 
-    const raw = response.content[0].text.trim();
+    let raw = response.content[0].text.trim();
+    raw = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
     const parsed = JSON.parse(raw);
 
     return {
