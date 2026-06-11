@@ -124,6 +124,7 @@ router.get('/analytics/summary', async (req, res) => {
       { key: 'wordpress', table: 'wordpress_posts',  dateCol: 'posted_at' },
       { key: 'blogger',   table: 'blogger_posts',   dateCol: 'posted_at' },
       { key: 'quora',     table: 'quora_answers',   dateCol: 'posted_at' },
+      { key: 'medium',    table: 'medium_posts',    dateCol: 'posted_at' },
     ];
 
     const socialStats = {};
