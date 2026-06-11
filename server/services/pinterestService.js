@@ -192,7 +192,7 @@ Output only the description text. No hashtags (those come separately).`;
       max_tokens: 200,
       messages: [{ role: 'user', content: prompt }],
     });
-    return response.content[0].text.trim() + ctaLine;
+    return response.content[0].text.trim();
   }
 
   async generatePin(topicIndex = null) {
