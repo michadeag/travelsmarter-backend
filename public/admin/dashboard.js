@@ -1619,6 +1619,9 @@ document.addEventListener('click', (e) => {
     if (e.target.getAttribute('data-tab') === 'social-media') {
         loadSocialMediaDashboard();
     }
+    if (e.target.getAttribute('data-tab') === 'medium') {
+        initMediumTab();
+    }
 });
 
 // EMAIL TEMPLATES MANAGEMENT
