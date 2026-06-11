@@ -92,10 +92,17 @@ router.post('/reload-settings', async (req, res) => {
 router.post('/post-article', async (req, res) => {
   try {
     await linkedinService.loadSettings();
+    const c = linkedinService.credentials;
+    console.log('LinkedIn post - configured:', linkedinService.isConfigured);
+    console.log('LinkedIn post - hasToken:', !!c.accessToken);
+    console.log('LinkedIn post - personUrn:', c.personUrn || 'NOT SET');
+    console.log('LinkedIn post - orgId:', c.orgId || 'NOT SET');
     const result = await linkedinService.createAndPost();
     res.json({ success: true, ...result });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+    console.error('LinkedIn post error:', detail);
+    res.status(500).json({ success: false, error: detail });
   }
 });
 
