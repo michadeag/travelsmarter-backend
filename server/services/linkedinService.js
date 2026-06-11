@@ -144,7 +144,8 @@ Only output valid JSON, nothing else.`;
     return `urn:li:member:${id}`;
   }
 
-  async postToLinkedIn(text) {
+  async postToLinkedIn(rawText) {
+    const text = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
     const { accessToken, orgId, personUrn } = this.credentials;
 
     // Priority: org URN > person URN from settings > API lookup
