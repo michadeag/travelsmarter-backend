@@ -64,34 +64,70 @@ class SlideShareService {
     const slug = topic.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 40);
     const link = `https://travelsmarterapp.com/welcome.html?ref=slideshare&deck=${slug}`;
 
-    const prompt = `You are a presentation designer creating a SlideShare deck on travel for a smart travel app.
+    const softPitches = [
+      `💡 **Pro tip:** [TravelSmarter](${link}) tracks flight deals automatically so you never miss a cheap window — it's free.`,
+      `✈️ **Want this done for you?** [TravelSmarter](${link}) monitors prices and surfaces deals before they disappear — free to use.`,
+      `🎯 **Smart traveler move:** Bookmark [TravelSmarter](${link}) — it does the deal-hunting so you can focus on planning the trip.`,
+    ];
 
-Topic: "${topic.title}"
-Category: ${topic.category}
+    const prompt = `You are a presentation designer for TravelSmarter — a smart travel app at travelsmarterapp.com.
 
-Generate two things:
+## BRAND GUIDELINES for TravelSmarter:
+- Primary color: Deep Navy (#1a2744)
+- Accent color: Vibrant Coral (#ff6b4a)
+- Secondary: Warm White (#fafaf8) and Light Sky (#e8f4fd)
+- Font style: Clean modern sans-serif (like Inter or DM Sans)
+- Logo text: "TravelSmarter" — always in coral on navy background
+- Tone: Expert but warm, data-driven, empowering — "travel like a pro without the complexity"
+- Tagline: "Travel Smarter. Not Harder."
 
-## 1. GAMMA PROMPT
-Write a detailed prompt for Gamma AI (gamma.app) to create a beautiful presentation. Include:
-- Exact slide count: 10 slides
-- Visual style: ${topic.style}
-- Color scheme: ${topic.color}
-- Slide-by-slide structure with titles and key bullet points (2-3 per slide)
-- Slide 1: Title slide with subtitle "A guide by TravelSmarter"
-- Slides 2-9: Content slides with specific, actionable travel tips
-- Slide 10: CTA slide — "Start traveling smarter for free" with URL: ${link}
-- Tone: Expert but friendly, data-driven where possible
-Format the Gamma prompt clearly so it can be copy-pasted directly.
+## TASK
+Create a Gamma AI prompt for a 12-slide presentation on: "${topic.title}"
+
+## SLIDE STRUCTURE (write exact titles + 3-4 bullet points per slide):
+
+Slide 1 — TITLE SLIDE
+- Title: "${topic.title}"
+- Subtitle: "A Free Guide by TravelSmarter"
+- Visual: Full-bleed navy background, coral accent line, TravelSmarter branding
+- Bottom: travelsmarterapp.com
+
+Slides 2–4 — FOUNDATION (basics, why it matters, common mistakes)
+Slides 5–7 — TACTICS (specific actionable tips with numbers/examples)
+Slides 8–9 — ADVANCED (insider tips, tools, pro moves)
+
+Slide 10 — SOFT PITCH (natural, not salesy)
+- Title: "Make This Even Easier"
+- Content: "${softPitches[this.postCounter % softPitches.length]}"
+- Visual: Coral accent card on navy
+
+Slide 11 — SUMMARY
+- Top 5 takeaways from the presentation as a visual checklist
+
+Slide 12 — CTA SLIDE
+- Title: "Start Traveling Smarter — For Free"
+- Big URL: ${link}
+- Subtitle: "Flight deal tracking. Travel hacks. Zero cost."
+- Visual: Full coral background, white text, TravelSmarter logo
+
+## GAMMA FORMATTING INSTRUCTIONS:
+- Use the brand colors above consistently throughout
+- Every slide should have a bold headline, clean bullets, and generous white space
+- Alternate between navy-background and white-background slides for visual rhythm
+- Add travel-themed icons where appropriate (✈️ 🌍 💰 🎒 🏨)
+- Make it feel premium — this is a free guide that should feel better than paid content
+
+Write the complete Gamma prompt ready to paste into gamma.app → "New" → "Generate with AI".
+
+---
 
 ## 2. SLIDESHARE METADATA
-Title: (SEO-optimized, max 100 chars)
-Description: (150-200 words, keyword-rich, includes: ${link})
-Tags: (10-12 comma-separated tags, no #)
+Title: (SEO-optimized, include main keyword, max 100 chars)
+Description: (180-220 words, keyword-rich, conversational, naturally mention: ${link})
+Tags: (12 comma-separated tags, no #, mix broad and specific)
 Category: Education
 
-${includeCTA ? `## 3. CTA LINE (include naturally in description):\n"${cta}"` : ''}
-
-Separate each section clearly with the ## headers.`;
+Separate sections clearly with the ## headers.`;
 
     anthropic = await getAnthropicClient();
     const response = await anthropic.messages.create({

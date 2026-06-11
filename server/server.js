@@ -1069,6 +1069,22 @@ async function initializeApp() {
 
       CREATE INDEX IF NOT EXISTS idx_slideshare_posts_posted_at ON slideshare_posts(posted_at DESC);
 
+      -- Goodies Library (free PDFs/guides for users)
+      CREATE TABLE IF NOT EXISTS goodies (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title TEXT NOT NULL,
+        description TEXT,
+        slideshare_url TEXT,
+        pdf_url TEXT,
+        category VARCHAR(100),
+        thumbnail_url TEXT,
+        download_count INTEGER DEFAULT 0,
+        active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_goodies_created_at ON goodies(created_at DESC);
+
       -- Blogger published posts
       CREATE TABLE IF NOT EXISTS blogger_posts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
