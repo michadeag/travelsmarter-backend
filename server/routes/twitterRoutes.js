@@ -9,16 +9,34 @@ const travelTips = require('../services/travelTips');
  * GET /api/twitter/status
  * Check if Twitter is configured and get scheduler status
  */
-router.get('/status', (req, res) => {
-  res.json({
-    success: true,
-    configured: twitterService.isConfigured(),
-    scheduledJobs: twitterScheduler.getScheduledJobs().length,
-    jobs: twitterScheduler.getScheduledJobs().map(job => ({
-      type: job.type,
-      time: job.time || 'N/A'
-    }))
-  });
+router.get('/status', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    const countResult = await pool.query(`SELECT COUNT(*) AS total FROM twitter_posts`);
+    const totalPosts = parseInt(countResult.rows[0].total) || 0;
+
+    res.json({
+      success: true,
+      configured: twitterService.isConfigured(),
+      scheduledJobs: twitterScheduler.getScheduledJobs().length,
+      totalPosts,
+      jobs: twitterScheduler.getScheduledJobs().map(job => ({
+        type: job.type,
+        time: job.time || 'N/A'
+      }))
+    });
+  } catch (err) {
+    res.json({
+      success: true,
+      configured: twitterService.isConfigured(),
+      scheduledJobs: twitterScheduler.getScheduledJobs().length,
+      totalPosts: 0,
+      jobs: twitterScheduler.getScheduledJobs().map(job => ({
+        type: job.type,
+        time: job.time || 'N/A'
+      }))
+    });
+  }
 });
 
 /**
@@ -212,6 +230,52 @@ router.post('/post-custom', verifyAdminToken, requireAdminRole(['admin']), async
       message: 'Error posting tweet',
       error: error.message
     });
+  }
+});
+
+/**
+ * GET /api/twitter/db-test
+ * Test DB write for twitter_posts — debug only
+ */
+router.get('/db-test', async (req, res) => {
+  const pool = require('../config/database');
+  try {
+    // Check table exists and columns
+    const cols = await pool.query(`
+      SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'twitter_posts' ORDER BY ordinal_position
+    `);
+    // Try insert
+    await pool.query(
+      `INSERT INTO twitter_posts (body, tweet_id, status, posted_at) VALUES ($1, $2, 'test', NOW())`,
+      ['[DB TEST] This is a test entry', 'test-' + Date.now()]
+    );
+    const count = await pool.query(`SELECT COUNT(*) as total FROM twitter_posts`);
+    res.json({
+      success: true,
+      columns: cols.rows.map(r => r.column_name),
+      totalRows: count.rows[0].total
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/twitter/posts
+ * Get recent posted tweets from DB log
+ */
+router.get('/posts', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    const limit = parseInt(req.query.limit) || 20;
+    const result = await pool.query(
+      `SELECT id, body, tweet_id, status, posted_at FROM twitter_posts ORDER BY posted_at DESC LIMIT $1`,
+      [limit]
+    );
+    res.json({ success: true, posts: result.rows, total: result.rows.length });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching posts', error: error.message });
   }
 });
 

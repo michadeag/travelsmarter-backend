@@ -1119,14 +1119,9 @@
 
             <!-- SOCIAL MEDIA TAB -->
             <div id="social-media" class="tab-content">
-                <!-- Status Overview -->
-                <div class="cards-grid" id="platform-status">
-                    <!-- Dynamically populated -->
-                </div>
-
-                <!-- Create New Post -->
-                <div class="card">
-                    <h3>📝 Create New Post</h3>
+                <!-- Create New Post (Always visible) -->
+                <div class="card" style="margin-bottom: 30px;">
+                    <h3>📝 Create & Publish Post</h3>
                     <div class="form-group">
                         <label>Post Type</label>
                         <select id="post-type">
@@ -1179,33 +1174,107 @@
                     </button>
                 </div>
 
-                <!-- Connected Accounts -->
-                <div class="card">
-                    <h3>🔗 Connected Accounts</h3>
-                    <div id="accounts-list"></div>
-                    <button onclick="openConnectModal()" class="btn btn-secondary" style="margin-top: 15px;">
-                        + Connect New Account
-                    </button>
+                <!-- Sub-Tabs Navigation -->
+                <div style="margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; display: flex; gap: 10px;">
+                    <button class="social-sub-tab active" data-tab="accounts" onclick="switchSocialTab('accounts')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid #667eea; color: #667eea; font-weight: 600;">🔗 Accounts</button>
+                    <button class="social-sub-tab" data-tab="posts" onclick="switchSocialTab('posts')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">📋 Posts</button>
+                    <button class="social-sub-tab" data-tab="analytics" onclick="switchSocialTab('analytics')" style="padding: 10px 15px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600;">📊 Analytics</button>
                 </div>
 
-                <!-- Recent Posts -->
-                <div class="card">
-                    <h3>📋 Recent Posts</h3>
-                    <div class="table-container">
-                        <table id="recent-posts-table">
-                            <thead>
-                                <tr>
-                                    <th>Posted</th>
-                                    <th>Type</th>
-                                    <th>Content</th>
-                                    <th>Platforms</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="posts-tbody">
-                                <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading...</td></tr>
-                            </tbody>
-                        </table>
+                <!-- ACCOUNTS TAB -->
+                <div class="social-sub-content active" id="content-accounts">
+                    <div class="card">
+                        <h3>🔗 Connected Accounts</h3>
+                        <div id="accounts-list" style="margin-bottom: 20px;"></div>
+                        <button onclick="openConnectModal()" class="btn btn-secondary">
+                            + Connect New Account
+                        </button>
+                    </div>
+
+                    <div class="card" style="margin-top: 20px;">
+                        <h3>📋 Account Details</h3>
+                        <div id="account-details" style="color: #6b7280; padding: 20px; text-align: center;">
+                            Select an account to view details
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POSTS TAB -->
+                <div class="social-sub-content" id="content-posts" style="display: none;">
+                    <div class="card">
+                        <h3>📋 Recent Posts</h3>
+                        <div class="table-container">
+                            <table id="recent-posts-table">
+                                <thead>
+                                    <tr>
+                                        <th>Posted</th>
+                                        <th>Platform</th>
+                                        <th>Content</th>
+                                        <th>Engagement</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="posts-tbody">
+                                    <tr><td colspan="6" style="text-align: center; padding: 20px;">Loading posts...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ANALYTICS TAB -->
+                <div class="social-sub-content" id="content-analytics" style="display: none;">
+                    <div class="stats-overview" style="margin-bottom: 30px;">
+                        <div class="stat-card">
+                            <h4>Total Posts</h4>
+                            <div class="number" id="analytics-total-posts">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Total Engagement</h4>
+                            <div class="number" id="analytics-total-engagement">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Avg Engagement Rate</h4>
+                            <div class="number" id="analytics-avg-rate">0%</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Total Impressions</h4>
+                            <div class="number" id="analytics-impressions">0</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📊 Performance by Platform</h3>
+                        <div id="platform-analytics" style="padding: 20px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                                <div style="padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                    <h4>🐦 Twitter</h4>
+                                    <p><small>Posts:</small> <strong id="analytics-twitter-posts">0</strong></p>
+                                    <p><small>Engagement:</small> <strong id="analytics-twitter-engagement">0</strong></p>
+                                </div>
+                                <div style="padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                    <h4>🤖 Reddit</h4>
+                                    <p><small>Posts:</small> <strong id="analytics-reddit-posts">0</strong></p>
+                                    <p><small>Engagement:</small> <strong id="analytics-reddit-engagement">0</strong></p>
+                                </div>
+                                <div style="padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                    <h4>📌 Pinterest</h4>
+                                    <p><small>Posts:</small> <strong id="analytics-pinterest-posts">0</strong></p>
+                                    <p><small>Engagement:</small> <strong id="analytics-pinterest-engagement">0</strong></p>
+                                </div>
+                                <div style="padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                    <h4>📸 Instagram</h4>
+                                    <p><small>Posts:</small> <strong id="analytics-instagram-posts">0</strong></p>
+                                    <p><small>Engagement:</small> <strong id="analytics-instagram-engagement">0</strong></p>
+                                </div>
+                                <div style="padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                    <h4>💼 LinkedIn</h4>
+                                    <p><small>Posts:</small> <strong id="analytics-linkedin-posts">0</strong></p>
+                                    <p><small>Engagement:</small> <strong id="analytics-linkedin-engagement">0</strong></p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

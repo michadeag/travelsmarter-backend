@@ -77,12 +77,25 @@ async function postTweet(tweetText) {
   try {
     const rwClient = client.readWrite;
     const response = await rwClient.v2.tweet(tweetText);
+    const tweetId = response.data.id;
 
-    console.log(`✅ Tweet posted successfully! ID: ${response.data.id}`);
+    console.log(`✅ Tweet posted successfully! ID: ${tweetId}`);
+
+    // Save to DB log
+    try {
+      const pool = require('../config/database');
+      await pool.query(
+        `INSERT INTO twitter_posts (body, tweet_id, status, posted_at) VALUES ($1, $2, 'posted', NOW())`,
+        [tweetText, tweetId]
+      );
+      console.log(`✅ Tweet saved to DB log`);
+    } catch (dbErr) {
+      console.error('❌ Could not save tweet to DB log:', dbErr.message);
+    }
 
     return {
       success: true,
-      tweetId: response.data.id,
+      tweetId,
       text: tweetText
     };
   } catch (error) {

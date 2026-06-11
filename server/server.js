@@ -943,6 +943,9 @@ async function initializeApp() {
         posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
       CREATE INDEX IF NOT EXISTS idx_twitter_posts_posted_at ON twitter_posts(posted_at DESC);
+      ALTER TABLE twitter_posts ADD COLUMN IF NOT EXISTS included_cta BOOLEAN DEFAULT false;
+      ALTER TABLE twitter_posts ADD COLUMN IF NOT EXISTS tweet_id VARCHAR(100);
+      ALTER TABLE twitter_posts ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'posted';
 
       -- Reddit posts log
       CREATE TABLE IF NOT EXISTS reddit_posts (

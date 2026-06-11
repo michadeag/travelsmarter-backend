@@ -1341,6 +1341,7 @@ async function loadTwitterStatus() {
                 <p style="color: #ccffcc;">✅ Twitter API Connected</p>
                 <p style="font-size: 14px; margin-top: 10px;">
                     <strong>Scheduled Jobs:</strong> ${data.scheduledJobs}<br>
+                    <strong>Total Posts:</strong> ${data.totalPosts || 0}<br>
                     ${data.jobs.length > 0 ? '<strong>Active Schedules:</strong><br>' + data.jobs.map(j => `• ${j.type} ${j.time ? 'at ' + j.time : ''}`).join('<br>') : 'No active schedule'}
                 </p>
             `;
@@ -2161,7 +2162,7 @@ function closeHackManagementModal() {
     currentEditingHackId = null;
 }
 
-// SOCIAL MEDIA PLATFORM TAB SWITCHING
+// SOCIAL MEDIA PLATFORM TAB SWITCHING (Settings)
 function switchPlatformTab(platform) {
     // Hide all platform settings
     document.querySelectorAll('.platform-settings').forEach(el => {
@@ -2185,5 +2186,71 @@ function switchPlatformTab(platform) {
     if (activeTab) {
         activeTab.style.borderBottom = '3px solid #667eea';
         activeTab.style.color = '#667eea';
+    }
+}
+
+// SOCIAL MEDIA SUB-TAB SWITCHING (Accounts | Posts | Analytics)
+function switchSocialTab(tabName) {
+    // Hide all social media sub-content
+    document.querySelectorAll('.social-sub-content').forEach(el => {
+        el.style.display = 'none';
+    });
+
+    // Remove active class from all sub-tabs
+    document.querySelectorAll('.social-sub-tab').forEach(el => {
+        el.style.borderBottom = '3px solid transparent';
+        el.style.color = '#6b7280';
+    });
+
+    // Show selected content
+    const contentElement = document.getElementById(`content-${tabName}`);
+    if (contentElement) {
+        contentElement.style.display = 'block';
+    }
+
+    // Highlight active tab
+    const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeTab) {
+        activeTab.style.borderBottom = '3px solid #667eea';
+        activeTab.style.color = '#667eea';
+    }
+
+    // Load data for the selected tab
+    if (tabName === 'accounts') {
+        loadConnectedAccounts();
+    } else if (tabName === 'posts') {
+        loadRecentPosts();
+    } else if (tabName === 'analytics') {
+        loadAnalytics();
+    }
+}
+
+// Load analytics data
+async function loadAnalytics() {
+    try {
+        const res = await fetch(`${API_URL}/api/admin/analytics/summary`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (!data.success) return;
+
+        const el = id => document.getElementById(id);
+        if (el('analytics-total-posts')) el('analytics-total-posts').textContent = data.social?.totalPosts ?? 0;
+        if (el('analytics-total-engagement')) el('analytics-total-engagement').textContent = '—';
+        if (el('analytics-avg-rate')) el('analytics-avg-rate').textContent = '—';
+        if (el('analytics-impressions')) el('analytics-impressions').textContent = '—';
+
+        // Per-platform breakdown
+        const tbody = document.getElementById('analytics-platforms');
+        if (tbody && data.social?.platforms) {
+            const icons = { twitter:'🐦', reddit:'🤖', linkedin:'💼', pinterest:'📌', instagram:'📸', wordpress:'📝', blogger:'📰', quora:'❓' };
+            tbody.innerHTML = Object.entries(data.social.platforms).map(([key, p]) => `
+                <tr>
+                    <td>${icons[key] || ''} ${key.charAt(0).toUpperCase() + key.slice(1)}</td>
+                    <td>${p.total}</td>
+                    <td>${p.thisMonth}</td>
+                    <td>${p.withCTA}</td>
+                </tr>`).join('');
+        }
+    } catch (err) {
+        console.error('Error loading analytics:', err);
     }
 }

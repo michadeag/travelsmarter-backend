@@ -24,7 +24,7 @@ function startDailyPosting(time = '09:00') {
   // Cron format: minute hour day month day-of-week
   const cronExpression = `${minute} ${hour} * * *`;
 
-  console.log(`📅 Scheduling daily tweet at ${time} (${cronExpression})`);
+  console.log(`📅 Scheduling daily tweet at ${time} ET (${cronExpression})`);
 
   const job = cron.schedule(cronExpression, async () => {
     console.log('⏰ Daily posting time reached. Posting travel tip...');
@@ -35,7 +35,7 @@ function startDailyPosting(time = '09:00') {
     } else {
       console.error(`❌ Failed to post daily tip: ${result.error}`);
     }
-  });
+  }, { timezone: 'America/New_York' });
 
   scheduledJobs.push({ type: 'daily', time, job });
   console.log(`✅ Daily posting scheduled at ${time}`);
@@ -73,7 +73,7 @@ function startHourlyPosting() {
     } else {
       console.error(`❌ Failed to post hourly tip: ${result.error}`);
     }
-  });
+  }, { timezone: 'America/New_York' });
 
   scheduledJobs.push({ type: 'hourly', job });
   console.log('✅ Hourly posting scheduled');
@@ -95,7 +95,7 @@ function startCategoryRotation(categories = ['flights', 'hotels', 'dining', 'tra
 
   console.log(`📅 Scheduling category rotation: ${categories.join(', ')}`);
 
-  const job = cron.schedule('0 10 * * *', async () => {
+  const job = cron.schedule('0 10 * * *', async () => { // 10:00 ET
     const category = categories[currentCategoryIndex];
     console.log(`⏰ Posting ${category} tip...`);
 
@@ -109,7 +109,7 @@ function startCategoryRotation(categories = ['flights', 'hotels', 'dining', 'tra
 
     // Rotate to next category
     currentCategoryIndex = (currentCategoryIndex + 1) % categories.length;
-  });
+  }, { timezone: 'America/New_York' });
 
   scheduledJobs.push({ type: 'category-rotation', categories, job });
   console.log(`✅ Category rotation scheduled`);

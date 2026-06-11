@@ -275,10 +275,9 @@ Only output valid JSON, nothing else.`;
     const cron = require('node-cron');
     this.schedulerJobs = [];
 
-    // 8:00 AM EST = 13:00 UTC, 5:00 PM EST = 22:00 UTC
-    // Optimal times for US audience (Eastern Time)
-    const cronTimes = ['0 13 * * *', '0 22 * * *'];
-    const labels = ['8:00 AM EST', '5:00 PM EST'];
+    // 8:00 AM & 5:00 PM Eastern Time (DST-aware)
+    const cronTimes = ['0 8 * * *', '0 17 * * *'];
+    const labels = ['8:00 AM ET', '5:00 PM ET'];
 
     cronTimes.forEach((cronExpr, i) => {
       const job = cron.schedule(cronExpr, async () => {
@@ -288,14 +287,14 @@ Only output valid JSON, nothing else.`;
         } catch (err) {
           console.error('LinkedIn scheduler error:', err.message);
         }
-      }, { timezone: 'UTC' });
+      }, { timezone: 'America/New_York' });
       this.schedulerJobs.push(job);
     });
 
     // Keep legacy this.scheduler truthy for getStatus()
     this.scheduler = true;
 
-    console.log('💼 LinkedIn scheduler started — 8:00 AM & 5:00 PM EST (US audience)');
+    console.log('💼 LinkedIn scheduler started — 8:00 AM & 5:00 PM ET (US audience)');
     return { started: true, times: labels };
   }
 
