@@ -199,7 +199,7 @@ Only output valid JSON, nothing else.`;
       {
         headers: {
           ...headers,
-          'LinkedIn-Version': '202406',
+          'LinkedIn-Version': '202501',
           'X-Restli-Protocol-Version': '2.0.0'
         }
       }
