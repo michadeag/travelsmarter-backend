@@ -170,27 +170,29 @@ Only output valid JSON, nothing else.`;
 
     try {
       const response = await axios.post(
-        'https://api.linkedin.com/rest/posts',
+        'https://api.linkedin.com/v2/ugcPosts',
         {
           author: authorUrn,
           lifecycleState: 'PUBLISHED',
-          visibility: 'PUBLIC',
-          commentary: text,
-          distribution: {
-            feedDistribution: 'MAIN_FEED',
-            targetEntities: [],
-            thirdPartyDistributionChannels: []
+          specificContent: {
+            'com.linkedin.ugc.ShareContent': {
+              shareCommentary: { text },
+              shareMediaCategory: 'NONE'
+            }
+          },
+          visibility: {
+            'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
           }
         },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
-            'LinkedIn-Version': '202406'
+            'X-Restli-Protocol-Version': '2.0.0'
           }
         }
       );
-      return response.headers['x-restli-id'] || response.data?.id || null;
+      return response.data?.id || null;
     } catch (err) {
       console.error(`💼 LinkedIn API error: ${err.response?.status} — ${JSON.stringify(err.response?.data)}`);
       throw err;
