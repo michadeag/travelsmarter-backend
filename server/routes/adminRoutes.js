@@ -123,8 +123,9 @@ router.get('/analytics/summary', async (req, res) => {
       { key: 'instagram', table: 'instagram_posts', dateCol: 'posted_at' },
       { key: 'wordpress', table: 'wordpress_posts',  dateCol: 'posted_at' },
       { key: 'blogger',   table: 'blogger_posts',   dateCol: 'posted_at' },
-      { key: 'quora',     table: 'quora_answers',   dateCol: 'posted_at' },
-      { key: 'medium',    table: 'medium_posts',    dateCol: 'posted_at' },
+      { key: 'quora',      table: 'quora_answers',    dateCol: 'posted_at' },
+      { key: 'medium',     table: 'medium_posts',     dateCol: 'posted_at' },
+      { key: 'slideshare', table: 'slideshare_posts', dateCol: 'posted_at' },
     ];
 
     const socialStats = {};
@@ -133,7 +134,7 @@ router.get('/analytics/summary', async (req, res) => {
 
     for (const p of platforms) {
       try {
-        const statusFilter = ['linkedin_posts', 'medium_posts', 'reddit_posts', 'quora_answers', 'pinterest_posts'].includes(p.table)
+        const statusFilter = ['linkedin_posts', 'medium_posts', 'reddit_posts', 'quora_answers', 'pinterest_posts', 'slideshare_posts'].includes(p.table)
           ? `WHERE status = 'posted'` : '';
         const r = await pool.query(`
           SELECT

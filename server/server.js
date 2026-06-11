@@ -39,6 +39,7 @@ const pinterestRoutes = require('./routes/pinterestRoutes');
 const instagramRoutes = require('./routes/instagramRoutes');
 const mediumRoutes = require('./routes/mediumRoutes');
 const wordpressRoutes = require('./routes/wordpressRoutes');
+const slideshareRoutes = require('./routes/slideshareRoutes');
 const quoraRoutes = require('./routes/quoraRoutes');
 const bloggerRoutes = require('./routes/bloggerRoutes');
 
@@ -163,6 +164,7 @@ app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/reddit', redditRoutes);
 app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/pinterest', pinterestRoutes);
+app.use('/api/slideshare', slideshareRoutes);
 app.use('/api/instagram', instagramRoutes);
 app.use('/api/medium', mediumRoutes);
 app.use('/api/wordpress', wordpressRoutes);
@@ -1048,6 +1050,24 @@ async function initializeApp() {
       ALTER TABLE quora_answers ADD COLUMN IF NOT EXISTS post_url TEXT;
 
       CREATE INDEX IF NOT EXISTS idx_quora_answers_posted_at ON quora_answers(posted_at DESC);
+
+      -- SlideShare / Gamma presentations
+      CREATE TABLE IF NOT EXISTS slideshare_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title TEXT,
+        category VARCHAR(100),
+        gamma_prompt TEXT,
+        ss_title TEXT,
+        ss_description TEXT,
+        ss_tags TEXT,
+        link TEXT,
+        post_url TEXT,
+        included_cta BOOLEAN DEFAULT false,
+        status VARCHAR(50) DEFAULT 'draft',
+        posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_slideshare_posts_posted_at ON slideshare_posts(posted_at DESC);
 
       -- Blogger published posts
       CREATE TABLE IF NOT EXISTS blogger_posts (
