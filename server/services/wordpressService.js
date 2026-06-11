@@ -1,6 +1,7 @@
 const axios = require('axios');
 const Anthropic = require('@anthropic-ai/sdk');
 const pool = require('../config/database');
+const cron = require('node-cron');
 
 let anthropic = null;
 async function getAnthropicClient() {
@@ -24,102 +25,68 @@ const TOPICS = [
   { title: 'How Hotel Loyalty Programs Work — And How to Get Free Nights Faster', category: 'hotels', tags: ['hotel loyalty', 'free nights', 'travel rewards'] }
 ];
 
-const WP_API_BASE = 'https://public-api.wordpress.com';
+const CTA_VARIANTS = [
+  `<p><em>One tool that makes trip planning much easier: <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> — free app that tracks flight deals and travel hacks automatically. Worth bookmarking before your next trip.</em></p>`,
+  `<p><em>If you want to stay ahead of flight deals without spending hours searching, check out <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> — it's completely free and does the heavy lifting for you.</em></p>`,
+  `<p><em>Small tip: I use <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> to track cheap flight windows — free tool, surprisingly effective for finding deals before they disappear.</em></p>`,
+  `<p><em>Want to travel smarter? <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> is a free app built for exactly this — flight deal tracking, travel hacks, no noise. Give it a try.</em></p>`,
+];
 
 class WordPressService {
   constructor() {
-    this.clientId = null;
-    this.clientSecret = null;
-    this.accessToken = null;
-    this.siteId = null;
+    this.siteUrl = null;
+    this.username = null;
+    this.appPassword = null;
     this.frequencyHours = 48;
     this.autoPosting = false;
     this.postCounter = 0;
-    this.schedulerInterval = null;
-    this.redirectUri = 'https://localhost';
+    this.schedulerJobs = [];
+    this.TOPICS = TOPICS;
   }
 
   async loadSettings() {
     try {
-      // Re-initialize Anthropic client with key from DB if available
       const claudeKeyResult = await pool.query("SELECT value FROM settings WHERE key = 'anthropic_api_key' LIMIT 1");
       const claudeKey = claudeKeyResult.rows[0]?.value || process.env.ANTHROPIC_API_KEY;
       if (claudeKey) anthropic = new Anthropic({ apiKey: claudeKey });
+
       const result = await pool.query(
         `SELECT key, value FROM settings WHERE key IN (
-          'wordpress_client_id','wordpress_client_secret','wordpress_access_token',
-          'wordpress_site_id','wordpress_frequency_hours','wordpress_auto_posting',
-          'wordpress_post_counter'
+          'wordpress_site_url','wordpress_username','wordpress_app_password',
+          'wordpress_frequency_hours','wordpress_auto_posting','wordpress_post_counter'
         )`
       );
       result.rows.forEach(({ key, value }) => {
-        if (key === 'wordpress_client_id') this.clientId = value;
-        if (key === 'wordpress_client_secret') this.clientSecret = value;
-        if (key === 'wordpress_access_token') this.accessToken = value;
-        if (key === 'wordpress_site_id') this.siteId = value;
+        if (key === 'wordpress_site_url') this.siteUrl = value?.replace(/\/$/, '');
+        if (key === 'wordpress_username') this.username = value;
+        if (key === 'wordpress_app_password') this.appPassword = value;
         if (key === 'wordpress_frequency_hours') this.frequencyHours = parseInt(value) || 48;
         if (key === 'wordpress_auto_posting') this.autoPosting = value === 'true';
         if (key === 'wordpress_post_counter') this.postCounter = parseInt(value) || 0;
       });
+
+      return this.isConfigured();
     } catch (err) {
       console.error('WordPress: loadSettings error:', err.message);
+      return false;
     }
   }
 
-  getAuthUrl() {
-    if (!this.clientId) throw new Error('WordPress Client ID nicht konfiguriert.');
-    const params = new URLSearchParams({
-      client_id: this.clientId,
-      redirect_uri: this.redirectUri,
-      response_type: 'code',
-      scope: 'posts'
+  isConfigured() {
+    return !!(this.siteUrl && this.username && this.appPassword);
+  }
+
+  async testConnection() {
+    const auth = Buffer.from(`${this.username}:${this.appPassword}`).toString('base64');
+    const res = await axios.get(`${this.siteUrl}/wp-json/wp/v2/users/me`, {
+      headers: { Authorization: `Basic ${auth}` }
     });
-    return `${WP_API_BASE}/oauth2/authorize?${params.toString()}`;
-  }
-
-  async exchangeCodeForToken(code) {
-    if (!this.clientId || !this.clientSecret) {
-      throw new Error('WordPress OAuth2 Credentials nicht konfiguriert.');
-    }
-    const response = await axios.post(`${WP_API_BASE}/oauth2/token`, new URLSearchParams({
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
-      code,
-      redirect_uri: this.redirectUri,
-      grant_type: 'authorization_code'
-    }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-
-    const { access_token, blog_id, blog_url } = response.data;
-    if (!access_token) throw new Error('Kein access_token zurückgegeben.');
-
-    this.accessToken = access_token;
-    if (blog_id) this.siteId = String(blog_id);
-
-    await pool.query(
-      `INSERT INTO settings (key, value, type) VALUES ('wordpress_access_token', $1, 'text')
-       ON CONFLICT (key) DO UPDATE SET value = $1`, [access_token]
-    );
-    if (blog_id) {
-      await pool.query(
-        `INSERT INTO settings (key, value, type) VALUES ('wordpress_site_id', $1, 'text')
-         ON CONFLICT (key) DO UPDATE SET value = $1`, [String(blog_id)]
-      );
-    }
-
-    return { access_token, blog_id, blog_url };
-  }
-
-  async fetchSites() {
-    if (!this.accessToken) throw new Error('Nicht verbunden. Bitte zuerst WordPress-Konto verbinden.');
-    const response = await axios.get(`${WP_API_BASE}/rest/v1.1/me/sites`, {
-      headers: { Authorization: `Bearer ${this.accessToken}` }
-    });
-    return (response.data.sites || []).map(s => ({ id: s.ID, name: s.name, url: s.URL }));
+    return { id: res.data.id, name: res.data.name, url: this.siteUrl };
   }
 
   async generateArticle(topic, includeCTA) {
     const ctaSection = includeCTA
-      ? `\n\n<p><em>One tool that makes all of this much easier: <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> — it\'s completely free and automatically tracks flight deals, travel hacks, and money-saving tips so you never miss out. Worth bookmarking before your next trip.</em></p>`
+      ? `\n\n${CTA_VARIANTS[this.postCounter % CTA_VARIANTS.length]}`
       : '';
 
     const prompt = `You are a travel expert writing a high-quality SEO blog post for WordPress.
@@ -136,11 +103,10 @@ Write a complete blog post that:
 - Total length: 900-1200 words
 
 Format as clean HTML using only: <h2>, <p>, <ul>, <li>, <strong>, <em>, <a>
-Do NOT include <html>, <head>, <body> wrapper tags. No inline styles.`;
+Do NOT include <html>, <head>, <body> wrapper tags. No inline styles.
+Only output the HTML content, nothing else.`;
 
     anthropic = await getAnthropicClient();
-
-
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 2000,
@@ -152,27 +118,38 @@ Do NOT include <html>, <head>, <body> wrapper tags. No inline styles.`;
   }
 
   async publishPost(title, body, tags) {
-    if (!this.accessToken) throw new Error('Nicht verbunden.');
-    if (!this.siteId) throw new Error('WordPress Site ID nicht konfiguriert.');
+    if (!this.isConfigured()) throw new Error('WordPress nicht konfiguriert.');
+    const auth = Buffer.from(`${this.username}:${this.appPassword}`).toString('base64');
 
     const response = await axios.post(
-      `${WP_API_BASE}/rest/v1.1/sites/${this.siteId}/posts/new`,
-      { title, content: body, status: 'publish', tags: tags.join(',') },
-      { headers: { Authorization: `Bearer ${this.accessToken}`, 'Content-Type': 'application/json' } }
+      `${this.siteUrl}/wp-json/wp/v2/posts`,
+      {
+        title,
+        content: body,
+        status: 'publish',
+        tags: [],
+        categories: [],
+        meta: {}
+      },
+      { headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' } }
     );
 
-    return { id: String(response.data.ID), url: response.data.URL };
+    return { id: String(response.data.id), url: response.data.link };
   }
 
   async createAndPost(topicIndex = null) {
     await this.loadSettings();
+    if (!this.isConfigured()) throw new Error('WordPress nicht konfiguriert — URL, Username und App Password in Settings eintragen.');
+
     const index = topicIndex !== null ? topicIndex : this.postCounter % TOPICS.length;
     this.postCounter++;
-    const includeCTA = this.postCounter % 2 === 0;
+    const includeCTA = this.postCounter % 3 === 0;
     const topic = TOPICS[index % TOPICS.length];
 
+    console.log(`📝 WordPress: generating "${topic.title}" (CTA: ${includeCTA})`);
     const { title, body, category, tags } = await this.generateArticle(topic, includeCTA);
     const { id, url } = await this.publishPost(title, body, tags);
+    console.log(`📝 WordPress: published → ${url}`);
 
     await this._logPost({ title, body, category, wpPostId: id, wpUrl: url, includedCTA: includeCTA });
     return { title, category, wpPostId: id, wpUrl: url, includedCTA: includeCTA };
@@ -196,29 +173,28 @@ Do NOT include <html>, <head>, <body> wrapper tags. No inline styles.`;
   }
 
   startScheduler() {
-    if (this.schedulerInterval) return { started: false, reason: 'Scheduler läuft bereits' };
-    if (!this.autoPosting) return { started: false, reason: 'Auto-Posting ist deaktiviert' };
-    if (!this.accessToken) return { started: false, reason: 'WordPress-Konto nicht verbunden' };
-    if (!this.siteId) return { started: false, reason: 'Site ID nicht konfiguriert' };
+    if (this.schedulerJobs.length > 0) return { started: false, reason: 'Scheduler läuft bereits' };
+    if (!this.isConfigured()) return { started: false, reason: 'WordPress nicht konfiguriert' };
 
-    const ms = this.frequencyHours * 60 * 60 * 1000;
-    this.schedulerInterval = setInterval(async () => {
+    // Post every 2 days at 10:00 AM UTC
+    const job = cron.schedule('0 10 */2 * *', async () => {
       try {
-        await this.createAndPost();
-        console.log('WordPress: scheduled post published');
+        const result = await this.createAndPost();
+        console.log(`✅ WordPress: auto-published "${result.title}"`);
       } catch (err) {
         console.error('WordPress scheduler error:', err.message);
       }
-    }, ms);
+    }, { timezone: 'UTC' });
 
-    console.log(`WordPress: scheduler started — every ${this.frequencyHours}h`);
-    return { started: true, intervalHours: this.frequencyHours };
+    this.schedulerJobs.push(job);
+    console.log('📝 WordPress: scheduler started — every 2 days at 10:00 UTC');
+    return { started: true, schedule: 'every 2 days at 10:00 UTC' };
   }
 
   stopScheduler() {
-    if (!this.schedulerInterval) return { stopped: false, reason: 'Scheduler läuft nicht' };
-    clearInterval(this.schedulerInterval);
-    this.schedulerInterval = null;
+    if (this.schedulerJobs.length === 0) return { stopped: false, reason: 'Scheduler läuft nicht' };
+    this.schedulerJobs.forEach(j => j.stop());
+    this.schedulerJobs = [];
     return { stopped: true };
   }
 
@@ -238,13 +214,12 @@ Do NOT include <html>, <head>, <body> wrapper tags. No inline styles.`;
 
   getStatus() {
     return {
-      configured: !!(this.clientId && this.clientSecret && this.accessToken && this.siteId),
-      connected: !!this.accessToken,
-      schedulerRunning: !!this.schedulerInterval,
+      configured: this.isConfigured(),
+      siteUrl: this.siteUrl,
+      schedulerRunning: this.schedulerJobs.length > 0,
       autoPosting: this.autoPosting,
       frequencyHours: this.frequencyHours,
-      postCounter: this.postCounter,
-      siteId: this.siteId
+      postCounter: this.postCounter
     };
   }
 }
