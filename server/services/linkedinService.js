@@ -139,8 +139,9 @@ Only output valid JSON, nothing else.`;
     const res = await axios.get('https://api.linkedin.com/v2/me', {
       headers: { Authorization: `Bearer ${accessToken}`, 'X-Restli-Protocol-Version': '2.0.0' }
     });
-    console.log(`💼 LinkedIn: member URN resolved → urn:li:person:${res.data.id}`);
-    return `urn:li:person:${res.data.id}`;
+    const id = res.data.id;
+    console.log(`💼 LinkedIn: member URN resolved → urn:li:person:${id}`);
+    return `urn:li:person:${id}`;
   }
 
   async postToLinkedIn(text) {
