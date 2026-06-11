@@ -72,6 +72,72 @@ router.get('/callback', async (req, res) => {
   }
 });
 
+// Topics list for UI dropdown
+router.get('/topics', async (req, res) => {
+  try {
+    const topics = linkedinService.TOPICS || [];
+    const counter = linkedinService.postCounter || 0;
+    const nextIdx = counter % topics.length;
+    res.json({ success: true, topics: topics.map((t, i) => ({ index: i, title: t.topic.substring(0, 60), isNext: i === nextIdx })) });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Generate post text only (no posting)
+router.post('/generate', async (req, res) => {
+  try {
+    await linkedinService.loadSettings();
+    const { topicIndex } = req.body;
+    const topics = linkedinService.TOPICS;
+    const idx = (topicIndex != null && topics[topicIndex]) ? topicIndex : Math.floor(Math.random() * topics.length);
+    const topicEntry = topics[idx];
+
+    linkedinService.postCounter = (linkedinService.postCounter || 0) + 1;
+    const includeCTA = linkedinService.postCounter % 2 === 0;
+    const post = await linkedinService.generatePost(topicEntry, includeCTA);
+
+    // Save as draft in DB
+    const r = await pool.query(
+      `INSERT INTO linkedin_posts (body, category, included_cta, status, posted_at)
+       VALUES ($1, $2, $3, 'draft', NOW()) RETURNING id`,
+      [post.text, post.category, includeCTA]
+    );
+    await pool.query(
+      `INSERT INTO settings (key, value, type) VALUES ('linkedin_post_counter', $1, 'text')
+       ON CONFLICT (key) DO UPDATE SET value = $1`,
+      [String(linkedinService.postCounter)]
+    );
+
+    res.json({ success: true, text: post.text, category: post.category, includeCTA, dbId: r.rows[0].id });
+  } catch (err) {
+    const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+    res.status(500).json({ success: false, error: detail });
+  }
+});
+
+// Mark manually posted
+router.post('/log-manual', async (req, res) => {
+  try {
+    const { dbId, text, category, linkedinUrl, includeCTA } = req.body;
+    if (dbId) {
+      await pool.query(
+        `UPDATE linkedin_posts SET status='posted', linkedin_post_id=$1, posted_at=NOW() WHERE id=$2`,
+        [linkedinUrl || null, dbId]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO linkedin_posts (body, category, included_cta, linkedin_post_id, status, posted_at)
+         VALUES ($1, $2, $3, $4, 'posted', NOW())`,
+        [text, category, includeCTA || false, linkedinUrl || null]
+      );
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.get('/status', async (req, res) => {
   try {
     await linkedinService.loadSettings();

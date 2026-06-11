@@ -52,6 +52,7 @@ class LinkedInService {
     this.isConfigured = false;
     this.credentials = {};
     this.postCounter = 0;
+    this.TOPICS = TOPICS;
   }
 
   async loadSettings() {
