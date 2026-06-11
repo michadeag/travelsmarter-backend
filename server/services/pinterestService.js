@@ -167,10 +167,11 @@ No watermarks, no logos.`;
           magic_prompt_option: 'OFF'
         }
       },
-      { headers: { 'Api-Key': this.ideogramKey, 'Content-Type': 'application/json' } }
+      { headers: { 'Api-Key': this.ideogramKey, 'Content-Type': 'application/json' }, timeout: 60000 }
     );
     const url = response.data?.data?.[0]?.url;
     if (!url) throw new Error('Ideogram returned no image');
+    console.log(`📌 Pinterest: image ready → ${url.substring(0, 60)}...`);
     return url;
   }
 
@@ -204,12 +205,11 @@ Output only the description text. No hashtags (those come separately).`;
     const pinSlug = topic.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '').substring(0, 40);
     const link = `https://travelsmarterapp.com/welcome.html?ref=pinterest&pin=${pinSlug}`;
 
-    console.log(`📌 Pinterest: generating "${topic.title}"`);
+    console.log(`📌 Pinterest: generating description for "${topic.title}"`);
+    const description = await this.generateDescription(topic);
 
-    const [imageUrl, description] = await Promise.all([
-      this.generateImage(topic),
-      this.generateDescription(topic),
-    ]);
+    console.log(`📌 Pinterest: generating image for "${topic.title}"`);
+    const imageUrl = await this.generateImage(topic);
 
     const tags = topic.tags.join(' ');
 

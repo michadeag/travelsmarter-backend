@@ -109,6 +109,7 @@ router.get('/topics', async (req, res) => {
 
 // Generate pin for copy-paste
 router.post('/generate', async (req, res) => {
+  res.setTimeout(120000); // 2 min timeout for image generation
   try {
     const { topicIndex } = req.body;
     const result = await pinterestService.generatePin(
@@ -117,6 +118,7 @@ router.post('/generate', async (req, res) => {
     res.json({ success: true, ...result });
   } catch (err) {
     const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+    console.error('Pinterest /generate error:', detail);
     res.status(500).json({ success: false, error: detail });
   }
 });
