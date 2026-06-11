@@ -30,6 +30,8 @@ router.get('/callback', async (req, res) => {
     const clientSecR = await pool.query(`SELECT value FROM settings WHERE key = 'linkedin_client_secret'`);
     const clientId = clientIdR.rows[0]?.value;
     const clientSecret = clientSecR.rows[0]?.value;
+    console.log('LinkedIn OAuth - clientId:', clientId ? clientId.substring(0,8)+'...' : 'MISSING');
+    console.log('LinkedIn OAuth - clientSecret:', clientSecret ? clientSecret.substring(0,8)+'...' : 'MISSING');
 
     const tokenRes = await axios.post('https://www.linkedin.com/oauth/v2/accessToken',
       `grant_type=authorization_code&code=${code}&redirect_uri=${encodeURIComponent(LINKEDIN_REDIRECT)}&client_id=${clientId}&client_secret=${clientSecret}`,
