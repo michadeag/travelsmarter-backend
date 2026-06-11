@@ -2,8 +2,15 @@ const axios = require('axios');
 const Anthropic = require('@anthropic-ai/sdk');
 const pool = require('../config/database');
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const MEDIUM_API = 'https://api.medium.com/v1';
+
+async function getAnthropicClient() {
+  if (process.env.ANTHROPIC_API_KEY) return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const r = await pool.query(`SELECT value FROM settings WHERE key = 'anthropic_api_key'`).catch(() => ({ rows: [] }));
+  const key = r.rows[0]?.value;
+  if (!key) throw new Error('Anthropic API key not configured');
+  return new Anthropic({ apiKey: key });
+}
 
 const TOPICS = [
   {
@@ -153,6 +160,7 @@ Write a complete, publish-ready Medium article that:
 
 Format: Markdown only. Start directly with the article content (no meta-commentary).`;
 
+    const anthropic = await getAnthropicClient();
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 2000,
