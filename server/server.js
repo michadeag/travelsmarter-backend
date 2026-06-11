@@ -1027,9 +1027,16 @@ async function initializeApp() {
         question TEXT,
         answer TEXT,
         category VARCHAR(50),
+        space_suggestions TEXT,
+        status VARCHAR(20) DEFAULT 'draft',
+        post_url TEXT,
         included_cta BOOLEAN DEFAULT false,
         posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+
+      ALTER TABLE quora_answers ADD COLUMN IF NOT EXISTS space_suggestions TEXT;
+      ALTER TABLE quora_answers ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'draft';
+      ALTER TABLE quora_answers ADD COLUMN IF NOT EXISTS post_url TEXT;
 
       CREATE INDEX IF NOT EXISTS idx_quora_answers_posted_at ON quora_answers(posted_at DESC);
 

@@ -10,220 +10,261 @@ async function getAnthropicClient() {
   return new Anthropic({ apiKey: key });
 }
 
-const QUESTIONS = [
+const TOPIC_MAP = [
   {
-    question: 'What is the best way to travel Europe on a tight budget?',
-    category: 'budget',
-    tags: ['budget travel', 'Europe', 'backpacking']
-  },
-  {
-    question: 'How do I use credit card points to fly business class for free or cheap?',
-    category: 'points_miles',
-    tags: ['points and miles', 'business class', 'travel hacks']
-  },
-  {
-    question: 'What are the best countries to visit as a digital nomad in 2025?',
-    category: 'nomad',
-    tags: ['digital nomad', 'remote work', 'travel destinations']
-  },
-  {
-    question: 'How do you find cheap flights that most people don\'t know about?',
+    title: 'Cheap Flights',
     category: 'flights',
-    tags: ['cheap flights', 'travel hacks', 'flight deals']
+    questions: [
+      'What is the best way to find cheap flights?',
+      'What are some tips for booking cheap airline tickets?',
+      'How do I find the cheapest time to fly?',
+    ],
+    spaces: ['Travel', 'Budget Travel', 'Air Travel'],
   },
   {
-    question: 'Is travel insurance worth it? When should you buy it and what does it actually cover?',
-    category: 'insurance',
-    tags: ['travel insurance', 'travel tips', 'travel planning']
+    title: 'Budget Travel Europe',
+    category: 'budget',
+    questions: [
+      'How can I travel Europe on a tight budget?',
+      'What are the cheapest countries to visit in Europe?',
+      'How do backpackers afford to travel Europe?',
+    ],
+    spaces: ['Travel', 'Budget Travel', 'Backpacking'],
   },
   {
-    question: 'What are the most underrated travel destinations that aren\'t overrun by tourists?',
-    category: 'destinations',
-    tags: ['hidden gems', 'travel destinations', 'off the beaten path']
+    title: 'Travel Credit Cards & Points',
+    category: 'points_miles',
+    questions: [
+      'How do travel credit card points work?',
+      'What is the best credit card for earning travel miles?',
+      'How can I fly business class for free using points?',
+    ],
+    spaces: ['Travel', 'Credit Cards', 'Personal Finance'],
   },
   {
-    question: 'How do you pack a carry-on bag for a two-week trip?',
+    title: 'Travel Apps',
+    category: 'tools',
+    questions: [
+      'What are the best travel apps?',
+      'Which apps do frequent travelers use?',
+      'What apps should every traveler have on their phone?',
+    ],
+    spaces: ['Travel', 'Travel Tips', 'Mobile Apps'],
+  },
+  {
+    title: 'Minimalist Packing',
     category: 'packing',
-    tags: ['packing tips', 'carry-on', 'minimalist travel']
+    questions: [
+      'How do you pack light for a long trip?',
+      'What are the best tips for packing carry-on only?',
+      'How do minimalist travelers pack for 2 weeks?',
+    ],
+    spaces: ['Travel', 'Minimalism', 'Travel Tips'],
   },
   {
-    question: 'What travel hacks do frequent travelers use that most people don\'t know?',
-    category: 'hacks',
-    tags: ['travel hacks', 'travel tips', 'frequent traveler']
+    title: 'Digital Nomad Life',
+    category: 'nomad',
+    questions: [
+      'What is it like to be a digital nomad?',
+      'Which countries are best for digital nomads?',
+      'How do I start working remotely and traveling the world?',
+    ],
+    spaces: ['Digital Nomads', 'Remote Work', 'Travel'],
   },
   {
-    question: 'How do hotel loyalty programs work and are they worth joining?',
-    category: 'hotels',
-    tags: ['hotel loyalty', 'travel rewards', 'hotel hacks']
+    title: 'Travel Insurance',
+    category: 'insurance',
+    questions: [
+      'Is travel insurance worth it?',
+      'What does travel insurance actually cover?',
+      'When should you buy travel insurance?',
+    ],
+    spaces: ['Travel', 'Insurance', 'Travel Tips'],
   },
   {
-    question: 'What should every solo traveler know before their first trip abroad?',
-    category: 'solo_travel',
-    tags: ['solo travel', 'travel tips', 'first time traveler']
-  },
-  {
-    question: 'How can I get airport lounge access without paying for an expensive membership?',
+    title: 'Airport Hacks',
     category: 'airports',
-    tags: ['airport lounge', 'travel perks', 'credit cards']
+    questions: [
+      'What are the best airport hacks frequent flyers use?',
+      'How do you get through airport security faster?',
+      'What do experienced travelers do differently at airports?',
+    ],
+    spaces: ['Travel', 'Air Travel', 'Travel Tips'],
   },
   {
-    question: 'What are the best travel credit cards and how do you maximize their benefits?',
-    category: 'credit_cards',
-    tags: ['travel credit cards', 'points and miles', 'travel rewards']
+    title: 'Hidden Travel Destinations',
+    category: 'destinations',
+    questions: [
+      'What are some underrated travel destinations worth visiting?',
+      'Where should I travel that most tourists haven\'t discovered yet?',
+      'What are the best hidden gem destinations in the world?',
+    ],
+    spaces: ['Travel', 'Travel Destinations', 'Adventure Travel'],
   },
   {
-    question: 'What is the cheapest time of year to travel internationally?',
-    category: 'timing',
-    tags: ['cheap travel', 'travel planning', 'budget travel']
+    title: 'Hotel Loyalty Programs',
+    category: 'hotels',
+    questions: [
+      'Are hotel loyalty programs worth it?',
+      'How do you earn free hotel nights faster?',
+      'What hotel rewards program gives the most value?',
+    ],
+    spaces: ['Travel', 'Hotels', 'Travel Rewards'],
   },
   {
-    question: 'How do you avoid tourist traps and find authentic local experiences?',
-    category: 'local',
-    tags: ['local travel', 'authentic experiences', 'travel tips']
+    title: 'Solo Travel',
+    category: 'solo_travel',
+    questions: [
+      'What should every solo traveler know before their first trip?',
+      'Is solo travel safe? How do you stay safe traveling alone?',
+      'What are the best destinations for solo travelers?',
+    ],
+    spaces: ['Travel', 'Solo Travel', 'Travel Tips'],
   },
   {
-    question: 'What do you wish you knew before your first long-term backpacking trip?',
-    category: 'backpacking',
-    tags: ['backpacking', 'long-term travel', 'travel lessons']
-  }
+    title: 'Travel Hacks',
+    category: 'hacks',
+    questions: [
+      'What travel hacks do frequent travelers use that most people don\'t know?',
+      'How can I make long flights more comfortable?',
+      'What are the best ways to save money while traveling?',
+    ],
+    spaces: ['Travel', 'Travel Tips', 'Life Hacks'],
+  },
+];
+
+const CTA_VARIANTS = [
+  `\n\n---\n\n*One tool I find genuinely useful for this: [TravelSmarter](https://travelsmarterapp.com/welcome.html) — free app that tracks flight deals and surfaces travel hacks automatically. Worth bookmarking before your next trip.*`,
+  `\n\n---\n\n*Bonus tip: I use [TravelSmarter](https://travelsmarterapp.com/welcome.html) to stay on top of flight deals without spending hours searching. It's free and surprisingly effective.*`,
+  `\n\n---\n\n*Free resource worth bookmarking: [TravelSmarter](https://travelsmarterapp.com/welcome.html) — tracks cheap flight windows and travel hacks automatically. Saves a lot of time.*`,
+  `\n\n---\n\n*Tool that helps a lot here: [TravelSmarter](https://travelsmarterapp.com/welcome.html) — free app, does the deal-hunting for you so you can focus on planning the actual trip.*`,
 ];
 
 class QuoraService {
   constructor() {
-    this.answerCounter = 0;
+    this.postCounter = 0;
+    this.TOPIC_MAP = TOPIC_MAP;
   }
 
   async loadSettings() {
     try {
-      // Re-initialize Anthropic client with key from DB if available
       const claudeKeyResult = await pool.query("SELECT value FROM settings WHERE key = 'anthropic_api_key' LIMIT 1");
       const claudeKey = claudeKeyResult.rows[0]?.value || process.env.ANTHROPIC_API_KEY;
       if (claudeKey) anthropic = new Anthropic({ apiKey: claudeKey });
-      const result = await pool.query(
-        `SELECT value FROM settings WHERE key = 'quora_answer_counter'`
-      );
-      if (result.rows.length > 0) {
-        this.answerCounter = parseInt(result.rows[0].value || '0');
-      }
-    } catch {
-      // non-blocking
-    }
+      const r = await pool.query(`SELECT value FROM settings WHERE key = 'quora_post_counter'`);
+      if (r.rows[0]) this.postCounter = parseInt(r.rows[0].value) || 0;
+    } catch (e) { /* non-blocking */ }
   }
 
-  async generateAnswer(questionIndex, includeCTA) {
-    const entry = QUESTIONS[questionIndex % QUESTIONS.length];
+  getTopics() {
+    return TOPIC_MAP.map((t, i) => ({
+      index: i,
+      title: t.title,
+      category: t.category,
+      isNext: i === this.postCounter % TOPIC_MAP.length,
+    }));
+  }
 
-    const ctaSection = includeCTA
-      ? `\n\n---\n\n*One tool I've found genuinely useful for this: [TravelSmarter](https://travelsmarterapp.com/welcome.html) — it's completely free and tracks flight deals and travel hacks automatically. Worth bookmarking.*`
-      : '';
+  // Legacy: kept for backward compat with old routes
+  getQuestions() {
+    return TOPIC_MAP.map((t, i) => ({
+      index: i,
+      question: t.questions[0],
+      category: t.category,
+    }));
+  }
+
+  async generatePost(topicIndex = null) {
+    await this.loadSettings();
+    const index = topicIndex !== null ? topicIndex : this.postCounter % TOPIC_MAP.length;
+    const topic = TOPIC_MAP[index % TOPIC_MAP.length];
+    const question = topic.questions[this.postCounter % topic.questions.length];
+    const includeCTA = this.postCounter % 3 === 0;
+
+    const ctaSuffix = includeCTA ? CTA_VARIANTS[this.postCounter % CTA_VARIANTS.length] : '';
 
     const prompt = `You are an experienced traveler writing a high-quality Quora answer.
 
-Question: "${entry.question}"
+Question: "${question}"
+Topic area: ${topic.title}
 
-Write a Quora answer that:
-- Opens with a direct, confident statement that immediately addresses the question (no "Great question!" filler)
-- Uses first-person voice — share real experience, specific examples, actual numbers
-- Is structured clearly: main answer first, then supporting details and tips
-- Uses short paragraphs (2–4 sentences each) for readability on mobile
-- Includes a concrete, actionable takeaway or recommendation
-- Is 300–500 words — detailed enough to be the top answer, tight enough to hold attention
-- Sounds like a real person, not an AI or a content farm
+Requirements:
+- Open with a direct, confident statement that immediately addresses the question (no "Great question!" filler)
+- First-person voice — share real experience, specific examples, actual numbers
+- Short paragraphs (2–4 sentences each) for mobile readability
+- 3–5 actionable, specific tips
+- Conversational but authoritative tone — like advice from a well-traveled friend
+- 300–450 words total
+- End with one clear takeaway sentence
 
-Format: plain text with paragraph breaks. No markdown headers. No bullet point lists unless they genuinely help.`;
+Format: plain text with paragraph breaks. No markdown headers. Use bold (**word**) sparingly only for key terms.
+Output only the answer text — no preamble.`;
 
     anthropic = await getAnthropicClient();
-
-
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 800,
-      messages: [{ role: 'user', content: prompt }]
+      max_tokens: 900,
+      messages: [{ role: 'user', content: prompt }],
     });
 
-    const body = response.content[0].text.trim() + ctaSection;
+    const answerText = response.content[0].text.trim() + ctaSuffix;
+
+    const dbResult = await pool.query(
+      `INSERT INTO quora_answers (question, answer, category, space_suggestions, included_cta, status, posted_at)
+       VALUES ($1, $2, $3, $4, $5, 'draft', NOW()) RETURNING id`,
+      [question, answerText, topic.category, topic.spaces.join(', '), includeCTA]
+    );
+
+    this.postCounter++;
+    await pool.query(
+      `INSERT INTO settings (key, value, type) VALUES ('quora_post_counter', $1, 'text')
+       ON CONFLICT (key) DO UPDATE SET value = $1`,
+      [String(this.postCounter)]
+    );
 
     return {
-      question: entry.question,
-      answer: body,
-      category: entry.category,
-      tags: entry.tags,
-      includedCTA: includeCTA,
-      questionIndex: questionIndex % QUESTIONS.length
+      question,
+      answer: answerText,
+      category: topic.category,
+      spaces: topic.spaces,
+      includeCTA,
+      dbId: dbResult.rows[0].id,
     };
   }
 
+  async markAsPosted(dbId, postUrl = null) {
+    await pool.query(
+      `UPDATE quora_answers SET status = 'posted', post_url = $1, posted_at = NOW() WHERE id = $2`,
+      [postUrl || null, dbId]
+    );
+  }
+
+  // Legacy method used by old /generate route
   async generateAndLog(questionIndex = null) {
-    const index = questionIndex !== null
-      ? questionIndex
-      : this.answerCounter % QUESTIONS.length;
-
-    this.answerCounter++;
-    const includeCTA = this.answerCounter % 2 === 0;
-
-    const result = await this.generateAnswer(index, includeCTA);
-
-    await this._logAnswer(result);
-    return result;
+    return this.generatePost(questionIndex);
   }
 
-  async generateBatch(count = 5) {
-    const results = [];
-    for (let i = 0; i < count; i++) {
-      const index = (this.answerCounter) % QUESTIONS.length;
-      this.answerCounter++;
-      const includeCTA = this.answerCounter % 2 === 0;
-      const result = await this.generateAnswer(index, includeCTA);
-      await this._logAnswer(result);
-      results.push(result);
-    }
-    return results;
-  }
-
-  async _logAnswer({ question, answer, category, includedCTA }) {
+  async getRecentPosts(limit = 20) {
     try {
-      await pool.query(
-        `INSERT INTO quora_answers (question, answer, category, included_cta, posted_at)
-         VALUES ($1, $2, $3, $4, NOW())`,
-        [question, answer, category, includedCTA]
-      );
-      await pool.query(
-        `INSERT INTO settings (key, value, type) VALUES ('quora_answer_counter', $1, 'text')
-         ON CONFLICT (key) DO UPDATE SET value = $1`,
-        [String(this.answerCounter)]
-      );
-    } catch (err) {
-      console.error('Quora: failed to log answer:', err.message);
-    }
-  }
-
-  async getRecentAnswers(limit = 20) {
-    try {
-      const result = await pool.query(
-        `SELECT id, question, answer, category, included_cta, posted_at
+      const r = await pool.query(
+        `SELECT id, question, answer, category, space_suggestions, post_url, included_cta, status, posted_at
          FROM quora_answers ORDER BY posted_at DESC LIMIT $1`,
         [limit]
       );
-      return result.rows;
-    } catch {
-      return [];
-    }
+      return r.rows;
+    } catch { return []; }
   }
 
-  getQuestions() {
-    return QUESTIONS.map((q, i) => ({
-      index: i,
-      question: q.question,
-      category: q.category,
-      tags: q.tags
-    }));
+  // Legacy alias
+  async getRecentAnswers(limit = 20) {
+    return this.getRecentPosts(limit);
   }
 
   getStatus() {
     return {
-      totalQuestions: QUESTIONS.length,
-      answerCounter: this.answerCounter,
-      nextQuestion: QUESTIONS[this.answerCounter % QUESTIONS.length]?.question || null
+      totalQuestions: TOPIC_MAP.length,
+      postCounter: this.postCounter,
+      nextQuestion: TOPIC_MAP[this.postCounter % TOPIC_MAP.length]?.questions[0] || null,
     };
   }
 }
