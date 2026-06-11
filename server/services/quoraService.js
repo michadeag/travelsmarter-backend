@@ -1,7 +1,14 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const pool = require('../config/database');
 
-let anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+let anthropic = null;
+async function getAnthropicClient() {
+  if (process.env.ANTHROPIC_API_KEY) return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const r = await pool.query(`SELECT value FROM settings WHERE key = 'anthropic_api_key'`).catch(() => ({ rows: [] }));
+  const key = r.rows[0]?.value;
+  if (!key) throw new Error('Anthropic API key not configured');
+  return new Anthropic({ apiKey: key });
+}
 
 const QUESTIONS = [
   {
@@ -124,6 +131,9 @@ Write a Quora answer that:
 - Sounds like a real person, not an AI or a content farm
 
 Format: plain text with paragraph breaks. No markdown headers. No bullet point lists unless they genuinely help.`;
+
+    anthropic = await getAnthropicClient();
+
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',

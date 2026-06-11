@@ -2,7 +2,14 @@ const axios = require('axios');
 const Anthropic = require('@anthropic-ai/sdk');
 const pool = require('../config/database');
 
-let anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+let anthropic = null;
+async function getAnthropicClient() {
+  if (process.env.ANTHROPIC_API_KEY) return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const r = await pool.query(`SELECT value FROM settings WHERE key = 'anthropic_api_key'`).catch(() => ({ rows: [] }));
+  const key = r.rows[0]?.value;
+  if (!key) throw new Error('Anthropic API key not configured');
+  return new Anthropic({ apiKey: key });
+}
 
 const TOPICS = [
   { title: 'The Ultimate Guide to Finding Cheap Flights: 12 Strategies That Actually Work', category: 'flights', tags: ['cheap flights', 'travel hacks', 'budget travel'] },
@@ -130,6 +137,9 @@ Write a complete blog post that:
 
 Format as clean HTML using only: <h2>, <p>, <ul>, <li>, <strong>, <em>, <a>
 Do NOT include <html>, <head>, <body> wrapper tags. No inline styles.`;
+
+    anthropic = await getAnthropicClient();
+
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',

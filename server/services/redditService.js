@@ -2,7 +2,14 @@ const axios = require('axios');
 const Anthropic = require('@anthropic-ai/sdk');
 const pool = require('../config/database');
 
-let anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+let anthropic = null;
+async function getAnthropicClient() {
+  if (process.env.ANTHROPIC_API_KEY) return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const r = await pool.query(`SELECT value FROM settings WHERE key = 'anthropic_api_key'`).catch(() => ({ rows: [] }));
+  const key = r.rows[0]?.value;
+  if (!key) throw new Error('Anthropic API key not configured');
+  return new Anthropic({ apiKey: key });
+}
 
 // Article topics and matching subreddits
 const TOPIC_MAP = [

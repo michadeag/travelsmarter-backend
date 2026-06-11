@@ -4,7 +4,14 @@ const pool = require('../config/database');
 // Reuse Pinterest's Ideogram image generation and topic list
 const pinterestService = require('./pinterestService');
 
-let anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+let anthropic = null;
+async function getAnthropicClient() {
+  if (process.env.ANTHROPIC_API_KEY) return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const r = await pool.query(`SELECT value FROM settings WHERE key = 'anthropic_api_key'`).catch(() => ({ rows: [] }));
+  const key = r.rows[0]?.value;
+  if (!key) throw new Error('Anthropic API key not configured');
+  return new Anthropic({ apiKey: key });
+}
 
 const GRAPH_API = 'https://graph.facebook.com/v19.0';
 
@@ -85,6 +92,9 @@ The caption should:
 - Total length: 100–180 words
 
 Only return the caption text, nothing else.`;
+
+    anthropic = await getAnthropicClient();
+
 
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
