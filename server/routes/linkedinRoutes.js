@@ -33,8 +33,13 @@ router.get('/callback', async (req, res) => {
     console.log('LinkedIn OAuth - clientId:', clientId ? clientId.substring(0,8)+'...' : 'MISSING');
     console.log('LinkedIn OAuth - clientSecret:', clientSecret ? clientSecret.substring(0,8)+'...' : 'MISSING');
 
-    const tokenRes = await axios.post('https://www.linkedin.com/oauth/v2/accessToken',
-      `grant_type=authorization_code&code=${code}&redirect_uri=${encodeURIComponent(LINKEDIN_REDIRECT)}&client_id=${clientId}&client_secret=${clientSecret}`,
+    const params = new URLSearchParams();
+    params.append('grant_type', 'authorization_code');
+    params.append('code', code);
+    params.append('redirect_uri', LINKEDIN_REDIRECT);
+    params.append('client_id', clientId);
+    params.append('client_secret', clientSecret);
+    const tokenRes = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', params,
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
