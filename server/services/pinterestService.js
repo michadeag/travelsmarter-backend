@@ -174,18 +174,14 @@ No watermarks, no logos.`;
     return url;
   }
 
-  async generateDescription(topic, includeCTA) {
-    const ctaLine = includeCTA
-      ? '\n\nFind the best flight deals automatically → travelsmarterapp.com/welcome.html'
-      : '';
-
+  async generateDescription(topic) {
     const prompt = `Write a Pinterest pin description for a travel infographic titled "${topic.title}" about ${topic.promptTheme}.
 
 Requirements:
 - 2–3 sentences, inspiring and practical
 - Mention 1–2 specific benefits or tips
 - Conversational, not corporate
-- Max 300 characters for the main text${includeCTA ? '\n- Add this line at the end: "Find the best flight deals automatically → travelsmarterapp.com/welcome.html"' : ''}
+- Max 300 characters
 
 Output only the description text. No hashtags (those come separately).`;
 
@@ -202,15 +198,17 @@ Output only the description text. No hashtags (those come separately).`;
     await this.loadSettings();
     const index = topicIndex !== null ? topicIndex : this.topicIndex % TOPICS.length;
     const topic = TOPICS[index % TOPICS.length];
-    const includeCTA = this.postCounter % 3 === 0;
+    const includeCTA = true; // always true — destination link is always present
     const board = this._pickBoard(topic);
-    const link = 'https://travelsmarterapp.com/welcome.html';
+    // Unique UTM link per pin so Pinterest analytics shows which pin drives traffic
+    const pinSlug = topic.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '').substring(0, 40);
+    const link = `https://travelsmarterapp.com/welcome.html?ref=pinterest&pin=${pinSlug}`;
 
     console.log(`📌 Pinterest: generating "${topic.title}"`);
 
     const [imageUrl, description] = await Promise.all([
       this.generateImage(topic),
-      this.generateDescription(topic, includeCTA),
+      this.generateDescription(topic),
     ]);
 
     const tags = topic.tags.join(' ');
