@@ -155,7 +155,16 @@ Only output valid JSON, nothing else.`;
       authorUrn = personUrn.startsWith('urn:li:') ? personUrn : `urn:li:person:${personUrn}`;
       console.log(`💼 LinkedIn: posting as person (from settings): ${authorUrn}`);
     } else {
-      authorUrn = await this.getMemberUrn(accessToken);
+      // Try to decode URN from JWT token
+      try {
+        const parts = accessToken.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+          const id = payload.sub || payload.id;
+          if (id) { authorUrn = `urn:li:person:${id}`; console.log(`💼 LinkedIn: URN from JWT: ${authorUrn}`); }
+        }
+      } catch (e) {}
+      if (!authorUrn) authorUrn = await this.getMemberUrn(accessToken);
     }
 
     try {

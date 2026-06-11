@@ -133,10 +133,12 @@ router.post('/fetch-urn', async (req, res) => {
     await linkedinService.loadSettings();
     const token = linkedinService.credentials.accessToken;
     if (!token) return res.status(400).json({ success: false, error: 'No access token saved' });
-    const profileRes = await axios.get('https://api.linkedin.com/v2/me', {
-      headers: { Authorization: `Bearer ${token}`, 'X-Restli-Protocol-Version': '2.0.0' }
-    });
-    const personUrn = profileRes.data.id;
+    // Decode JWT to extract sub (person ID) without extra API call
+    const parts = token.split('.');
+    if (parts.length !== 3) throw new Error('Token is not a JWT — cannot decode URN automatically');
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+    const personUrn = payload.sub || payload.id;
+    if (!personUrn) throw new Error('Could not find sub/id in token payload');
     await pool.query(
       `INSERT INTO settings (key, value, updated_at) VALUES ('linkedin_person_urn', $1, NOW()) ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
       [personUrn]
