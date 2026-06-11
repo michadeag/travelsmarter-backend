@@ -127,4 +127,25 @@ router.post('/scheduler/stop', async (req, res) => {
   }
 });
 
+// Fetch and save person URN from current access token
+router.post('/fetch-urn', async (req, res) => {
+  try {
+    await linkedinService.loadSettings();
+    const token = linkedinService.credentials.accessToken;
+    if (!token) return res.status(400).json({ success: false, error: 'No access token saved' });
+    const profileRes = await axios.get('https://api.linkedin.com/v2/me', {
+      headers: { Authorization: `Bearer ${token}`, 'X-Restli-Protocol-Version': '2.0.0' }
+    });
+    const personUrn = profileRes.data.id;
+    await pool.query(
+      `INSERT INTO settings (key, value, updated_at) VALUES ('linkedin_person_urn', $1, NOW()) ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+      [personUrn]
+    );
+    res.json({ success: true, personUrn });
+  } catch (err) {
+    const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+    res.status(500).json({ success: false, error: detail });
+  }
+});
+
 module.exports = router;
