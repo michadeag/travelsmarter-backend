@@ -93,6 +93,21 @@ class WordPressService {
       ? `\n\n${CTA_VARIANTS[this.postCounter % CTA_VARIANTS.length]}`
       : '';
 
+    const softPitchVariants = [
+      `Tools like <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> make this effortless — it tracks flight deals and travel hacks automatically so you never miss a window.`,
+      `This is where <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> comes in handy — a free tool that monitors cheap flight windows and surfaces the best deals before they disappear.`,
+      `<a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> is a free app built exactly for this — it watches prices and alerts you when the right moment hits.`,
+      `Apps like <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> do the heavy lifting here — free to use and surprisingly effective at catching deals most travelers miss.`,
+      `That's the kind of edge <a href="https://travelsmarterapp.com/welcome.html">TravelSmarter</a> gives you — a free flight deal tracker that works quietly in the background while you focus on planning.`,
+    ];
+    // Pick 3 different variants for this article
+    const counter = this.postCounter;
+    const picks = [
+      softPitchVariants[counter % softPitchVariants.length],
+      softPitchVariants[(counter + 2) % softPitchVariants.length],
+      softPitchVariants[(counter + 4) % softPitchVariants.length],
+    ];
+
     const prompt = `You are a travel expert writing a high-quality SEO blog post for WordPress.
 
 Title: "${topic.title}"
@@ -106,6 +121,11 @@ Write a complete blog post that:
 - Closes with a 2-3 sentence conclusion that encourages action
 - Total length: 900-1200 words
 
+IMPORTANT — weave these 3 sentences naturally into the article body, one each in 3 different sections (not all at the end, not in the intro). Place each where it fits the surrounding advice:
+1. "${picks[0]}"
+2. "${picks[1]}"
+3. "${picks[2]}"
+
 Format as clean HTML using only: <h2>, <p>, <ul>, <li>, <strong>, <em>, <a>
 Do NOT include <html>, <head>, <body> wrapper tags. No inline styles.
 Only output the HTML content, nothing else.`;
@@ -117,7 +137,7 @@ Only output the HTML content, nothing else.`;
       messages: [{ role: 'user', content: prompt }]
     });
 
-    const body = response.content[0].text.trim() + ctaSection;
+    const body = response.content[0].text.trim();
     return { title: topic.title, body, category: topic.category, tags: topic.tags };
   }
 
