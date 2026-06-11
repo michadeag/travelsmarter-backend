@@ -12,7 +12,7 @@ router.get('/auth-url', async (req, res) => {
     const r = await pool.query(`SELECT value FROM settings WHERE key = 'linkedin_client_id'`);
     const clientId = r.rows[0]?.value;
     if (!clientId) return res.status(400).json({ success: false, error: 'LinkedIn Client ID not set in Settings' });
-    const url = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(LINKEDIN_REDIRECT)}&scope=openid%20profile%20w_member_social&state=travelsmarter`;
+    const url = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(LINKEDIN_REDIRECT)}&scope=w_member_social&state=travelsmarter`;
     res.json({ success: true, url });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -38,13 +38,13 @@ router.get('/callback', async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    // Get person URN
+    // Get person URN via /v2/me
     let personUrn = '';
     try {
-      const profileRes = await axios.get('https://api.linkedin.com/v2/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` }
+      const profileRes = await axios.get('https://api.linkedin.com/v2/me', {
+        headers: { Authorization: `Bearer ${accessToken}`, 'X-Restli-Protocol-Version': '2.0.0' }
       });
-      personUrn = profileRes.data.sub || '';
+      personUrn = profileRes.data.id || '';
     } catch (e) { console.warn('Could not fetch LinkedIn profile:', e.message); }
 
     await pool.query(
