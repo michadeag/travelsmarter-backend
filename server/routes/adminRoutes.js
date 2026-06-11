@@ -133,7 +133,7 @@ router.get('/analytics/summary', async (req, res) => {
 
     for (const p of platforms) {
       try {
-        const statusFilter = ['linkedin_posts', 'medium_posts', 'reddit_posts', 'quora_answers'].includes(p.table)
+        const statusFilter = ['linkedin_posts', 'medium_posts', 'reddit_posts', 'quora_answers', 'pinterest_posts'].includes(p.table)
           ? `WHERE status = 'posted'` : '';
         const r = await pool.query(`
           SELECT

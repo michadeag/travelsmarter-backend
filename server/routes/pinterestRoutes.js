@@ -6,7 +6,7 @@ const pool = require('../config/database');
 
 const PINTEREST_REDIRECT = 'https://api.travelsmarterapp.com/api/pinterest/callback';
 
-// Step 1: Generate OAuth URL
+// OAuth URL
 router.get('/auth-url', async (req, res) => {
   try {
     const r = await pool.query(`SELECT value FROM settings WHERE key = 'pinterest_app_id'`);
@@ -19,7 +19,7 @@ router.get('/auth-url', async (req, res) => {
   }
 });
 
-// Step 2: OAuth callback — exchange code for access token
+// OAuth callback
 router.get('/callback', async (req, res) => {
   try {
     const { code, error } = req.query;
@@ -45,32 +45,51 @@ router.get('/callback', async (req, res) => {
       [accessToken]
     );
 
-    res.send(`<h2>✅ Pinterest connected!</h2><p>Access Token saved. You can close this window and return to the dashboard.</p><script>setTimeout(()=>window.close(),3000)</script>`);
+    res.send(`<h2>✅ Pinterest connected!</h2><p>Token saved. You can close this window.</p><script>setTimeout(()=>window.close(),3000)</script>`);
   } catch (err) {
     res.send(`<h2>❌ Error: ${err.response?.data?.message || err.message}</h2>`);
   }
 });
 
-// Step 3: Load boards
+// Load boards
 router.get('/boards', async (req, res) => {
   try {
     await pinterestService.loadSettings();
-    const token = pinterestService.credentials.accessToken;
-    if (!token) return res.status(400).json({ success: false, error: 'No access token' });
+    const token = pinterestService.accessToken;
+    if (!token) return res.status(400).json({ success: false, error: 'No access token — verbinde Pinterest zuerst' });
     const r = await axios.get('https://api.pinterest.com/v5/boards', {
       headers: { Authorization: `Bearer ${token}` }
     });
-    res.json({ success: true, boards: r.data.items.map(b => ({ id: b.id, name: b.name })) });
+    const boards = r.data.items.map(b => ({ id: b.id, name: b.name }));
+    // Cache boards in DB for board-matching
+    await pool.query(
+      `INSERT INTO settings (key, value, type) VALUES ('pinterest_boards_json', $1, 'text') ON CONFLICT (key) DO UPDATE SET value = $1`,
+      [JSON.stringify(boards)]
+    );
+    res.json({ success: true, boards });
   } catch (err) {
     res.status(500).json({ success: false, error: err.response?.data?.message || err.message });
+  }
+});
+
+// Select a board
+router.post('/select-board', async (req, res) => {
+  try {
+    const { boardId, boardName } = req.body;
+    if (!boardId) return res.status(400).json({ success: false, error: 'boardId required' });
+    await pool.query(`INSERT INTO settings (key,value) VALUES('pinterest_board_id',$1) ON CONFLICT(key) DO UPDATE SET value=$1`, [boardId]);
+    if (boardName) await pool.query(`INSERT INTO settings (key,value) VALUES('pinterest_board_name',$1) ON CONFLICT(key) DO UPDATE SET value=$1`, [boardName]);
+    await pinterestService.loadSettings();
+    res.json({ success: true, boardId, boardName });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 router.get('/status', async (req, res) => {
   try {
     await pinterestService.loadSettings();
-    const pool = require('../config/database');
-    const r = await pool.query(`SELECT COUNT(*) AS total FROM pinterest_posts`).catch(() => ({ rows: [{ total: 0 }] }));
+    const r = await pool.query(`SELECT COUNT(*) AS total FROM pinterest_posts WHERE status = 'posted'`).catch(() => ({ rows: [{ total: 0 }] }));
     const status = pinterestService.getStatus();
     status.totalPosts = parseInt(r.rows[0].total) || 0;
     res.json({ success: true, status });
@@ -79,42 +98,36 @@ router.get('/status', async (req, res) => {
   }
 });
 
-router.post('/reload-settings', async (req, res) => {
+router.get('/topics', async (req, res) => {
   try {
-    const configured = await pinterestService.loadSettings();
-    const c = pinterestService.credentials;
-    res.json({
-      success: true,
-      configured,
-      debug: {
-        hasAccessToken: !!c.accessToken,
-        accessTokenLength: c.accessToken?.length || 0,
-        hasBoardId: !!c.boardId,
-        boardId: c.boardId || null,
-        hasIdeogramKey: !!c.ideogramKey,
-        ideogramKeyLength: c.ideogramKey?.length || 0
-      }
-    });
+    await pinterestService.loadSettings();
+    res.json({ success: true, topics: pinterestService.getTopics() });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-router.post('/post-pin', async (req, res) => {
+// Generate pin for copy-paste
+router.post('/generate', async (req, res) => {
   try {
-    await pinterestService.loadSettings();
-    const result = await pinterestService.createAndPost();
+    const { topicIndex } = req.body;
+    const result = await pinterestService.generatePin(
+      topicIndex !== undefined ? parseInt(topicIndex) : null
+    );
     res.json({ success: true, ...result });
   } catch (err) {
     const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
-    console.error('Pinterest post-pin error:', detail);
     res.status(500).json({ success: false, error: detail });
   }
 });
 
-router.get('/topics', async (req, res) => {
+// Mark as manually posted
+router.post('/log-manual', async (req, res) => {
   try {
-    res.json({ success: true, topics: pinterestService.getTopics() });
+    const { dbId, pinUrl } = req.body;
+    if (!dbId) return res.status(400).json({ success: false, error: 'dbId required' });
+    await pinterestService.markAsPosted(dbId, pinUrl);
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -129,20 +142,10 @@ router.get('/recent-posts', async (req, res) => {
   }
 });
 
-router.post('/scheduler/start', async (req, res) => {
+router.post('/reload-settings', async (req, res) => {
   try {
     await pinterestService.loadSettings();
-    const result = pinterestService.startScheduler();
-    res.json({ success: true, ...result });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-router.post('/scheduler/stop', async (req, res) => {
-  try {
-    const result = pinterestService.stopScheduler();
-    res.json({ success: true, ...result });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

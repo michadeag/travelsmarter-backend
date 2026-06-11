@@ -11,183 +11,150 @@ async function getAnthropicClient() {
   return new Anthropic({ apiKey: key });
 }
 
-// Infographic topics — each has a title template, bullet structure, and visual style hint
-const INFOGRAPHIC_TOPICS = [
+const TOPICS = [
   {
     category: 'budget_flights',
     title: '5 Hacks to Fly for Way Less',
-    promptTheme: 'flight deals and cheap airfare hacks',
-    pins: [
-      'Use Google Flights + flexible dates',
-      'Book 6–8 weeks ahead for domestic',
-      'Set fare alerts on Hopper or Kayak',
-      'Fly Tue/Wed for the cheapest seats',
-      'Check nearby airports for big savings'
-    ]
+    promptTheme: 'finding cheap flights and flight deal strategies',
+    boards: ['Travel Tips', 'Budget Travel', 'Travel Hacks'],
+    tags: ['#cheapflights', '#travelhacks', '#budgettravel', '#flightdeals', '#travelsmarter', '#airtravel', '#traveltips'],
   },
   {
     category: 'packing',
     title: 'The Perfect Carry-On Packing List',
-    promptTheme: 'minimalist carry-on packing for any trip',
-    pins: [
-      '3-1-1 liquids in a clear zip bag',
-      'Roll, don\'t fold — saves 30% space',
-      'Pack a portable charger + cables',
-      'One outfit per 2 days (mix & match)',
-      'Compression cubes = game changer'
-    ]
+    promptTheme: 'minimalist carry-on packing for any trip length',
+    boards: ['Packing Tips', 'Travel Tips', 'Minimalist Travel'],
+    tags: ['#packingtips', '#carryon', '#minimalisttravel', '#travelpacking', '#travellight', '#travelhacks', '#packinglist'],
   },
   {
     category: 'points_miles',
     title: 'Earn Miles Without Flying',
-    promptTheme: 'credit card points and airline miles strategy',
-    pins: [
-      'Sign-up bonuses = free business class',
-      'Use miles card for everyday spend',
-      'Transfer points to airline partners',
-      'Shop through airline shopping portals',
-      'Dining programs earn bonus miles'
-    ]
+    promptTheme: 'credit card points and airline miles strategies',
+    boards: ['Travel Rewards', 'Travel Tips', 'Budget Travel'],
+    tags: ['#travelmiles', '#creditcardpoints', '#travelrewards', '#pointsandmiles', '#freeflight', '#businessclass', '#travelhacks'],
   },
   {
     category: 'budget_destinations',
-    title: 'Best Budget Countries in 2025',
-    promptTheme: 'affordable travel destinations worldwide',
-    pins: [
-      'Vietnam — $30/day all-in',
-      'Portugal — cheapest in Western Europe',
-      'Colombia — stunning & underrated',
-      'Georgia (Caucasus) — hidden gem',
-      'Mexico — world-class food, low cost'
-    ]
+    title: 'Best Budget Destinations 2025',
+    promptTheme: 'affordable and underrated travel destinations worldwide',
+    boards: ['Travel Destinations', 'Budget Travel', 'Travel Inspiration'],
+    tags: ['#budgettravel', '#traveldestinations', '#cheaptravel', '#travelinspiration', '#wanderlust', '#hiddengemtravel', '#traveltips'],
   },
   {
     category: 'airport_hacks',
-    title: 'Airport Tricks Every Traveler Needs',
-    promptTheme: 'airport productivity and travel hacks',
-    pins: [
-      'Skip bag check — always carry-on',
-      'TSA PreCheck = worth every penny',
-      'Free lounge access with right credit card',
-      'Screenshot boarding pass offline',
-      'Arrive 90 min early, not 3 hours'
-    ]
+    title: 'Airport Tricks Frequent Flyers Use',
+    promptTheme: 'airport productivity hacks and insider tips',
+    boards: ['Travel Hacks', 'Travel Tips', 'Air Travel'],
+    tags: ['#airporthacks', '#frequentflyer', '#traveltips', '#tsaprecheck', '#airportlounge', '#travelhacks', '#airtravel'],
   },
   {
     category: 'travel_safety',
     title: 'Stay Safe Anywhere in the World',
-    promptTheme: 'travel safety tips and smart precautions',
-    pins: [
-      'Use a VPN on public WiFi',
-      'Keep copies of all documents in email',
-      'Share itinerary with someone at home',
-      'Get travel insurance — always',
-      'Use ATMs inside banks, not on streets'
-    ]
+    promptTheme: 'travel safety tips and smart precautions for solo and group travel',
+    boards: ['Travel Safety', 'Travel Tips', 'Solo Travel'],
+    tags: ['#travelsafety', '#solotravel', '#traveltips', '#travelsmarter', '#safetravel', '#travelhacks', '#traveladvice'],
   },
   {
     category: 'hotel_hacks',
     title: 'Get More from Every Hotel Stay',
-    promptTheme: 'hotel booking hacks and loyalty tips',
-    pins: [
-      'Book direct for best rate + perks',
-      'Ask for upgrades at check-in (politely)',
-      'Loyalty programs unlock free nights fast',
-      'Use hotel WiFi over cellular abroad',
-      'Late check-out is often free if you ask'
-    ]
+    promptTheme: 'hotel booking strategies and loyalty program hacks',
+    boards: ['Hotel Tips', 'Travel Hacks', 'Travel Tips'],
+    tags: ['#hotelhacks', '#traveltips', '#hotelloyalty', '#freenights', '#travelhacks', '#hotelbooking', '#travelrewards'],
   },
   {
     category: 'digital_nomad',
     title: 'Work Remotely from Anywhere',
-    promptTheme: 'digital nomad lifestyle and remote work travel',
-    pins: [
-      'Coworking day pass = $10–20 anywhere',
-      'Airbnb monthly = way cheaper than nightly',
-      'Time zones: always be async-first',
-      'Noise-cancelling headphones are essential',
-      'Bali, Chiang Mai, Lisbon = nomad hubs'
-    ]
-  }
+    promptTheme: 'digital nomad lifestyle, remote work travel, and best destinations',
+    boards: ['Digital Nomad', 'Remote Work', 'Travel Tips'],
+    tags: ['#digitalnomad', '#remotework', '#workfromanywhere', '#nomadlife', '#traveltips', '#locationindependent', '#workandtravel'],
+  },
+  {
+    category: 'europe_budget',
+    title: 'How to Travel Europe on $50/Day',
+    promptTheme: 'budget travel Europe tips, cheap accommodation, free activities',
+    boards: ['Europe Travel', 'Budget Travel', 'Travel Tips'],
+    tags: ['#europetravel', '#budgeteurope', '#backpackingeurope', '#cheaptravel', '#traveleurope', '#budgettravel', '#traveltips'],
+  },
+  {
+    category: 'travel_apps',
+    title: 'Best Travel Apps Every Traveler Needs',
+    promptTheme: 'essential travel apps for booking, navigation, saving money',
+    boards: ['Travel Tips', 'Travel Tools', 'Budget Travel'],
+    tags: ['#travelapps', '#traveltips', '#travelhacks', '#traveltools', '#smarttravel', '#travelsmarter', '#traveltech'],
+  },
 ];
 
 class PinterestService {
   constructor() {
-    this.scheduler = null;
-    this.isConfigured = false;
-    this.credentials = {};
+    this.accessToken = null;
+    this.boardId = null;
+    this.boardName = null;
+    this.ideogramKey = null;
     this.postCounter = 0;
-    this.topicIndex = 0; // rotate through topics in order
+    this.topicIndex = 0;
+    this.userBoards = [];
+    this.TOPICS = TOPICS;
   }
 
   async loadSettings() {
     try {
-      // Re-initialize Anthropic client with key from DB if available
       const claudeKeyResult = await pool.query("SELECT value FROM settings WHERE key = 'anthropic_api_key' LIMIT 1");
       const claudeKey = claudeKeyResult.rows[0]?.value || process.env.ANTHROPIC_API_KEY;
       if (claudeKey) anthropic = new Anthropic({ apiKey: claudeKey });
+
       const result = await pool.query(
-        `SELECT key, value FROM settings WHERE key LIKE 'pinterest_%' OR key = 'ideogram_api_key'`
+        `SELECT key, value FROM settings WHERE key IN (
+          'pinterest_access_token','pinterest_board_id','pinterest_board_name',
+          'pinterest_post_counter','pinterest_topic_index','ideogram_api_key'
+        )`
       );
-      const settings = {};
-      result.rows.forEach(r => { settings[r.key] = r.value; });
+      result.rows.forEach(({ key, value }) => {
+        if (key === 'pinterest_access_token') this.accessToken = value;
+        if (key === 'pinterest_board_id') this.boardId = value;
+        if (key === 'pinterest_board_name') this.boardName = value;
+        if (key === 'pinterest_post_counter') this.postCounter = parseInt(value) || 0;
+        if (key === 'pinterest_topic_index') this.topicIndex = parseInt(value) || 0;
+        if (key === 'ideogram_api_key') this.ideogramKey = value;
+      });
 
-      this.credentials = {
-        accessToken: settings.pinterest_access_token || '',
-        boardId: settings.pinterest_board_id || '',
-        ideogramKey: settings.ideogram_api_key || '',
-        frequency: settings.pinterest_posting_frequency || 'daily',
-        maxPosts: parseInt(settings.pinterest_max_posts_per_day || '1'),
-        postingTime: settings.pinterest_posting_time || '20:00',
-        autoPosting: settings.pinterest_auto_posting === 'true'
-      };
+      // Load user boards from DB
+      try {
+        const boardsR = await pool.query(`SELECT value FROM settings WHERE key = 'pinterest_boards_json'`);
+        if (boardsR.rows[0]) this.userBoards = JSON.parse(boardsR.rows[0].value);
+      } catch (e) { this.userBoards = []; }
 
-      this.isConfigured = !!(
-        this.credentials.accessToken &&
-        this.credentials.boardId &&
-        this.credentials.ideogramKey
-      );
-
-      const counterResult = await pool.query(
-        `SELECT value FROM settings WHERE key = 'pinterest_post_counter'`
-      );
-      if (counterResult.rows.length > 0) {
-        this.postCounter = parseInt(counterResult.rows[0].value || '0');
-      }
-
-      const indexResult = await pool.query(
-        `SELECT value FROM settings WHERE key = 'pinterest_topic_index'`
-      );
-      if (indexResult.rows.length > 0) {
-        this.topicIndex = parseInt(indexResult.rows[0].value || '0');
-      }
-
-      return this.isConfigured;
     } catch (err) {
-      console.error('Pinterest: failed to load settings:', err.message);
-      return false;
+      console.error('Pinterest: loadSettings error:', err.message);
     }
   }
 
-  // Build the Ideogram prompt for a travel infographic
-  _buildIdeogramPrompt(topic, includeCTA) {
-    const bullets = topic.pins.map((p, i) => `${i + 1}. ${p}`).join('  |  ');
-    const ctaLine = includeCTA
-      ? '  |  travelsmarterapp.com'
-      : '';
-
-    return [
-      `Travel infographic Pinterest pin, portrait 2:3 format, clean modern design.`,
-      `Bold headline at top: "${topic.title}"`,
-      `Below: numbered list in readable sans-serif font: ${bullets}${ctaLine}`,
-      `Color palette: warm coral and cream with navy accents. Travel theme icons.`,
-      `High contrast text, white background sections, professional look.`,
-      `Style: flat design infographic, no photographs, text-forward layout.`
-    ].join(' ');
+  isConfigured() {
+    return !!(this.accessToken && this.ideogramKey);
   }
 
-  async generateImage(topic, includeCTA) {
-    const prompt = this._buildIdeogramPrompt(topic, includeCTA);
+  // Pick the best matching board from user's actual boards
+  _pickBoard(topic) {
+    if (!this.userBoards.length) return { id: this.boardId, name: this.boardName || 'Travel' };
+    // Try to match by name
+    for (const preferred of topic.boards) {
+      const match = this.userBoards.find(b =>
+        b.name.toLowerCase().includes(preferred.toLowerCase()) ||
+        preferred.toLowerCase().includes(b.name.toLowerCase())
+      );
+      if (match) return match;
+    }
+    // Rotate through boards as fallback
+    return this.userBoards[this.topicIndex % this.userBoards.length];
+  }
+
+  async generateImage(topic) {
+    if (!this.ideogramKey) throw new Error('Ideogram API key not configured');
+    const prompt = `Pinterest travel infographic, portrait 2:3 format, clean modern design.
+Bold headline at top: "${topic.title}"
+Travel theme: ${topic.promptTheme}
+Color palette: warm coral and cream with navy accents. Travel icons. High contrast text.
+Style: flat design infographic, professional, eye-catching, Pinterest-optimized.
+No watermarks, no logos.`;
 
     const response = await axios.post(
       'https://api.ideogram.ai/generate',
@@ -200,202 +167,131 @@ class PinterestService {
           magic_prompt_option: 'OFF'
         }
       },
-      {
-        headers: {
-          'Api-Key': this.credentials.ideogramKey,
-          'Content-Type': 'application/json'
-        }
-      }
+      { headers: { 'Api-Key': this.ideogramKey, 'Content-Type': 'application/json' } }
     );
-
-    const imageUrl = response.data?.data?.[0]?.url;
-    if (!imageUrl) throw new Error('Ideogram returned no image URL');
-    return imageUrl;
+    const url = response.data?.data?.[0]?.url;
+    if (!url) throw new Error('Ideogram returned no image');
+    return url;
   }
 
   async generateDescription(topic, includeCTA) {
+    const ctaLine = includeCTA
+      ? '\n\nFind the best flight deals automatically → travelsmarterapp.com/welcome.html'
+      : '';
+
     const prompt = `Write a Pinterest pin description for a travel infographic titled "${topic.title}" about ${topic.promptTheme}.
 
-The description should:
-- Be 2–3 sentences, conversational and inspiring
-- Include 3–5 relevant hashtags at the end
-- NOT be promotional or salesy
-${includeCTA ? '- End with: "Find more travel deals at travelsmarterapp.com"' : ''}
+Requirements:
+- 2–3 sentences, inspiring and practical
+- Mention 1–2 specific benefits or tips
+- Conversational, not corporate
+- Max 300 characters for the main text${includeCTA ? '\n- Add this line at the end: "Find the best flight deals automatically → travelsmarterapp.com/welcome.html"' : ''}
 
-Only return the description text, nothing else.`;
+Output only the description text. No hashtags (those come separately).`;
 
     anthropic = await getAnthropicClient();
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
-      messages: [{ role: 'user', content: prompt }]
+      messages: [{ role: 'user', content: prompt }],
     });
-
-    return response.content[0].text.trim();
+    return response.content[0].text.trim() + ctaLine;
   }
 
-  async postToPinterest(imageUrl, title, description, link) {
-    const body = {
-      board_id: this.credentials.boardId,
-      title,
-      description,
-      media_source: {
-        source_type: 'image_url',
-        url: imageUrl
-      }
-    };
+  async generatePin(topicIndex = null) {
+    await this.loadSettings();
+    const index = topicIndex !== null ? topicIndex : this.topicIndex % TOPICS.length;
+    const topic = TOPICS[index % TOPICS.length];
+    const includeCTA = this.postCounter % 3 === 0;
+    const board = this._pickBoard(topic);
+    const link = 'https://travelsmarterapp.com/welcome.html';
 
-    if (link) body.link = link;
+    console.log(`📌 Pinterest: generating "${topic.title}"`);
 
-    const response = await axios.post(
-      'https://api.pinterest.com/v5/pins',
-      body,
-      {
-        headers: {
-          Authorization: `Bearer ${this.credentials.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    return response.data?.id || null;
-  }
-
-  async createAndPost() {
-    if (!this.isConfigured) {
-      throw new Error('Pinterest not configured — add credentials and Ideogram API key in Settings.');
-    }
-
-    // Rotate topics in order
-    const topic = INFOGRAPHIC_TOPICS[this.topicIndex % INFOGRAPHIC_TOPICS.length];
-    this.topicIndex++;
-
-    this.postCounter++;
-    const includeCTA = this.postCounter % 2 === 0;
-
-    // Generate image and description in parallel
     const [imageUrl, description] = await Promise.all([
-      this.generateImage(topic, includeCTA),
-      this.generateDescription(topic, includeCTA)
+      this.generateImage(topic),
+      this.generateDescription(topic, includeCTA),
     ]);
 
-    const link = includeCTA ? 'https://travelsmarterapp.com/welcome.html' : undefined;
-    const pinId = await this.postToPinterest(imageUrl, topic.title, description, link);
+    const tags = topic.tags.join(' ');
 
-    await this._logPost({
-      title: topic.title,
-      category: topic.category,
-      imageUrl,
-      description,
-      pinId,
-      includedCTA: includeCTA,
-      status: 'posted'
-    });
+    // Save as draft
+    const dbResult = await pool.query(
+      `INSERT INTO pinterest_posts (title, category, image_url, description, tags, board_id, board_name, link, included_cta, status, posted_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'draft', NOW()) RETURNING id`,
+      [topic.title, topic.category, imageUrl, description, tags, board.id || null, board.name || null, link, includeCTA]
+    );
+
+    this.topicIndex++;
+    this.postCounter++;
+    await pool.query(
+      `INSERT INTO settings (key, value, type) VALUES ('pinterest_topic_index', $1, 'text') ON CONFLICT (key) DO UPDATE SET value = $1`,
+      [String(this.topicIndex)]
+    );
+    await pool.query(
+      `INSERT INTO settings (key, value, type) VALUES ('pinterest_post_counter', $1, 'text') ON CONFLICT (key) DO UPDATE SET value = $1`,
+      [String(this.postCounter)]
+    );
 
     return {
       title: topic.title,
-      category: topic.category,
+      description,
       imageUrl,
-      pinId,
-      includedCTA,
-      description: description.substring(0, 100) + '…'
+      tags,
+      board,
+      link,
+      includeCTA,
+      category: topic.category,
+      dbId: dbResult.rows[0].id,
     };
   }
 
-  async _logPost({ title, category, imageUrl, description, pinId, includedCTA, status }) {
-    try {
-      await pool.query(
-        `INSERT INTO pinterest_posts (title, category, image_url, description, pin_id, included_cta, status, posted_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-        [title, category, imageUrl, description, pinId, includedCTA, status]
-      );
-      await pool.query(
-        `INSERT INTO settings (key, value, type) VALUES ('pinterest_post_counter', $1, 'text')
-         ON CONFLICT (key) DO UPDATE SET value = $1`,
-        [String(this.postCounter)]
-      );
-      await pool.query(
-        `INSERT INTO settings (key, value, type) VALUES ('pinterest_topic_index', $1, 'text')
-         ON CONFLICT (key) DO UPDATE SET value = $1`,
-        [String(this.topicIndex)]
-      );
-    } catch (err) {
-      console.error('Pinterest: failed to log post:', err.message);
-    }
+  async markAsPosted(dbId, pinUrl = null) {
+    await pool.query(
+      `UPDATE pinterest_posts SET status = 'posted', pin_id = $1, posted_at = NOW() WHERE id = $2`,
+      [pinUrl || null, dbId]
+    );
   }
 
-  async getRecentPosts(limit = 10) {
+  async getRecentPosts(limit = 20) {
     try {
-      const result = await pool.query(
-        `SELECT title, category, image_url, description, pin_id, included_cta, status, posted_at
+      const r = await pool.query(
+        `SELECT id, title, category, image_url, description, board_name, included_cta, status, pin_id, posted_at
          FROM pinterest_posts ORDER BY posted_at DESC LIMIT $1`,
         [limit]
       );
-      return result.rows;
-    } catch {
-      return [];
-    }
+      return r.rows;
+    } catch { return []; }
   }
 
-  startScheduler() {
-    if (this.scheduler) return { started: false, reason: 'Scheduler already running' };
-
-    const { frequency, maxPosts } = this.credentials;
-
-    let intervalMs;
-    if (frequency === 'weekly') {
-      intervalMs = 7 * 24 * 60 * 60 * 1000;
-    } else if (frequency === 'multiple_daily') {
-      intervalMs = Math.floor((14 * 60 * 60 * 1000) / Math.max(maxPosts, 1));
-    } else {
-      intervalMs = 24 * 60 * 60 * 1000;
-    }
-
-    console.log(`📌 Pinterest scheduler started — interval: ${Math.round(intervalMs / 60000)} min`);
-
-    this.scheduler = setInterval(async () => {
-      try {
-        const result = await this.createAndPost();
-        console.log(`✅ Pinterest: pinned "${result.title}" [${result.category}]`);
-      } catch (err) {
-        console.error('Pinterest scheduler error:', err.message);
-      }
-    }, intervalMs);
-
-    return { started: true, intervalMinutes: Math.round(intervalMs / 60000), frequency };
-  }
-
-  stopScheduler() {
-    if (!this.scheduler) return { stopped: false, reason: 'No scheduler running' };
-    clearInterval(this.scheduler);
-    this.scheduler = null;
-    return { stopped: true };
+  getTopics() {
+    return TOPICS.map((t, i) => ({
+      index: i,
+      title: t.title,
+      category: t.category,
+      isNext: i === this.topicIndex % TOPICS.length,
+    }));
   }
 
   getStatus() {
     return {
-      configured: this.isConfigured,
-      schedulerRunning: !!this.scheduler,
-      boardId: this.credentials.boardId || null,
-      ideogramConfigured: !!this.credentials.ideogramKey,
-      frequency: this.credentials.frequency,
-      maxPosts: this.credentials.maxPosts,
-      postingTime: this.credentials.postingTime,
+      connected: !!this.accessToken,
+      ideogramConfigured: !!this.ideogramKey,
+      boardId: this.boardId,
+      boardName: this.boardName,
+      boardsLoaded: this.userBoards.length,
       postCounter: this.postCounter,
-      topicIndex: this.topicIndex,
-      nextTopic: INFOGRAPHIC_TOPICS[this.topicIndex % INFOGRAPHIC_TOPICS.length]?.title || null,
-      autoPosting: this.credentials.autoPosting
+      nextTopic: TOPICS[this.topicIndex % TOPICS.length]?.title || null,
     };
   }
 
-  getTopics() {
-    return INFOGRAPHIC_TOPICS.map((t, i) => ({
-      index: i,
-      title: t.title,
-      category: t.category,
-      isNext: i === this.topicIndex % INFOGRAPHIC_TOPICS.length
-    }));
+  // Legacy: kept for backward compat
+  async createAndPost() {
+    throw new Error('Auto-posting disabled — use copy-paste workflow via /generate endpoint.');
   }
+
+  startScheduler() { return { started: false, reason: 'Auto-posting not available — use copy-paste workflow' }; }
+  stopScheduler() { return { stopped: false, reason: 'No scheduler running' }; }
 }
 
 module.exports = new PinterestService();

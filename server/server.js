@@ -982,11 +982,20 @@ async function initializeApp() {
         category VARCHAR(50),
         image_url TEXT,
         description TEXT,
+        tags TEXT,
+        board_id VARCHAR(100),
+        board_name VARCHAR(200),
+        link TEXT,
         pin_id VARCHAR(255),
         included_cta BOOLEAN DEFAULT false,
-        status VARCHAR(50) DEFAULT 'posted',
+        status VARCHAR(50) DEFAULT 'draft',
         posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+
+      ALTER TABLE pinterest_posts ADD COLUMN IF NOT EXISTS tags TEXT;
+      ALTER TABLE pinterest_posts ADD COLUMN IF NOT EXISTS board_id VARCHAR(100);
+      ALTER TABLE pinterest_posts ADD COLUMN IF NOT EXISTS board_name VARCHAR(200);
+      ALTER TABLE pinterest_posts ADD COLUMN IF NOT EXISTS link TEXT;
 
       CREATE INDEX IF NOT EXISTS idx_pinterest_posts_posted_at ON pinterest_posts(posted_at DESC);
 
