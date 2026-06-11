@@ -106,8 +106,9 @@ router.post('/post-pin', async (req, res) => {
     const result = await pinterestService.createAndPost();
     res.json({ success: true, ...result });
   } catch (err) {
-    console.error('Pinterest post-pin error:', err.message);
-    res.status(500).json({ success: false, error: err.message });
+    const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+    console.error('Pinterest post-pin error:', detail);
+    res.status(500).json({ success: false, error: detail });
   }
 });
 
