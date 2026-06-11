@@ -149,32 +149,56 @@ router.post('/fetch-urn', async (req, res) => {
     let personId = null;
     const errors = [];
 
-    // Try /v2/me (works even with w_member_social in many cases)
+    // Try /v2/me
     try {
       const r = await axios.get('https://api.linkedin.com/v2/me', {
         headers: { Authorization: `Bearer ${token}`, 'X-Restli-Protocol-Version': '2.0.0' }
       });
       personId = r.data.id;
-      console.log('💼 LinkedIn fetch-urn /v2/me →', personId, JSON.stringify(r.data));
+      console.log('💼 LinkedIn /v2/me →', personId, JSON.stringify(r.data));
     } catch (e) {
       errors.push('/v2/me: ' + (e.response?.status || e.message));
     }
 
-    // Try /v2/userinfo (OpenID Connect — works if openid/profile scope)
+    // Try token introspection — returns sub (member ID) using client credentials
+    if (!personId) {
+      try {
+        const clientIdR = await pool.query(`SELECT value FROM settings WHERE key = 'linkedin_client_id'`);
+        const clientSecR = await pool.query(`SELECT value FROM settings WHERE key = 'linkedin_client_secret'`);
+        const clientId = clientIdR.rows[0]?.value;
+        const clientSecret = clientSecR.rows[0]?.value;
+        if (clientId && clientSecret) {
+          const params = new URLSearchParams();
+          params.append('token', token);
+          params.append('client_id', clientId);
+          params.append('client_secret', clientSecret);
+          const r = await axios.post('https://www.linkedin.com/oauth/v2/introspectToken', params,
+            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+          );
+          console.log('💼 LinkedIn introspect →', JSON.stringify(r.data));
+          // sub is the numeric member ID
+          personId = r.data.sub || r.data.id || r.data.member_id;
+        }
+      } catch (e) {
+        errors.push('introspect: ' + (e.response?.status + ' ' + JSON.stringify(e.response?.data) || e.message));
+      }
+    }
+
+    // Try /v2/userinfo (OpenID Connect)
     if (!personId) {
       try {
         const r = await axios.get('https://api.linkedin.com/v2/userinfo', {
           headers: { Authorization: `Bearer ${token}` }
         });
         personId = r.data.sub;
-        console.log('💼 LinkedIn fetch-urn /v2/userinfo sub →', personId);
+        console.log('💼 LinkedIn /v2/userinfo sub →', personId);
       } catch (e) {
         errors.push('/v2/userinfo: ' + (e.response?.status || e.message));
       }
     }
 
     if (!personId) {
-      return res.status(400).json({ success: false, error: 'Could not resolve member ID', tried: errors });
+      return res.status(400).json({ success: false, error: `Could not resolve member ID. Errors: ${errors.join(' | ')}` });
     }
 
     await pool.query(
