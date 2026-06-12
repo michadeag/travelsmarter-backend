@@ -1014,6 +1014,9 @@ async function initializeApp() {
         posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      ALTER TABLE instagram_posts ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      ALTER TABLE instagram_posts ADD COLUMN IF NOT EXISTS post_url TEXT;
+
       CREATE INDEX IF NOT EXISTS idx_instagram_posts_posted_at ON instagram_posts(posted_at DESC);
 
       -- Medium posts log
