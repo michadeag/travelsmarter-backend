@@ -100,7 +100,7 @@ Return ONLY the caption, nothing else.`
     const r = await axios.post('https://api.ideogram.ai/generate', {
       image_request: {
         prompt: `Instagram travel infographic: "${topic.title}". Bold modern design, Deep Navy (#1a2744) background, Vibrant Coral (#ff6b4a) accents, clean typography. Travel photography style. Inspiring and professional. Theme: ${topic.promptTheme}.`,
-        aspect_ratio: 'ASPECT_4_5',
+        aspect_ratio: 'ASPECT_2_3',
         model: 'V_2',
         style_type: 'DESIGN',
         magic_prompt_option: 'AUTO',
