@@ -1048,6 +1048,9 @@ async function initializeApp() {
         posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS unsubscribe_token UUID DEFAULT gen_random_uuid();
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS email_marketing_opt_out BOOLEAN DEFAULT false;
+
       ALTER TABLE quora_answers ADD COLUMN IF NOT EXISTS space_suggestions TEXT;
       ALTER TABLE quora_answers ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'draft';
       ALTER TABLE quora_answers ADD COLUMN IF NOT EXISTS post_url TEXT;
@@ -1203,7 +1206,7 @@ async function initializeApp() {
     // Seed Instagram + Cloudinary credentials into settings table
     try {
       const igCreds = [
-        ['instagram_access_token', 'IGAAjVcr6k02NBZAFlEU296NWlyUGhQZAVU3djNLUVpLc085ODF5akN3bDRKM1ltMkZAZAdkt2UExJTlNqaHZAackdfdWZAMdC1hRHZA1OE9UdkhIcHk2N3BRNklOWlJkWEJ3dUhSSWZAHUmR4LUNfcmdhbUppU1A4Y2VUMGhTZA1pKMnRhVQZDZD'],
+        ['instagram_access_token', 'EAAU3XCOp3KUBRoOIU9qICc0sab6MxejleB3JxyuXfPRsLjCCHpHxYTfpGouFPfo8EEH5aqhmLaZAiDjnN42qZBRCBwZCPeQMFJBFVCyC18yZBgiq6uF46Rxjlxaxt6I1U9sm8WPk5oNtGdxRk4KHMw0YQZCKZBzvukJUJzVn2IOzpZAvi40xHr9XfMftaYxyNNC'],
         ['instagram_account_id', '17841477818287005'],
         ['cloudinary_cloud_name', 'djb1xbhts'],
         ['cloudinary_api_key', '141873827238578'],

@@ -30,4 +30,21 @@ router.get('/me', protect, getMe);
 router.put('/update-profile', protect, updateProfile);
 router.post('/change-password', protect, changePassword);
 
+// Unsubscribe (public — no auth needed)
+router.get('/unsubscribe', async (req, res) => {
+  const pool = require('../config/database');
+  const { token } = req.query;
+  if (!token) return res.status(400).json({ success: false, error: 'Token missing' });
+  try {
+    const r = await pool.query(
+      `UPDATE users SET email_marketing_opt_out = true WHERE unsubscribe_token = $1 RETURNING email`,
+      [token]
+    );
+    if (!r.rows.length) return res.status(404).json({ success: false, error: 'Invalid token' });
+    res.json({ success: true, email: r.rows[0].email });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

@@ -198,6 +198,7 @@ async function sendPendingEmails() {
     // Find emails that are due to be sent
     const result = await pool.query(`
       SELECT se.id, se.user_id, se.template_id, u.email, u.first_name,
+             u.unsubscribe_token, u.email_marketing_opt_out,
              et.day, et.subject, et.html_content
       FROM scheduled_emails se
       JOIN users u ON se.user_id = u.id
@@ -205,6 +206,7 @@ async function sendPendingEmails() {
       WHERE se.status = 'pending'
       AND se.scheduled_at <= NOW()
       AND et.is_active = true
+      AND (u.email_marketing_opt_out IS NULL OR u.email_marketing_opt_out = false)
       ORDER BY se.scheduled_at ASC
     `);
 
@@ -238,8 +240,8 @@ async function sendPendingEmails() {
                         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 40px 0;">
                         <p style="font-size: 12px; color: #9ca3af;">
                           You received this email because you signed up for TravelSmarter.<br>
-                          <a href="${appUrl}/settings" style="color: #667eea; text-decoration: none;">Manage preferences</a> |
-                          <a href="${appUrl}/unsubscribe" style="color: #667eea; text-decoration: none;">Unsubscribe</a>
+                          <a href="${appUrl}/account.html" style="color: #667eea; text-decoration: none;">Manage preferences</a> |
+                          <a href="${appUrl}/unsubscribe.html?token=${row.unsubscribe_token}" style="color: #667eea; text-decoration: none;">Unsubscribe</a>
                         </p>
                       </td>
                     </tr>
