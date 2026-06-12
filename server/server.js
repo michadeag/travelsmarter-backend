@@ -40,6 +40,7 @@ const instagramRoutes = require('./routes/instagramRoutes');
 const mediumRoutes = require('./routes/mediumRoutes');
 const wordpressRoutes = require('./routes/wordpressRoutes');
 const slideshareRoutes = require('./routes/slideshareRoutes');
+const partnerDealsRoutes = require('./routes/partnerDealsRoutes');
 const quoraRoutes = require('./routes/quoraRoutes');
 const bloggerRoutes = require('./routes/bloggerRoutes');
 
@@ -165,6 +166,7 @@ app.use('/api/reddit', redditRoutes);
 app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/pinterest', pinterestRoutes);
 app.use('/api/slideshare', slideshareRoutes);
+app.use('/api/partner-deals', partnerDealsRoutes);
 app.use('/api/instagram', instagramRoutes);
 app.use('/api/medium', mediumRoutes);
 app.use('/api/wordpress', wordpressRoutes);
@@ -1048,6 +1050,21 @@ async function initializeApp() {
         posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      CREATE TABLE IF NOT EXISTS partner_deals (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(300) NOT NULL,
+        description TEXT,
+        category VARCHAR(100) DEFAULT 'other',
+        discount_badge VARCHAR(100),
+        affiliate_url TEXT NOT NULL,
+        logo_url TEXT,
+        is_verified BOOLEAN DEFAULT true,
+        is_active BOOLEAN DEFAULT true,
+        click_count INTEGER DEFAULT 0,
+        sort_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       ALTER TABLE users ADD COLUMN IF NOT EXISTS unsubscribe_token UUID DEFAULT gen_random_uuid();
       ALTER TABLE users ADD COLUMN IF NOT EXISTS email_marketing_opt_out BOOLEAN DEFAULT false;
       UPDATE users SET unsubscribe_token = gen_random_uuid() WHERE unsubscribe_token IS NULL;
@@ -1300,6 +1317,33 @@ async function initializeApp() {
       });
     } else {
       console.log('⏭️ Skipping seed data (SKIP_SEED=true)');
+    }
+
+    // Seed partner deals if table is empty
+    try {
+      const dealsCount = await pool.query(`SELECT COUNT(*) FROM partner_deals`);
+      if (parseInt(dealsCount.rows[0].count) === 0) {
+        const deals = [
+          ['Wise Travel Card', 'Send money abroad at the real exchange rate. No hidden fees. Perfect for travel.', 'travel_card', 'No FX Fees', 'https://wise.com/invite/ih/michaelh2041', '', true, 1],
+          ['Airalo eSIM', 'Stay connected in 200+ countries with affordable data eSIMs. No roaming charges.', 'esim', 'Up to 70% cheaper', 'https://www.airalo.com/?irclickid=ref-travelsmarter', '', true, 2],
+          ['SafetyWing Travel Insurance', 'Flexible travel medical insurance for nomads and travelers. From $45.08/month.', 'insurance', 'From $45/month', 'https://safetywing.com/?referenceID=travelsmarter', '', true, 3],
+          ['NordVPN', 'Stay secure on public WiFi. Access geo-restricted deals. 68% off with our link.', 'vpn', '68% OFF', 'https://nordvpn.com/special/travelsmarter/', '', true, 4],
+          ['Booking.com', 'Book hotels, apartments and more. Genius members save up to 20% instantly.', 'hotels', 'Up to 20% OFF', 'https://www.booking.com/index.html?aid=2311236', '', true, 5],
+          ['Rentalcars.com', 'Compare car rental deals from 900+ companies worldwide. Best price guarantee.', 'car_rental', 'Best Price Guarantee', 'https://www.rentalcars.com/?affiliateCode=travelsmarter', '', true, 6],
+          ['Priority Pass', 'Access 1,300+ airport lounges worldwide. Free drinks, food and WiFi.', 'flights', '10% OFF membership', 'https://www.prioritypass.com/en/affiliate/travelsmarter', '', true, 7],
+          ['Away Luggage', 'Premium hardshell carry-on luggage with built-in battery. Built for smart travelers.', 'luggage', '$20 OFF first order', 'https://www.awaytravel.com/travelsmarter', '', true, 8],
+        ];
+        for (const [title, description, category, badge, url, logo, verified, order] of deals) {
+          await pool.query(
+            `INSERT INTO partner_deals (title, description, category, discount_badge, affiliate_url, logo_url, is_verified, sort_order)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+            [title, description, category, badge, url, logo, verified, order]
+          );
+        }
+        console.log('✅ Partner deals seeded (8 deals)');
+      }
+    } catch (err) {
+      console.warn('⚠️ Partner deals seed failed:', err.message);
     }
 
     console.log('✅ App initialization complete');
