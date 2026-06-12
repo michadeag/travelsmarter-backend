@@ -157,9 +157,17 @@ Return ONLY the caption, nothing else.`
     const accountId = this._get('instagram_account_id');
 
     // Create media container
-    const containerRes = await axios.post(`${GRAPH_API}/${accountId}/media`, null, {
-      params: { image_url: post.image_url, caption: post.caption, access_token: token }
-    });
+    console.log('Instagram publish: accountId=', accountId, 'imageUrl=', post.image_url?.substring(0, 60));
+    let containerRes;
+    try {
+      containerRes = await axios.post(`${GRAPH_API}/${accountId}/media`, null, {
+        params: { image_url: post.image_url, caption: post.caption, access_token: token }
+      });
+    } catch (err) {
+      const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      console.error('Instagram container creation failed:', detail);
+      throw new Error('Instagram API: ' + detail);
+    }
     const creationId = containerRes.data?.id;
     if (!creationId) throw new Error('Instagram: no creation_id returned');
 
