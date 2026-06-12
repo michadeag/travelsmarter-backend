@@ -1,281 +1,217 @@
 const axios = require('axios');
 const Anthropic = require('@anthropic-ai/sdk');
+const { v2: cloudinary } = require('cloudinary');
 const pool = require('../config/database');
-// Reuse Pinterest's Ideogram image generation and topic list
-const pinterestService = require('./pinterestService');
 
-let anthropic = null;
-async function getAnthropicClient() {
-  if (process.env.ANTHROPIC_API_KEY) return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const r = await pool.query(`SELECT value FROM settings WHERE key = 'anthropic_api_key'`).catch(() => ({ rows: [] }));
-  const key = r.rows[0]?.value;
-  if (!key) throw new Error('Anthropic API key not configured');
-  return new Anthropic({ apiKey: key });
-}
+const GRAPH_API = 'https://graph.facebook.com/v21.0';
 
-const GRAPH_API = 'https://graph.facebook.com/v19.0';
+const TOPICS = [
+  { category: 'budget_flights', title: '5 Hacks to Fly for Way Less', promptTheme: 'flight deals and cheap airfare hacks' },
+  { category: 'packing', title: 'The Perfect Carry-On Packing List', promptTheme: 'minimalist carry-on packing for any trip' },
+  { category: 'points_miles', title: 'Earn Miles Without Flying', promptTheme: 'credit card points and airline miles strategy' },
+  { category: 'budget_destinations', title: 'Best Budget Countries in 2025', promptTheme: 'affordable travel destinations worldwide' },
+  { category: 'airport_hacks', title: 'Airport Tricks Every Traveler Needs', promptTheme: 'airport productivity and travel hacks' },
+  { category: 'travel_safety', title: 'Stay Safe Anywhere in the World', promptTheme: 'travel safety tips and smart precautions' },
+  { category: 'hotel_hacks', title: 'Get More from Every Hotel Stay', promptTheme: 'hotel booking hacks and loyalty tips' },
+  { category: 'digital_nomad', title: 'Work Remotely from Anywhere', promptTheme: 'digital nomad lifestyle and remote work travel' },
+  { category: 'upgrade_hacks', title: 'How to Get Upgraded (For Free)', promptTheme: 'flight and hotel upgrade strategies' },
+  { category: 'travel_mindset', title: 'Travel More, Spend Less', promptTheme: 'smart travel mindset and lifestyle design' },
+];
 
 class InstagramService {
   constructor() {
-    this.scheduler = null;
-    this.isConfigured = false;
-    this.credentials = {};
+    this.settings = {};
     this.postCounter = 0;
     this.topicIndex = 0;
+    this.isConfigured = false;
   }
 
   async loadSettings() {
     try {
-      // Re-initialize Anthropic client with key from DB if available
-      const claudeKeyResult = await pool.query("SELECT value FROM settings WHERE key = 'anthropic_api_key' LIMIT 1");
-      const claudeKey = claudeKeyResult.rows[0]?.value || process.env.ANTHROPIC_API_KEY;
-      if (claudeKey) anthropic = new Anthropic({ apiKey: claudeKey });
-      const result = await pool.query(
-        `SELECT key, value FROM settings WHERE key LIKE 'instagram_%' OR key = 'ideogram_api_key'`
+      const r = await pool.query(
+        `SELECT key, value FROM settings WHERE key LIKE 'instagram_%' OR key LIKE 'cloudinary_%' OR key = 'ideogram_api_key' OR key = 'anthropic_api_key'`
       );
-      const settings = {};
-      result.rows.forEach(r => { settings[r.key] = r.value; });
+      r.rows.forEach(row => { this.settings[row.key] = row.value; });
 
-      this.credentials = {
-        accessToken: settings.instagram_access_token || '',
-        accountId: settings.instagram_account_id || '',
-        ideogramKey: settings.ideogram_api_key || '',
-        frequency: settings.instagram_posting_frequency || 'daily',
-        maxPosts: parseInt(settings.instagram_max_posts_per_day || '1'),
-        postingHours: settings.instagram_posting_hours || '11,18',
-        autoPosting: settings.instagram_auto_posting === 'true'
-      };
+      const counterR = await pool.query(`SELECT value FROM settings WHERE key = 'instagram_post_counter'`);
+      if (counterR.rows.length) this.postCounter = parseInt(counterR.rows[0].value || '0');
+
+      const indexR = await pool.query(`SELECT value FROM settings WHERE key = 'instagram_topic_index'`);
+      if (indexR.rows.length) this.topicIndex = parseInt(indexR.rows[0].value || '0');
 
       this.isConfigured = !!(
-        this.credentials.accessToken &&
-        this.credentials.accountId &&
-        this.credentials.ideogramKey
+        this._get('instagram_access_token') &&
+        this._get('instagram_account_id') &&
+        this._get('ideogram_api_key')
       );
 
-      const counterResult = await pool.query(
-        `SELECT value FROM settings WHERE key = 'instagram_post_counter'`
-      );
-      if (counterResult.rows.length > 0) {
-        this.postCounter = parseInt(counterResult.rows[0].value || '0');
+      if (this._get('cloudinary_cloud_name')) {
+        cloudinary.config({
+          cloud_name: this._get('cloudinary_cloud_name'),
+          api_key: this._get('cloudinary_api_key'),
+          api_secret: this._get('cloudinary_api_secret'),
+        });
       }
-
-      const indexResult = await pool.query(
-        `SELECT value FROM settings WHERE key = 'instagram_topic_index'`
-      );
-      if (indexResult.rows.length > 0) {
-        this.topicIndex = parseInt(indexResult.rows[0].value || '0');
-      }
-
-      // Sync ideogram key into pinterestService credentials so generateImage works
-      pinterestService.credentials.ideogramKey = this.credentials.ideogramKey;
 
       return this.isConfigured;
     } catch (err) {
-      console.error('Instagram: failed to load settings:', err.message);
+      console.error('Instagram loadSettings error:', err.message);
       return false;
     }
   }
 
-  async generateCaption(topic, includeCTA) {
-    const ctaLine = includeCTA
-      ? '\n\n🔗 Find more travel deals for free → travelsmarterapp.com (link in bio)'
-      : '';
-
-    const prompt = `Write an Instagram caption for a travel infographic titled "${topic.title}" about ${topic.promptTheme}.
-
-The caption should:
-- Start with 1–2 hook sentences (surprising fact or bold statement)
-- Be energetic and conversational — Instagram tone, not corporate
-- Use 3–5 relevant emojis naturally throughout
-- End with a question to drive comments
-- Include 10–15 relevant hashtags on a new line at the end
-- Total length: 100–180 words
-
-Only return the caption text, nothing else.`;
-
-    anthropic = await getAnthropicClient();
-
-
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 300,
-      messages: [{ role: 'user', content: prompt }]
-    });
-
-    return response.content[0].text.trim() + ctaLine;
+  _get(key) {
+    return this.settings[key] || process.env[key.toUpperCase()] || '';
   }
 
-  async publishToInstagram(imageUrl, caption) {
-    const { accessToken, accountId } = this.credentials;
-
-    // Step 1: create media container
-    const containerRes = await axios.post(
-      `${GRAPH_API}/${accountId}/media`,
-      null,
-      {
-        params: {
-          image_url: imageUrl,
-          caption,
-          access_token: accessToken
-        }
-      }
-    );
-
-    const creationId = containerRes.data?.id;
-    if (!creationId) throw new Error('Instagram: no creation_id returned');
-
-    // Step 2: publish container
-    const publishRes = await axios.post(
-      `${GRAPH_API}/${accountId}/media_publish`,
-      null,
-      {
-        params: {
-          creation_id: creationId,
-          access_token: accessToken
-        }
-      }
-    );
-
-    return publishRes.data?.id || null;
-  }
-
-  async createAndPost() {
-    if (!this.isConfigured) {
-      throw new Error('Instagram not configured — add credentials and Ideogram API key in Settings.');
-    }
-
-    const topic = this._getTopic(this.topicIndex);
-    this.topicIndex++;
-
-    this.postCounter++;
-    const includeCTA = this.postCounter % 2 === 0;
-
-    // Generate image (reuse Pinterest's Ideogram call) and caption in parallel
-    const [imageUrl, caption] = await Promise.all([
-      pinterestService.generateImage(topic, includeCTA),
-      this.generateCaption(topic, includeCTA)
-    ]);
-
-    const postId = await this.publishToInstagram(imageUrl, caption);
-
-    await this._logPost({
-      title: topic.title,
-      category: topic.category,
-      imageUrl,
-      caption,
-      postId,
-      includedCTA: includeCTA,
-      status: 'posted'
-    });
-
-    return {
-      title: topic.title,
-      category: topic.category,
-      imageUrl,
-      postId,
-      includedCTA,
-      captionPreview: caption.substring(0, 100) + '…'
-    };
-  }
-
-  // Mirror of Pinterest's topic list — keeps services independent but images identical
-  _getTopic(index) {
-    const TOPICS = [
-      { category: 'budget_flights', title: '5 Hacks to Fly for Way Less', promptTheme: 'flight deals and cheap airfare hacks', pins: ['Use Google Flights + flexible dates', 'Book 6–8 weeks ahead for domestic', 'Set fare alerts on Hopper or Kayak', 'Fly Tue/Wed for the cheapest seats', 'Check nearby airports for big savings'] },
-      { category: 'packing', title: 'The Perfect Carry-On Packing List', promptTheme: 'minimalist carry-on packing for any trip', pins: ['3-1-1 liquids in a clear zip bag', 'Roll, don\'t fold — saves 30% space', 'Pack a portable charger + cables', 'One outfit per 2 days (mix & match)', 'Compression cubes = game changer'] },
-      { category: 'points_miles', title: 'Earn Miles Without Flying', promptTheme: 'credit card points and airline miles strategy', pins: ['Sign-up bonuses = free business class', 'Use miles card for everyday spend', 'Transfer points to airline partners', 'Shop through airline shopping portals', 'Dining programs earn bonus miles'] },
-      { category: 'budget_destinations', title: 'Best Budget Countries in 2025', promptTheme: 'affordable travel destinations worldwide', pins: ['Vietnam — $30/day all-in', 'Portugal — cheapest in Western Europe', 'Colombia — stunning & underrated', 'Georgia (Caucasus) — hidden gem', 'Mexico — world-class food, low cost'] },
-      { category: 'airport_hacks', title: 'Airport Tricks Every Traveler Needs', promptTheme: 'airport productivity and travel hacks', pins: ['Skip bag check — always carry-on', 'TSA PreCheck = worth every penny', 'Free lounge access with right credit card', 'Screenshot boarding pass offline', 'Arrive 90 min early, not 3 hours'] },
-      { category: 'travel_safety', title: 'Stay Safe Anywhere in the World', promptTheme: 'travel safety tips and smart precautions', pins: ['Use a VPN on public WiFi', 'Keep copies of all documents in email', 'Share itinerary with someone at home', 'Get travel insurance — always', 'Use ATMs inside banks, not on streets'] },
-      { category: 'hotel_hacks', title: 'Get More from Every Hotel Stay', promptTheme: 'hotel booking hacks and loyalty tips', pins: ['Book direct for best rate + perks', 'Ask for upgrades at check-in (politely)', 'Loyalty programs unlock free nights fast', 'Use hotel WiFi over cellular abroad', 'Late check-out is often free if you ask'] },
-      { category: 'digital_nomad', title: 'Work Remotely from Anywhere', promptTheme: 'digital nomad lifestyle and remote work travel', pins: ['Coworking day pass = $10–20 anywhere', 'Airbnb monthly = way cheaper than nightly', 'Time zones: always be async-first', 'Noise-cancelling headphones are essential', 'Bali, Chiang Mai, Lisbon = nomad hubs'] }
-    ];
+  _topic(index) {
     return TOPICS[index % TOPICS.length];
   }
 
-  async _logPost({ title, category, imageUrl, caption, postId, includedCTA, status }) {
-    try {
-      await pool.query(
-        `INSERT INTO instagram_posts (title, category, image_url, caption, post_id, included_cta, status, posted_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-        [title, category, imageUrl, caption, postId, includedCTA, status]
-      );
-      await pool.query(
-        `INSERT INTO settings (key, value, type) VALUES ('instagram_post_counter', $1, 'text')
-         ON CONFLICT (key) DO UPDATE SET value = $1`,
-        [String(this.postCounter)]
-      );
-      await pool.query(
-        `INSERT INTO settings (key, value, type) VALUES ('instagram_topic_index', $1, 'text')
-         ON CONFLICT (key) DO UPDATE SET value = $1`,
-        [String(this.topicIndex)]
-      );
-    } catch (err) {
-      console.error('Instagram: failed to log post:', err.message);
-    }
+  async generateCaption(topic) {
+    const anthropic = new Anthropic({ apiKey: this._get('anthropic_api_key') || process.env.ANTHROPIC_API_KEY });
+    const utmSlug = topic.category.replace(/_/g, '-');
+    const link = `https://travelsmarterapp.com/welcome.html?ref=instagram&topic=${utmSlug}`;
+
+    const r = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 400,
+      messages: [{
+        role: 'user',
+        content: `Write an Instagram caption for TravelSmarter about: "${topic.title}" (${topic.promptTheme}).
+
+Requirements:
+- Hook in first line — bold statement or surprising fact, no hashtags
+- 120–180 words total, conversational and energetic
+- 3–5 emojis naturally placed
+- End with a question to drive comments
+- Soft mention of travelsmarterapp.com: "${link}"
+- 15–20 hashtags on a separate final line (mix popular + niche travel hashtags)
+
+Return ONLY the caption, nothing else.`
+      }]
+    });
+
+    return r.content[0].text.trim();
   }
 
-  async getRecentPosts(limit = 10) {
-    try {
-      const result = await pool.query(
-        `SELECT title, category, image_url, caption, post_id, included_cta, status, posted_at
-         FROM instagram_posts ORDER BY posted_at DESC LIMIT $1`,
-        [limit]
-      );
-      return result.rows;
-    } catch {
-      return [];
-    }
-  }
-
-  startScheduler() {
-    if (this.scheduler) return { started: false, reason: 'Scheduler already running' };
-
-    const { frequency, maxPosts } = this.credentials;
-
-    let intervalMs;
-    if (frequency === 'weekly') {
-      intervalMs = 7 * 24 * 60 * 60 * 1000;
-    } else if (frequency === 'multiple_daily') {
-      intervalMs = Math.floor((14 * 60 * 60 * 1000) / Math.max(maxPosts, 1));
-    } else {
-      intervalMs = 24 * 60 * 60 * 1000;
-    }
-
-    console.log(`📸 Instagram scheduler started — interval: ${Math.round(intervalMs / 60000)} min`);
-
-    this.scheduler = setInterval(async () => {
-      try {
-        const result = await this.createAndPost();
-        console.log(`✅ Instagram: posted "${result.title}" [${result.category}]`);
-      } catch (err) {
-        console.error('Instagram scheduler error:', err.message);
+  async generateImage(topic) {
+    const apiKey = this._get('ideogram_api_key');
+    const r = await axios.post('https://api.ideogram.ai/generate', {
+      image_request: {
+        prompt: `Instagram travel infographic: "${topic.title}". Bold modern design, Deep Navy (#1a2744) background, Vibrant Coral (#ff6b4a) accents, clean typography. Travel photography style. Inspiring and professional. Theme: ${topic.promptTheme}.`,
+        aspect_ratio: 'ASPECT_4_5',
+        model: 'V_2',
+        style_type: 'DESIGN',
+        magic_prompt_option: 'AUTO',
       }
-    }, intervalMs);
+    }, {
+      headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
+      timeout: 60000,
+    });
 
-    return { started: true, intervalMinutes: Math.round(intervalMs / 60000), frequency };
+    return r.data.data[0].url;
   }
 
-  stopScheduler() {
-    if (!this.scheduler) return { stopped: false, reason: 'No scheduler running' };
-    clearInterval(this.scheduler);
-    this.scheduler = null;
-    return { stopped: true };
+  async uploadToCloudinary(imageUrl) {
+    const r = await cloudinary.uploader.upload(imageUrl, {
+      folder: 'travelsmarter/instagram',
+      resource_type: 'image',
+    });
+    return r.secure_url;
+  }
+
+  async generatePreview(topicIndex = null) {
+    const idx = topicIndex !== null ? topicIndex % TOPICS.length : this.topicIndex;
+    const topic = this._topic(idx);
+
+    const caption = await this.generateCaption(topic);
+    const ideogramUrl = await this.generateImage(topic);
+
+    let publicImageUrl = ideogramUrl;
+    if (this._get('cloudinary_cloud_name')) {
+      publicImageUrl = await this.uploadToCloudinary(ideogramUrl);
+    }
+
+    const r = await pool.query(
+      `INSERT INTO instagram_posts (title, category, image_url, caption, status, created_at)
+       VALUES ($1, $2, $3, $4, 'draft', NOW()) RETURNING id`,
+      [topic.title, topic.category, publicImageUrl, caption]
+    );
+
+    return {
+      dbId: r.rows[0].id,
+      topic: topic.title,
+      category: topic.category,
+      imageUrl: publicImageUrl,
+      caption,
+    };
+  }
+
+  async publishPost(dbId) {
+    const r = await pool.query(`SELECT * FROM instagram_posts WHERE id = $1`, [dbId]);
+    if (!r.rows.length) throw new Error('Post not found');
+    const post = r.rows[0];
+
+    const token = this._get('instagram_access_token');
+    const accountId = this._get('instagram_account_id');
+
+    // Create media container
+    const containerRes = await axios.post(`${GRAPH_API}/${accountId}/media`, null, {
+      params: { image_url: post.image_url, caption: post.caption, access_token: token }
+    });
+    const creationId = containerRes.data?.id;
+    if (!creationId) throw new Error('Instagram: no creation_id returned');
+
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // Publish
+    const publishRes = await axios.post(`${GRAPH_API}/${accountId}/media_publish`, null, {
+      params: { creation_id: creationId, access_token: token }
+    });
+    const igPostId = publishRes.data?.id;
+
+    await pool.query(
+      `UPDATE instagram_posts SET status='posted', post_id=$1, posted_at=NOW() WHERE id=$2`,
+      [igPostId, dbId]
+    );
+
+    this.topicIndex++;
+    this.postCounter++;
+    await this._saveCounters();
+
+    return { igPostId, postUrl: `https://www.instagram.com/` };
+  }
+
+  async _saveCounters() {
+    await pool.query(
+      `INSERT INTO settings (key, value, type) VALUES ('instagram_post_counter', $1, 'text') ON CONFLICT (key) DO UPDATE SET value = $1`,
+      [String(this.postCounter)]
+    );
+    await pool.query(
+      `INSERT INTO settings (key, value, type) VALUES ('instagram_topic_index', $1, 'text') ON CONFLICT (key) DO UPDATE SET value = $1`,
+      [String(this.topicIndex)]
+    );
+  }
+
+  async getRecentPosts(limit = 20) {
+    const r = await pool.query(
+      `SELECT * FROM instagram_posts ORDER BY created_at DESC LIMIT $1`, [limit]
+    );
+    return r.rows;
   }
 
   getStatus() {
-    const nextTopic = this._getTopic(this.topicIndex);
     return {
       configured: this.isConfigured,
-      schedulerRunning: !!this.scheduler,
-      accountId: this.credentials.accountId || null,
-      ideogramConfigured: !!this.credentials.ideogramKey,
-      frequency: this.credentials.frequency,
-      maxPosts: this.credentials.maxPosts,
       postCounter: this.postCounter,
-      nextTopic: nextTopic?.title || null,
-      autoPosting: this.credentials.autoPosting
+      nextTopic: this._topic(this.topicIndex)?.title || null,
+      topics: TOPICS.length,
     };
+  }
+
+  getTopics() {
+    return TOPICS.map((t, i) => ({ index: i, name: t.title }));
   }
 }
 

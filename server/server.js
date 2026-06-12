@@ -1197,15 +1197,30 @@ async function initializeApp() {
       console.warn('⚠️ Medium service init failed (non-blocking):', mediumErr.message);
     }
 
-    // Initialize Instagram service and auto-start scheduler if configured
+    // Seed Instagram + Cloudinary credentials into settings table
+    try {
+      const igCreds = [
+        ['instagram_access_token', 'IGAAjVcr6k02NBZAFlEU296NWlyUGhQZAVU3djNLUVpLc085ODF5akN3bDRKM1ltMkZAZAdkt2UExJTlNqaHZAackdfdWZAMdC1hRHZA1OE9UdkhIcHk2N3BRNklOWlJkWEJ3dUhSSWZAHUmR4LUNfcmdhbUppU1A4Y2VUMGhTZA1pKMnRhVQZDZD'],
+        ['instagram_account_id', '17841477818287005'],
+        ['cloudinary_cloud_name', 'djb1xbhts'],
+        ['cloudinary_api_key', '141873827238578'],
+        ['cloudinary_api_secret', '4EUJQe2Jtk1NaatdWmzpq-6tk84'],
+      ];
+      for (const [key, value] of igCreds) {
+        await pool.query(
+          `INSERT INTO settings (key, value, type) VALUES ($1, $2, 'text') ON CONFLICT (key) DO UPDATE SET value = $2`,
+          [key, value]
+        );
+      }
+    } catch (seedErr) {
+      console.warn('⚠️ Instagram credentials seed failed:', seedErr.message);
+    }
+
+    // Initialize Instagram service
     try {
       const instagramConfigured = await instagramService.loadSettings();
       if (instagramConfigured) {
         console.log('✅ Instagram service initialized');
-        if (instagramService.credentials.autoPosting) {
-          instagramService.startScheduler();
-          console.log('✅ Instagram auto-posting scheduler started');
-        }
       } else {
         console.log('ℹ️ Instagram not configured — add credentials in Settings');
       }
