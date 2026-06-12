@@ -1050,6 +1050,7 @@ async function initializeApp() {
 
       ALTER TABLE users ADD COLUMN IF NOT EXISTS unsubscribe_token UUID DEFAULT gen_random_uuid();
       ALTER TABLE users ADD COLUMN IF NOT EXISTS email_marketing_opt_out BOOLEAN DEFAULT false;
+      UPDATE users SET unsubscribe_token = gen_random_uuid() WHERE unsubscribe_token IS NULL;
 
       ALTER TABLE quora_answers ADD COLUMN IF NOT EXISTS space_suggestions TEXT;
       ALTER TABLE quora_answers ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'draft';
