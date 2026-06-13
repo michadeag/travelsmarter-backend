@@ -2,74 +2,264 @@ const pool = require('../config/database');
 const emailService = require('./emailService');
 const { v4: uuidv4 } = require('uuid');
 
-/**
- * Default 10-Day Welcome Email Sequence
- * Used only for seeding the database on first run
- */
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+function btn(url, label) {
+  return `<a href="${url}" style="display:inline-block;background:#ff6b4a;color:white;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;margin-top:4px;">${label} →</a>`;
+}
+
+function hackBox(content) {
+  return `<div style="background:#f0f4ff;border-left:4px solid #667eea;border-radius:0 8px 8px 0;padding:18px 20px;margin:22px 0;color:#1f2937;line-height:1.7;">${content}</div>`;
+}
+
+function upgradeBox(text, linkUrl) {
+  return `<div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:10px;padding:18px 20px;margin:22px 0;">
+    <p style="margin:0 0 12px;font-size:14px;color:#92400e;">${text}</p>
+    <a href="${linkUrl}" style="display:inline-block;background:#1a2744;color:white;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">See Plans →</a>
+  </div>`;
+}
+
+function h(text) {
+  return `<h2 style="color:#1a2744;font-size:21px;font-weight:700;margin:0 0 16px;line-height:1.3;">${text}</h2>`;
+}
+
+function p(text) {
+  return `<p style="color:#374151;margin:0 0 14px;line-height:1.75;font-size:15px;">${text}</p>`;
+}
+
+function small(text) {
+  return `<p style="color:#9ca3af;font-size:13px;margin:16px 0 0;line-height:1.6;">${text}</p>`;
+}
+
+// ─── EMAIL TEMPLATES ──────────────────────────────────────────────────────────
+
 const defaultEmailSequence = [
   {
     day: 0,
-    subject: '🎉 Welcome to TravelSmarter - Your Travel Hacking Journey Starts Now!',
-    html: `<h2>Welcome to TravelSmarter!</h2><p>Hi {firstName},</p><p>Thank you for joining TravelSmarter! You've just unlocked access to 87 proven travel hacks that could save you thousands of euros on your next adventure.</p><p><strong>Here's what you get:</strong></p><ul><li>✈️ Flight hacking strategies used by travel experts</li><li>🏨 Hotel booking secrets nobody talks about</li><li>💳 Credit card optimization for maximum rewards</li><li>🌍 Destination guides with insider tips</li></ul><p>Start exploring now and find your first travel hack!</p><p><a href="{appUrl}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Explore Travel Hacks</a></p><p>Happy travels!<br>The TravelSmarter Team</p>`
+    subject: '✈️ Your 20 free travel hacks are ready',
+    html: `
+      ${h('You\'re in, {firstName}. Here\'s what you have.')}
+      ${p('Welcome to TravelSmarter. You now have free access to 20 verified travel hacks across 4 modules — no trial, no credit card, no expiry.')}
+      ${hackBox(`
+        <strong>Your free modules:</strong><br>
+        ✈️ <strong>Flight Hacking</strong> — award arbitrage, mistake fares, booking windows<br>
+        💳 <strong>Credit Cards</strong> — sign-up bonuses, transfer partners, stacking<br>
+        🏨 <strong>Hotel Hacking</strong> — upgrade psychology, rate arbitrage, status tricks<br>
+        ⏰ <strong>Timing Intelligence</strong> — when to book, when to wait, shoulder seasons
+      `)}
+      ${p('Over the next 10 days you\'ll get one focused hack per email — actionable, specific, and immediately usable.')}
+      ${p('But first — your hacks are waiting:')}
+      ${btn('{appUrl}/index.html', 'Go to My Free Hacks')}
+      ${small('Tomorrow: the flight booking window most people miss — and why it saves €300–600 per ticket.')}
+    `
   },
+
   {
     day: 1,
-    subject: '✈️ Day 1: The 3 Flight Hacks That Save €500+ Per Year',
-    html: `<h2>The 3 Flight Hacks That Save €500+ Per Year</h2><p>Hi {firstName},</p><p>Most people pay full price for flights. Not anymore.</p><p><strong>Here are 3 simple hacks that could save you €500+ annually:</strong></p><ol><li><strong>The Tuesday Trick:</strong> Airlines release deals on Tuesday evenings (UTC). Set a calendar reminder and book then.</li><li><strong>The Incognito Hack:</strong> Clear your cookies before searching for flights. Airlines track repeat searches and raise prices.</li><li><strong>The Stopover Strategy:</strong> Flying A→B→C is often cheaper than A→B. Use our module to find hidden stopovers.</li></ol><p>Ready to save? Check out our Flight Hacks module for more strategies.</p><p><a href="{appUrl}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">View Flight Hacks</a></p><p>Cheers,<br>The TravelSmarter Team</p>`
+    subject: '✈️ The booking window airlines don\'t advertise',
+    html: `
+      ${h('This 15-day window saves €300–600 per flight.')}
+      ${p('Airlines manage pricing with an algorithm. It optimises for revenue — which means prices are lowest when the algorithm hasn\'t yet decided to push them up.')}
+      ${p('That window sits between <strong>30 and 45 days before departure</strong> for most European and short-haul routes (6–10 weeks for transatlantic). Inside 3 weeks, prices spike 40–80%.')}
+      ${hackBox(`
+        <strong>The hack:</strong><br>
+        1. Set a price alert in Google Flights or Skyscanner now for your next trip<br>
+        2. Watch it for 2 weeks<br>
+        3. Buy when it dips — usually Tuesday/Wednesday evening (airlines reset prices then)<br>
+        4. If it hasn\'t moved in 10 days, buy — it won\'t get better
+      `)}
+      ${p('Pair this with flying Tuesday–Wednesday instead of Friday–Sunday and you can add another €80–150 to the saving.')}
+      ${btn('{appUrl}/module.html?id=1', 'See All Flight Hacks')}
+      ${small('Tomorrow: a single sentence at hotel check-in that gets you a room upgrade about 40% of the time.')}
+    `
   },
+
   {
     day: 2,
-    subject: '🏨 Day 2: How to Get 5-Star Hotels for 3-Star Prices',
-    html: `<h2>How to Get 5-Star Hotels for 3-Star Prices</h2><p>Hi {firstName},</p><p>Hotel hacking is the quickest way to upgrade your travel lifestyle.</p><p><strong>Our favorite hotel tricks:</strong></p><ul><li>💎 Join loyalty programs (free!) to get upgrades and free breakfast</li><li>📞 Call the hotel directly 24 hours before arrival - they'll often give you a better room</li><li>⏰ Book at off-peak times (July = expensive, September = bargains)</li><li>🤝 Use our rate comparison tool to find the best deal across 50+ sites</li></ul><p>Want the full hotel hacking playbook? It's in our Hotel Hacks module.</p><p><a href="{appUrl}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Master Hotel Hacks</a></p><p>Sweet dreams,<br>The TravelSmarter Team</p>`
+    subject: '🏨 What to say at hotel check-in (works ~40% of the time)',
+    html: `
+      ${h('One sentence. Free upgrade. Works because of how hotels actually work.')}
+      ${p('Hotels oversell room categories constantly. The front desk team has upgrade authority — and they use it to solve problems before they become complaints.')}
+      ${p('Which means: the guest who asks nicely and at the right time often wins.')}
+      ${hackBox(`
+        <strong>The script:</strong><br>
+        Walk up, check in normally, then say: <em>"I know it\'s a long shot, but if you have any rooms that didn\'t get claimed today, I\'d be grateful for anything a bit nicer — it\'s a special trip."</em><br><br>
+        <strong>Why it works:</strong> you\'re giving them permission to help you without pressure. Works best on Sunday/Monday check-ins when occupancy is lower, and at 5-star properties where front desk staff have more discretion.
+      `)}
+      ${p('The full Hotel Hacking module has 4 more upgrade strategies, rate arbitrage techniques, and a status matching shortcut that works in under 24 hours.')}
+      ${btn('{appUrl}/module.html?id=3', 'See All Hotel Hacks')}
+      ${small('Tomorrow: how to earn a free return flight without ever getting on a plane.')}
+    `
   },
+
   {
     day: 3,
-    subject: '💳 Day 3: The Credit Card Secret That Pays You To Travel',
-    html: `<h2>The Credit Card Secret That Pays You To Travel</h2><p>Hi {firstName},</p><p>Here's the truth: smart travelers get paid to fly.</p><p><strong>The credit card travel hack:</strong></p><p>Premium travel credit cards offer:</p><ul><li>💰 5-10% cashback on flights and hotels</li><li>✈️ Free flights from sign-up bonuses (€500+ value)</li><li>🎫 Lounge access, travel insurance, seat upgrades</li><li>🛡️ Purchase protection on all bookings</li></ul><p>Example: Sign up for a premium card, spend €5,000 in 3 months, get €500-1,000 in travel rewards. Repeat 2-3x per year = 2+ free vacations annually.</p><p>Explore our Credit Cards module to find the best cards for YOUR travel style.</p><p><a href="{appUrl}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Credit Card Guide</a></p><p>Get rewarded,<br>The TravelSmarter Team</p>`
+    subject: '💳 How to earn a free flight without flying',
+    html: `
+      ${h('Sign-up bonuses are the fastest path to free flights. Here\'s exactly how they work.')}
+      ${p('Most premium travel credit cards offer a sign-up bonus worth €400–900 in flights if you spend a certain amount in the first 3 months. The key insight most people miss:')}
+      ${hackBox(`
+        <strong>The timing trick:</strong><br>
+        Apply for a new travel card 4–6 weeks before a big spend you already planned (holiday shopping, annual insurance, a work trip you\'ll expense). You hit the minimum spend with money you were going to spend anyway — and keep 60,000–80,000 bonus points.<br><br>
+        <strong>What that\'s worth:</strong> 60k Avios = a return business class to New York. 80k Amex points = 2 return economy flights to Southeast Asia.
+      `)}
+      ${p('This is just one of the strategies in the Credit Cards module — which is yours free.')}
+      ${btn('{appUrl}/module.html?id=2', 'See Credit Card Hacks')}
+      ${upgradeBox('The Smart Traveler plan unlocks 6 more modules — including Travel Money, Travel Insurance, and Car Rentals. All for €19/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: the two weeks per year when flights AND hotels are cheapest simultaneously.')}
+    `
   },
+
   {
     day: 4,
-    subject: '⏰ Day 4: Timing Intelligence - When To Book for Maximum Savings',
-    html: `<h2>Timing Intelligence: When To Book for Maximum Savings</h2><p>Hi {firstName},</p><p>Timing is everything in travel hacking.</p><p><strong>The timing rules most people don't know:</strong></p><ul><li>✈️ <strong>Flights:</strong> Book 1-3 months in advance, on Tuesday evenings (22:00-23:59 UTC)</li><li>🏨 <strong>Hotels:</strong> Book 2-3 weeks before for weekends, 1 week for weekdays</li><li>🚗 <strong>Car rentals:</strong> Last-minute deals appear 1-5 days before pickup</li><li>📅 <strong>Seasons:</strong> Travel in shoulder seasons (April-May, Sept-Oct) for 30-50% savings</li></ul><p>Pro tip: Set price alerts 3 months before your dream trip and watch for dips.</p><p><a href="{appUrl}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Timing Intelligence Module</a></p><p>Perfect timing,<br>The TravelSmarter Team</p>`
+    subject: '⏰ The two cheapest weeks to travel each year',
+    html: `
+      ${h('Shoulder season isn\'t a secret. But the exact windows are.')}
+      ${p('Everyone knows "travel off-peak." Fewer people know which exact weeks hit the sweet spot — after summer crowds leave but before autumn rates kick in, and before Easter but after New Year ski season.')}
+      ${hackBox(`
+        <strong>The two windows:</strong><br>
+        🗓️ <strong>Late April – mid May:</strong> weather is good, school is in, flights and hotels 30–50% cheaper than June<br>
+        🗓️ <strong>Mid September – October:</strong> best weather in Southern Europe, 40–60% cheaper than August<br><br>
+        <strong>Bonus:</strong> avoid the first and last week of any school holiday. Those are the price spikes — everything in between is significantly cheaper.
+      `)}
+      ${p('The Timing Intelligence module maps this out month by month for major destinations — with the specific week-by-week price curves airlines actually use.')}
+      ${btn('{appUrl}/module.html?id=4', 'See Timing Intelligence')}
+      ${small('Tomorrow: the card that gives you the real exchange rate and has saved me hundreds across dozens of trips.')}
+    `
   },
+
   {
     day: 5,
-    subject: '🌍 Day 5: Destination Hacks - Live Like a Local, Not a Tourist',
-    html: `<h2>Destination Hacks: Live Like a Local, Not a Tourist</h2><p>Hi {firstName},</p><p>The best travel experiences aren't in guidebooks.</p><p><strong>Our destination hacking strategy:</strong></p><ul><li>🍽️ Eat where locals eat (small family restaurants, market stalls)</li><li>🗺️ Take public transport instead of taxis (90% cheaper, 100% more authentic)</li><li>🏠 Stay in residential neighborhoods, not tourist zones</li><li>🎭 Learn 10 phrases in the local language (opens doors, amazing deals)</li><li>📱 Use local apps (Grab in Asia, Bolt in Europe, etc.)</li></ul><p>Result: 50% cheaper, infinitely better memories.</p><p><a href="{appUrl}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Explore Destinations</a></p><p>Wander wisely,<br>The TravelSmarter Team</p>`
+    subject: '💰 Stop losing 5–10% on every currency exchange',
+    html: `
+      ${h('Every time you use a regular card abroad, you lose 3–8% to hidden fees. Here\'s how to stop.')}
+      ${p('The bank you\'ve had since you were 18 charges you a foreign transaction fee of 2–3%. Then the ATM adds 1.5–3%. Then the dynamic currency conversion screen tries to take another 5% if you\'re not careful.')}
+      ${p('On a €2,000 trip that\'s €100–200 gone to fees. Here\'s what smart travelers use instead:')}
+      ${hackBox(`
+        <strong>The three cards worth having:</strong><br>
+        💳 <strong>Wise (best for spending):</strong> real mid-market rate, no foreign transaction fee, 2 free ATM withdrawals per month<br>
+        💳 <strong>Revolut:</strong> free plan works for light users, great for multi-currency<br>
+        💳 <strong>N26:</strong> best for Eurozone travel, instant notifications, virtual cards<br><br>
+        <strong>Always:</strong> pay in the local currency (never let a merchant "help" you by charging in euros)
+      `)}
+      ${p('This is a preview from the Travel Money module. The full module covers ATM strategies, when to use cash vs card, and how to handle currencies in countries where cards aren\'t reliable.')}
+      ${upgradeBox('Travel Money is part of the Smart Traveler plan (€19/month) — along with 5 other modules covering Car Rentals, Airport & Transit, Travel Insurance, and more.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: how to get airport lounge access without a €500 credit card.')}
+    `
   },
+
   {
     day: 6,
-    subject: '🛂 Day 6: Visa & Immigration Hacks (Yes, They Exist)',
-    html: `<h2>Visa & Immigration Hacks (Yes, They Exist)</h2><p>Hi {firstName},</p><p>Visa costs, processing times, and restrictions frustrate travelers. But there are ways around them.</p><p><strong>Smart visa strategies:</strong></p><ul><li>🛂 <strong>Visa-free routes:</strong> Some countries let you enter with just a passport</li><li>⏱️ <strong>Visa runs:</strong> Leave and re-enter to reset your stay limit (90+90 days)</li><li>💼 <strong>Digital nomad visas:</strong> Portugal, Spain, Estonia offer 1-2 year visas for remote workers</li><li>🎓 <strong>Student visas:</strong> Study a cheap course abroad, travel visa-free for 6+ months</li><li>📋 <strong>Slow travel:</strong> Some countries have 10-year tourist visas (Japan, Thailand)</li></ul><p>The visa module has country-by-country guides for maximum flexibility.</p><p><a href="{appUrl}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Visa Guides</a></p><p>Travel freely,<br>The TravelSmarter Team</p>`
+    subject: '✈️ Airport lounge access — without the premium card',
+    html: `
+      ${h('A quiet room, free food, fast Wi-Fi. Most travelers pay €50–80 to get in. Here\'s how to do it for €0.')}
+      ${p('Airport lounges used to be for business class passengers. The system has changed — and there are now 4 ways to access them for free or near-free:')}
+      ${hackBox(`
+        <strong>4 ways in:</strong><br>
+        1. <strong>Certain travel credit cards</strong> include Priority Pass — check your card benefits, you might already have it<br>
+        2. <strong>Booking the right flight:</strong> some long-haul economy fares include lounge access on the departure airport<br>
+        3. <strong>Same-day flight delay:</strong> if your flight is delayed 2+ hours, many lounges will admit you for free — just ask<br>
+        4. <strong>Lounge day pass apps</strong> (LoungeBuddy, Priority Pass pay-per-use) — €25–35 vs the rack rate of €80+
+      `)}
+      ${p('The full Airport & Transit module covers 6 more strategies including TSA PreCheck equivalents in Europe, layover optimisation, and how to get fast-track security without status.')}
+      ${upgradeBox('Airport & Transit is in the Smart Traveler plan — unlocked alongside Travel Money, Car Rentals, and 3 other modules. €19/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: travel insurance — why yours might be better than you think (or worse).')}
+    `
   },
+
   {
     day: 7,
-    subject: '💰 Day 7: Money Hacks - Convert Currencies Like a Pro',
-    html: `<h2>Money Hacks: Convert Currencies Like a Pro</h2><p>Hi {firstName},</p><p>Currency exchange is where most travelers lose 10-20% of their money. Not you.</p><p><strong>The travel money strategy:</strong></p><ul><li>🏦 <strong>Never use airport/ATM exchange rates:</strong> They're 5-10% worse</li><li>💳 <strong>Use no-fee travel cards:</strong> Wise, N26, Revolut (0% fees, real rates)</li><li>💵 <strong>Get local currency before you travel:</strong> Best rates are at your home bank</li><li>🤐 <strong>Avoid currency exchange shops:</strong> They're a tourist trap (20%+ markup)</li><li>📊 <strong>Time your conversions:</strong> Convert when rates are favorable</li></ul><p>With Wise Card: €1,000 becomes €950 with a tourist trap, but €985 with Wise. That's €35 saved on one transaction!</p><p><a href="{appUrl}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Travel Money Guides</a></p><p>Keep your money,<br>The TravelSmarter Team</p>`
+    subject: '🛡️ Your credit card might already have travel insurance',
+    html: `
+      ${h('Before you buy travel insurance, check your credit card. You might already have it.')}
+      ${p('Most premium travel credit cards include some level of travel insurance — and most cardholders never read what\'s actually covered.')}
+      ${hackBox(`
+        <strong>What\'s typically included:</strong><br>
+        ✓ Flight delay/cancellation (usually 4+ hours, up to €500–1,500 per person)<br>
+        ✓ Lost/delayed baggage (€200–800)<br>
+        ✓ Car rental collision damage (saves €15–30/day on rental insurance)<br>
+        ✓ Purchase protection on items bought with the card<br><br>
+        <strong>What\'s NOT included:</strong> medical evacuation, pre-existing conditions, adventure sports. You still need a standalone policy for these — but you can get a cheaper one because your card covers the rest.
+      `)}
+      ${p('Log into your credit card\'s benefits portal today and spend 10 minutes reading the travel section. Most people are genuinely surprised by what they already have.')}
+      ${p('The full Travel Insurance module covers exactly what to look for, how to stack card benefits with a standalone policy, and how to actually make a claim (the part nobody explains).')}
+      ${upgradeBox('Travel Insurance is part of Smart Traveler — along with Travel Money, Airport & Transit, Car Rentals, and more. €19/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: how all of this fits together as a system — and where people leave the most money on the table.')}
+    `
   },
+
   {
     day: 8,
-    subject: '🎒 Day 8: Packing Hacks & Travel Insurance Secrets',
-    html: `<h2>Packing Hacks & Travel Insurance Secrets</h2><p>Hi {firstName},</p><p>Smart packing saves time, money, and baggage fees. Smart insurance saves thousands.</p><p><strong>Packing like a pro:</strong></p><ul><li>🧳 Carry-on only = €100+ in baggage fees saved</li><li>👔 Pack capsule wardrobe (5 tops, 2 bottoms, same color palette)</li><li>🎒 Ultralight backpack (40L) vs luggage = freedom</li><li>📱 Use packing cubes to organize and compress</li></ul><p><strong>Travel insurance that actually protects you:</strong></p><ul><li>✅ Get annual travel insurance (€100/year) vs per-trip (€20/trip)</li><li>✅ Make sure it covers high-risk activities (hiking, skiing)</li><li>✅ Check if your credit card includes travel insurance</li></ul><p><a href="{appUrl}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Packing & Insurance Guide</a></p><p>Travel smart,<br>The TravelSmarter Team</p>`
+    subject: '🏨 Get hotel Elite status in 24 hours (without staying there)',
+    html: `
+      ${h('Status matching is the best travel hack most people have never heard of.')}
+      ${p('Hotel loyalty programs give Elite status to guests who stay 50–75 nights per year. But there\'s a shortcut almost no one uses:')}
+      ${p('<strong>Status matching:</strong> if you have Elite status with one hotel chain, competing chains will often match it — instantly, with no stays required.')}
+      ${hackBox(`
+        <strong>How it works in practice:</strong><br>
+        1. Sign up for free to Marriott Bonvoy and complete their status challenge (10 stays in 90 days)<br>
+        2. Email Hyatt, IHG, or Hilton with proof of your Marriott status<br>
+        3. Get matched to their equivalent Elite tier — often in 24–48 hours<br><br>
+        <strong>What Elite status gets you:</strong> free room upgrades, late checkout, bonus points on every stay, lounge access at some properties. Value: €200–600 per year in upgrades alone.
+      `)}
+      ${p('This and 4 more status strategies are in the Hotel Hacking module — which is free with your account.')}
+      ${btn('{appUrl}/module.html?id=3', 'See Hotel Hacking Module')}
+      ${small('Tomorrow: the last email in this sequence. I\'ll show you where most people stop — and what the ones saving €3,000–5,000 per year do differently.')}
+    `
   },
+
   {
     day: 9,
-    subject: '🚀 Day 9: Your Travel Hacking Blueprint (The Complete System)',
-    html: `<h2>Your Travel Hacking Blueprint (The Complete System)</h2><p>Hi {firstName},</p><p>You've learned 9 travel hacks. Now let's put them together into a complete system.</p><p><strong>The TravelSmarter System:</strong></p><ol><li>📅 <strong>Plan 3 months ahead:</strong> Pick destination, set price alerts</li><li>💳 <strong>Use credit cards:</strong> Sign up 3 months before trip, get bonus points</li><li>✈️ <strong>Book flights:</strong> Tuesday evening, 1-3 months out</li><li>🏨 <strong>Book hotels:</strong> Using loyalty points or last-minute deals</li><li>💰 <strong>Exchange money:</strong> With no-fee card, real rates</li><li>🎒 <strong>Pack light:</strong> Carry-on only, no baggage fees</li><li>🌍 <strong>Travel like local:</strong> Eat local, use public transport</li><li>📸 <strong>Enjoy the adventure:</strong> You just saved 50%!</li></ol><p><strong>Result: Same trips, half the cost, twice the memories.</strong></p><p>You're ready. Start with your next trip.</p><p><a href="{appUrl}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Build Your Trip</a></p><p>Happy travels!<br>The TravelSmarter Team</p>`
+    subject: '🎯 9 hacks in. Here\'s what the full picture looks like.',
+    html: `
+      ${h('You\'ve had 9 hacks. Here\'s how they compound.')}
+      ${p('Most people apply one or two travel tricks and stop. The travelers saving €3,000–5,000 per year use them as a system — each element amplifying the others.')}
+      ${hackBox(`
+        <strong>The stack, in order:</strong><br>
+        1. <strong>Timing:</strong> Shoulder season + Tuesday booking window → save 30–50% on base price<br>
+        2. <strong>Flight:</strong> Book in the 30–45 day window → save another €200–400<br>
+        3. <strong>Credit card:</strong> Use sign-up bonus for the ticket → net cost: €0–100<br>
+        4. <strong>Hotel:</strong> Status match → free upgrade on arrival<br>
+        5. <strong>Currency:</strong> Wise card → save 5–8% on all spending<br>
+        6. <strong>Insurance:</strong> Credit card covers delays → buy cheaper standalone policy<br><br>
+        Applied together on a 10-day trip: €800–1,500 saved vs. booking the normal way.
+      `)}
+      ${p('Your 4 free modules cover steps 1–3. The other 12 modules go deeper on everything else:')}
+      ${upgradeBox(`
+        <strong>Smart Traveler (€19/month):</strong> 10 modules total — adds Airport & Transit, Travel Money, Car Rentals, Destinations, Travel Insurance, and more. 55+ hacks.<br><br>
+        <strong>Elite (€49/month):</strong> All 16 modules, 87 hacks, exclusive Partner Deals (up to 50% off Wise, Airalo, NordVPN), and access to the Travel Community of 12,340+ members.
+      `, '{appUrl}/sales-page.html')}
+      ${btn('{appUrl}/sales-page.html', 'See All Plans')}
+      ${small('Tomorrow is the last email. If you\'re happy with your 20 free hacks, that\'s great — they\'re yours forever. If you want the rest, I\'ll show you what\'s inside.')}
+    `
   },
+
   {
     day: 10,
-    subject: '🎁 Day 10: Exclusive Offer Inside - Upgrade Your Travel Game',
-    html: `<h2>🎁 Your Exclusive Member-Only Offer</h2><p>Hi {firstName},</p><p>Over the last 10 days, you've learned the travel hacking secrets most people never discover.</p><p>But the real power comes from using these hacks consistently, on every trip.</p><p><strong>This week only, you get:</strong></p><ul><li>✨ <strong>Smart Traveler Plan:</strong> €9.99/month (instead of €19)</li><li>🏆 <strong>Elite Plan:</strong> €39/month (instead of €49) </li><li>📚 <strong>Lifetime access</strong> to all 87 hacks</li><li>📧 <strong>Weekly deals</strong> - we find deals and send them to you</li><li>🎯 <strong>Personalized recommendations</strong> - based on your travel style</li></ul><p>With Smart Traveler, your €150/year membership pays for itself on your first trip.</p><p><strong>Upgrade now with your exclusive new-member discount:</strong></p><p><a href="{appUrl}/pricing" style="background: #10b981; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-size: 16px; font-weight: bold;">Claim Your Discount</a></p><p style="margin-top: 20px; font-size: 12px; color: #999;">Offer expires in 7 days. Your discount code is automatically applied at checkout.</p><p>Enjoy the journey,<br>The TravelSmarter Team</p>`
+    subject: '📬 Last email — your options going forward',
+    html: `
+      ${h('That\'s the 10-day course. Here\'s where things stand.')}
+      ${p('You now have 20 verified travel hacks across 4 modules — flight booking windows, hotel upgrades, credit card timing, and shoulder season strategy. They\'re free and they\'re yours forever.')}
+      ${p('If that\'s enough for you, great. Use them, save money, travel smarter.')}
+      ${p('If you want the full system — all 16 modules, 87 hacks, and everything that goes with it — here\'s what\'s available:')}
+      ${hackBox(`
+        <strong>Smart Traveler — €19/month</strong><br>
+        10 modules · 55+ hacks · all tools & calculators · Goodies (PDFs & checklists) · Weekly Hack Digest · New deal alerts by email · Standard support<br><br>
+        <strong>Elite — €49/month</strong><br>
+        16 modules · 87 hacks · everything above + Partner Deals (up to 50% off Wise, Airalo, NordVPN, Booking.com) + Travel Community (12,340+ members) + Priority support<br><br>
+        Both plans: no long-term commitment, cancel anytime.
+      `)}
+      ${btn('{appUrl}/sales-page.html', 'See Plans & Features')}
+      ${p('Either way — thank you for reading. I hope the hacks have already saved you something.')}
+      ${small('This is the last scheduled email. After this you\'ll only hear from us when we add new hacks or find a genuinely useful deal. Unsubscribe anytime — the link is below.')}
+    `
   }
 ];
 
-/**
- * Seed the database with default email templates on first run
- */
+// ─── SEED (first run only) ────────────────────────────────────────────────────
+
 async function seedEmailSequence() {
   try {
-    // Check if "Welcome Email Sequence" already exists
     const existing = await pool.query(
       `SELECT id FROM email_sequences WHERE name = $1`,
       ['Welcome Email Sequence']
@@ -80,7 +270,6 @@ async function seedEmailSequence() {
       return existing.rows[0].id;
     }
 
-    // Create the sequence
     const sequenceId = uuidv4();
     await pool.query(
       `INSERT INTO email_sequences (id, name, description, is_active, trigger_event, created_at)
@@ -88,23 +277,15 @@ async function seedEmailSequence() {
       [sequenceId, 'Welcome Email Sequence', '10-day automated welcome sequence for new users']
     );
 
-    // Add all 10 email templates
     for (const email of defaultEmailSequence) {
       await pool.query(
         `INSERT INTO email_templates (id, sequence_id, day, subject, content, html_content, is_active, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, true, CURRENT_TIMESTAMP)`,
-        [
-          uuidv4(),
-          sequenceId,
-          email.day,
-          email.subject,
-          email.html.replace(/<[^>]*>/g, ''), // Plain text version (strip HTML)
-          email.html
-        ]
+        [uuidv4(), sequenceId, email.day, email.subject, email.html.replace(/<[^>]*>/g, ''), email.html]
       );
     }
 
-    console.log('✅ Default email sequence seeded with 10 templates');
+    console.log('✅ Default email sequence seeded with 11 templates');
     return sequenceId;
   } catch (error) {
     console.error('❌ Error seeding email sequence:', error);
@@ -112,32 +293,54 @@ async function seedEmailSequence() {
   }
 }
 
-/**
- * Initialize email sequence for new user
- * Creates scheduled_emails records for all templates in the default sequence
- */
+// ─── UPDATE EXISTING TEMPLATES ────────────────────────────────────────────────
+// Call this on server startup to keep DB templates in sync with code.
+
+async function updateEmailTemplates() {
+  try {
+    const seqResult = await pool.query(
+      `SELECT id FROM email_sequences WHERE name = 'Welcome Email Sequence' LIMIT 1`
+    );
+    if (seqResult.rows.length === 0) return;
+
+    const sequenceId = seqResult.rows[0].id;
+
+    for (const email of defaultEmailSequence) {
+      await pool.query(
+        `UPDATE email_templates
+         SET subject = $1, html_content = $2, content = $3
+         WHERE sequence_id = $4 AND day = $5`,
+        [email.subject, email.html, email.html.replace(/<[^>]*>/g, ''), sequenceId, email.day]
+      );
+    }
+
+    console.log('✅ Email templates updated from code');
+  } catch (error) {
+    console.error('❌ Error updating email templates:', error);
+  }
+}
+
+// ─── INITIALIZE SEQUENCE FOR NEW USER ────────────────────────────────────────
+
 async function initializeEmailSequence(userId, userEmail, firstName) {
   try {
     console.log(`📧 Initializing email sequence for user ${userId} (${userEmail})`);
 
-    // Get the default "Welcome Email Sequence"
     const sequenceResult = await pool.query(
       `SELECT id FROM email_sequences WHERE name = $1 AND is_active = true LIMIT 1`,
       ['Welcome Email Sequence']
     );
 
     if (sequenceResult.rows.length === 0) {
-      console.warn('⚠️ No active email sequence found, skipping email scheduling');
+      console.warn('⚠️ No active email sequence found, skipping');
       return { success: false, message: 'No active email sequence configured' };
     }
 
     const sequenceId = sequenceResult.rows[0].id;
-    console.log(`📬 Found email sequence: ${sequenceId}`);
 
-    // Get all templates for this sequence ordered by day
     const templatesResult = await pool.query(
       `SELECT id, day, subject FROM email_templates
-       WHERE sequence_id = $1 AND is_active = true
+       WHERE sequence_id = $1 AND is_active = true AND day < 9000
        ORDER BY day ASC`,
       [sequenceId]
     );
@@ -147,14 +350,11 @@ async function initializeEmailSequence(userId, userEmail, firstName) {
       return { success: false, message: 'No email templates found' };
     }
 
-    console.log(`📧 Found ${templatesResult.rows.length} email templates`);
-
-    // Schedule all templates for this user
     let scheduledCount = 0;
     for (const template of templatesResult.rows) {
       const scheduledAt = new Date();
       scheduledAt.setDate(scheduledAt.getDate() + template.day);
-      scheduledAt.setHours(9, 0, 0, 0); // 9 AM
+      scheduledAt.setHours(9, 0, 0, 0);
 
       try {
         await pool.query(
@@ -163,39 +363,33 @@ async function initializeEmailSequence(userId, userEmail, firstName) {
           [userId, template.id, scheduledAt]
         );
         scheduledCount++;
-        console.log(`✅ Scheduled email Day ${template.day} for ${userEmail} at ${scheduledAt}`);
       } catch (insertError) {
         console.error(`❌ Failed to schedule Day ${template.day} email:`, insertError.message);
       }
     }
 
-    console.log(`✅ Email sequence initialized for ${userEmail} (${scheduledCount}/${templatesResult.rows.length} emails scheduled)`);
-    return { success: true, message: `${scheduledCount} emails scheduled`, scheduledCount };
+    console.log(`✅ Email sequence initialized for ${userEmail} (${scheduledCount} emails scheduled)`);
+    return { success: true, scheduledCount };
   } catch (error) {
     console.error('❌ Error initializing email sequence:', error);
     throw error;
   }
 }
 
-/**
- * Send pending emails (call this periodically via cron job)
- * Reads templates from the database
- */
+// ─── SEND PENDING EMAILS ──────────────────────────────────────────────────────
+
 async function sendPendingEmails() {
   try {
     console.log('🔄 Checking for pending emails to send...');
 
-    // Check if tables exist first
     const tableCheck = await pool.query(
       `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'scheduled_emails')`
     );
-
     if (!tableCheck.rows[0].exists) {
       console.warn('⚠️ scheduled_emails table does not exist yet, skipping');
       return { sent: 0 };
     }
 
-    // Find emails that are due to be sent
     const result = await pool.query(`
       SELECT se.id, se.user_id, se.template_id, u.email, u.first_name,
              u.unsubscribe_token, u.email_marketing_opt_out,
@@ -204,9 +398,9 @@ async function sendPendingEmails() {
       JOIN users u ON se.user_id = u.id
       JOIN email_templates et ON se.template_id = et.id
       WHERE se.status = 'pending'
-      AND se.scheduled_at <= NOW()
-      AND et.is_active = true
-      AND (u.email_marketing_opt_out IS NULL OR u.email_marketing_opt_out = false)
+        AND se.scheduled_at <= NOW()
+        AND et.is_active = true
+        AND (u.email_marketing_opt_out IS NULL OR u.email_marketing_opt_out = false)
       ORDER BY se.scheduled_at ASC
     `);
 
@@ -215,44 +409,54 @@ async function sendPendingEmails() {
       return { sent: 0 };
     }
 
+    const appUrl = process.env.FRONTEND_URL || 'https://travelsmarterapp.com';
     let sentCount = 0;
 
     for (const row of result.rows) {
       try {
-        // Replace placeholders in the HTML template
-        const appUrl = process.env.FRONTEND_URL || 'https://travelsmarterapp.com';
         const emailHtml = row.html_content
           .replace(/{firstName}/g, row.first_name || 'Traveler')
           .replace(/{appUrl}/g, appUrl);
 
-        // Send email using existing emailService
+        const fullHtml = `
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+            <tr><td align="center" style="padding:32px 16px;">
+              <table cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+                <!-- Brand header -->
+                <tr>
+                  <td style="background:#1a2744;padding:18px 32px;border-radius:12px 12px 0 0;">
+                    <span style="font-size:19px;font-weight:700;color:white;font-family:-apple-system,sans-serif;">
+                      Travel<span style="color:#ff6b4a;">Smarter</span>
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- Content -->
+                <tr>
+                  <td style="background:white;padding:36px 32px;border-radius:0 0 12px 12px;color:#1f2937;line-height:1.7;font-size:15px;">
+                    ${emailHtml}
+                    <hr style="border:none;border-top:1px solid #e5e7eb;margin:36px 0 24px;">
+                    <p style="font-size:12px;color:#9ca3af;margin:0;line-height:1.7;">
+                      You received this because you signed up for TravelSmarter.<br>
+                      <a href="${appUrl}/account.html" style="color:#667eea;text-decoration:none;">Manage preferences</a>
+                      &nbsp;·&nbsp;
+                      <a href="${appUrl}/unsubscribe.html?token=${row.unsubscribe_token}" style="color:#667eea;text-decoration:none;">Unsubscribe</a>
+                    </p>
+                  </td>
+                </tr>
+
+              </table>
+            </td></tr>
+          </table>
+        `;
+
         await emailService.sendEmail({
           to: row.email,
           subject: row.subject,
-          html: `
-            <table width="100%" cellpadding="0" cellspacing="0" style="background: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-              <tr>
-                <td align="center" style="padding: 40px 20px;">
-                  <table width="100%" maxwidth="600" cellpadding="0" cellspacing="0" style="background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px;">
-                    <tr>
-                      <td style="padding: 40px; color: #1f2937; line-height: 1.6;">
-                        ${emailHtml}
-                        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 40px 0;">
-                        <p style="font-size: 12px; color: #9ca3af;">
-                          You received this email because you signed up for TravelSmarter.<br>
-                          <a href="${appUrl}/account.html" style="color: #667eea; text-decoration: none;">Manage preferences</a> |
-                          <a href="${appUrl}/unsubscribe.html?token=${row.unsubscribe_token}" style="color: #667eea; text-decoration: none;">Unsubscribe</a>
-                        </p>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          `
+          html: fullHtml
         });
 
-        // Mark as sent
         await pool.query(
           `UPDATE scheduled_emails SET status = 'sent', sent_at = NOW() WHERE id = $1`,
           [row.id]
@@ -262,7 +466,6 @@ async function sendPendingEmails() {
         console.log(`✅ Sent day ${row.day} email to ${row.email}`);
       } catch (error) {
         console.error(`❌ Error sending email for scheduled_email ${row.id}:`, error);
-        // Mark as failed but don't stop the process
         await pool.query(
           `UPDATE scheduled_emails SET status = 'failed' WHERE id = $1`,
           [row.id]
@@ -281,5 +484,6 @@ async function sendPendingEmails() {
 module.exports = {
   initializeEmailSequence,
   sendPendingEmails,
-  seedEmailSequence
+  seedEmailSequence,
+  updateEmailTemplates
 };

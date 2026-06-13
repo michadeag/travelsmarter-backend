@@ -1300,9 +1300,12 @@ async function initializeApp() {
       console.warn('⚠️ Reddit service init failed (non-blocking):', redditErr.message);
     }
 
-    // Seed default email sequence
+    // Seed default email sequence (first run), then sync templates from code
     await emailSequenceService.seedEmailSequence().catch(err => {
       console.warn('⚠️ Error seeding email templates:', err.message);
+    });
+    await emailSequenceService.updateEmailTemplates().catch(err => {
+      console.warn('⚠️ Error updating email templates:', err.message);
     });
 
     // Seed travel hacks if database is empty (skip in production for faster startup)
