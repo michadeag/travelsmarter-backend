@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
+const { sendDealAlert } = require('../services/digestService');
 
 // Public: get active deals (frontend does tier-gating)
 router.get('/', async (req, res) => {
@@ -51,10 +52,13 @@ router.post('/', async (req, res) => {
     if (!title || !affiliateUrl) return res.status(400).json({ success: false, error: 'title and affiliateUrl required' });
     const r = await pool.query(
       `INSERT INTO partner_deals (title, description, category, discount_badge, affiliate_url, logo_url, is_verified, sort_order, is_active, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true,NOW()) RETURNING id`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true,NOW()) RETURNING *`,
       [title, description||'', category||'other', discountBadge||'', affiliateUrl, logoUrl||'', isVerified!==false, sortOrder||0]
     );
-    res.json({ success: true, id: r.rows[0].id });
+    const deal = r.rows[0];
+    // Fire-and-forget: send alert email to Smart Traveler + Elite users
+    sendDealAlert(deal).catch(err => console.error('Deal alert email error:', err.message));
+    res.json({ success: true, id: deal.id });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

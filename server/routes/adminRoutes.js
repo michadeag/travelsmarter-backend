@@ -1,11 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const SettingsController = require('../controllers/settingsController');
+const { triggerHackDigest } = require('../services/digestService');
 
 /**
  * Admin Settings Routes
  * All routes are public for now (add authentication middleware if needed)
  */
+
+// Trigger 3-day hack digest email campaign
+router.post('/trigger-hack-digest', async (req, res) => {
+  try {
+    const result = await triggerHackDigest();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // Health check for admin routes
 router.get('/health', (req, res) => {
