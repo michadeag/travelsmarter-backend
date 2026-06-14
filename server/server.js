@@ -43,6 +43,7 @@ const slideshareRoutes = require('./routes/slideshareRoutes');
 const partnerDealsRoutes = require('./routes/partnerDealsRoutes');
 const quoraRoutes = require('./routes/quoraRoutes');
 const bloggerRoutes = require('./routes/bloggerRoutes');
+const youtubeRoutes = require('./routes/youtubeRoutes');
 
 // Import controllers
 const SettingsController = require('./controllers/settingsController');
@@ -172,6 +173,7 @@ app.use('/api/medium', mediumRoutes);
 app.use('/api/wordpress', wordpressRoutes);
 app.use('/api/quora', quoraRoutes);
 app.use('/api/blogger', bloggerRoutes);
+app.use('/api/youtube', youtubeRoutes);
 
 // Diagnostic endpoint - updated Jun 6 21:57
 app.get('/api/test/version', (req, res) => {
@@ -1299,6 +1301,13 @@ async function initializeApp() {
     } catch (redditErr) {
       console.warn('⚠️ Reddit service init failed (non-blocking):', redditErr.message);
     }
+
+    // Ensure password reset columns exist (idempotent migration)
+    await pool.query(`
+      ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(64),
+        ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMPTZ
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
 
     // Seed default email sequence (first run), then sync templates from code
     await emailSequenceService.seedEmailSequence().catch(err => {
