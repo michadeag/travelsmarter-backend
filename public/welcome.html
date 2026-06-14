@@ -931,5 +931,15 @@
             }
         });
     </script>
+    <script>
+        (function() {
+            const api = 'https://api.travelsmarterapp.com';
+            fetch(api + '/api/analytics/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ page: 'welcome.html', referrer: document.referrer || null })
+            }).catch(() => {});
+        })();
+    </script>
 </body>
 </html>

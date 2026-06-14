@@ -232,6 +232,85 @@ exports.getSubscriptionDistribution = async (req, res) => {
 };
 
 /**
+ * Track a pageview (public endpoint, no auth required)
+ */
+exports.trackPageview = async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS page_views (
+        id SERIAL PRIMARY KEY,
+        page VARCHAR(255) NOT NULL,
+        referrer TEXT,
+        visited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    const { page, referrer } = req.body;
+    if (!page) return res.status(400).json({ success: false, message: 'page required' });
+
+    await pool.query(
+      'INSERT INTO page_views (page, referrer) VALUES ($1, $2)',
+      [page, referrer || null]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error tracking pageview:', error);
+    res.status(500).json({ success: false, message: 'Failed to track pageview' });
+  }
+};
+
+/**
+ * Get pageview stats for a page (admin only)
+ */
+exports.getPageviews = async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS page_views (
+        id SERIAL PRIMARY KEY,
+        page VARCHAR(255) NOT NULL,
+        referrer TEXT,
+        visited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    const page = req.query.page || 'welcome.html';
+
+    const [total, today, week, byDay] = await Promise.all([
+      pool.query('SELECT COUNT(*) as count FROM page_views WHERE page = $1', [page]),
+      pool.query(
+        'SELECT COUNT(*) as count FROM page_views WHERE page = $1 AND visited_at >= CURRENT_DATE',
+        [page]
+      ),
+      pool.query(
+        'SELECT COUNT(*) as count FROM page_views WHERE page = $1 AND visited_at >= CURRENT_DATE - INTERVAL \'7 days\'',
+        [page]
+      ),
+      pool.query(
+        `SELECT DATE(visited_at) as day, COUNT(*) as count
+         FROM page_views WHERE page = $1 AND visited_at >= CURRENT_DATE - INTERVAL '29 days'
+         GROUP BY DATE(visited_at) ORDER BY day ASC`,
+        [page]
+      )
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        page,
+        total: parseInt(total.rows[0].count),
+        today: parseInt(today.rows[0].count),
+        last7Days: parseInt(week.rows[0].count),
+        byDay: byDay.rows.map(r => ({ day: r.day, count: parseInt(r.count) }))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching pageviews:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch pageviews' });
+  }
+};
+
+/**
  * Get most popular hacks
  */
 exports.getPopularHacks = async (req, res) => {
