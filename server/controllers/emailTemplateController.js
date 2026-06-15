@@ -216,6 +216,51 @@ exports.updateSequence = async (req, res) => {
 };
 
 // @desc Create or update email template
+// @desc Send a test email for a template
+// @route POST /api/email-templates/templates/:templateId/send-test
+// @access Private (Admin)
+exports.sendTestEmail = async (req, res) => {
+  try {
+    const { templateId } = req.params;
+    const { toEmail } = req.body;
+
+    if (!toEmail) {
+      return res.status(400).json({ success: false, message: 'toEmail is required' });
+    }
+
+    const result = await pool.query(
+      `SELECT et.subject, et.html_content, et.content, es.name as sequence_name
+       FROM email_templates et
+       LEFT JOIN email_sequences es ON et.sequence_id = es.id
+       WHERE et.id = $1`,
+      [templateId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Template not found' });
+    }
+
+    const template = result.rows[0];
+    const emailService = require('../services/emailService');
+
+    const emailResult = await emailService.sendEmail({
+      to: toEmail,
+      subject: `[TEST] ${template.subject}`,
+      html: template.html_content || template.content || '<p>No content</p>',
+      text: template.content || template.html_content || 'No content'
+    });
+
+    if (emailResult.success) {
+      res.json({ success: true, message: `Test email sent to ${toEmail}` });
+    } else {
+      res.status(500).json({ success: false, message: emailResult.error || 'Failed to send email' });
+    }
+  } catch (error) {
+    console.error('Send test email error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @route POST /api/email-templates/templates
 // @access Private (Admin)
 exports.createTemplate = async (req, res) => {

@@ -15,6 +15,7 @@ router.put('/sequences/:sequenceId', protectWithAdminFallback, emailTemplateCont
 router.get('/templates', protectWithAdminFallback, emailTemplateController.getTemplates);
 router.get('/templates/:templateId', protectWithAdminFallback, emailTemplateController.getTemplateById);
 router.post('/templates', protectWithAdminFallback, emailTemplateController.createTemplate);
+router.post('/templates/:templateId/send-test', protectWithAdminFallback, emailTemplateController.sendTestEmail);
 router.put('/templates/:templateId', protectWithAdminFallback, emailTemplateController.updateTemplate);
 router.delete('/templates/:templateId', protectWithAdminFallback, emailTemplateController.deleteTemplate);
 
