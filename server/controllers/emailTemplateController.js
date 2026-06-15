@@ -248,8 +248,8 @@ exports.createTemplate = async (req, res) => {
     } else {
       // Create new
       result = await pool.query(
-        `INSERT INTO email_templates (id, sequence_id, day, subject, html_content, created_at)
-         VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+        `INSERT INTO email_templates (id, sequence_id, day, subject, content, html_content, created_at)
+         VALUES ($1, $2, $3, $4, $5, $5, CURRENT_TIMESTAMP)
          RETURNING *`,
         [uuidv4(), sequence_id, day, subject, html_content]
       );
