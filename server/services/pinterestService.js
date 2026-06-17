@@ -105,7 +105,7 @@ class PinterestService {
       const result = await pool.query(
         `SELECT key, value FROM settings WHERE key IN (
           'pinterest_access_token','pinterest_board_id','pinterest_board_name',
-          'pinterest_post_counter','pinterest_topic_index','ideogram_api_key'
+          'pinterest_post_counter','pinterest_topic_index','ideogram_api_key','openai_api_key'
         )`
       );
       result.rows.forEach(({ key, value }) => {
@@ -115,6 +115,7 @@ class PinterestService {
         if (key === 'pinterest_post_counter') this.postCounter = parseInt(value) || 0;
         if (key === 'pinterest_topic_index') this.topicIndex = parseInt(value) || 0;
         if (key === 'ideogram_api_key') this.ideogramKey = value;
+        if (key === 'openai_api_key') this.openaiKey = value;
       });
 
       // Load user boards from DB
@@ -129,7 +130,7 @@ class PinterestService {
   }
 
   isConfigured() {
-    return !!(this.accessToken && this.ideogramKey);
+    return !!(this.accessToken && (this.openaiKey || this.ideogramKey));
   }
 
   // Pick the best matching board from user's actual boards
@@ -148,14 +149,26 @@ class PinterestService {
   }
 
   async generateImage(topic) {
-    if (!this.ideogramKey) throw new Error('Ideogram API key not configured');
-    const prompt = `Pinterest travel infographic, portrait 2:3 format, clean modern design.
+    const prompt = `Pinterest travel infographic, portrait format, clean modern design.
 Bold headline at top: "${topic.title}"
 Travel theme: ${topic.promptTheme}
 Color palette: warm coral and cream with navy accents. Travel icons. High contrast text.
 Style: flat design infographic, professional, eye-catching, Pinterest-optimized.
 No watermarks, no logos.`;
 
+    if (this.openaiKey) {
+      const response = await axios.post(
+        'https://api.openai.com/v1/images/generations',
+        { model: 'dall-e-3', prompt, n: 1, size: '1024x1792', quality: 'standard' },
+        { headers: { 'Authorization': `Bearer ${this.openaiKey}`, 'Content-Type': 'application/json' }, timeout: 60000 }
+      );
+      const url = response.data?.data?.[0]?.url;
+      if (!url) throw new Error('DALL-E 3 returned no image');
+      console.log(`📌 Pinterest: DALL-E 3 image ready → ${url.substring(0, 60)}...`);
+      return url;
+    }
+
+    if (!this.ideogramKey) throw new Error('No image generation API key configured');
     const response = await axios.post(
       'https://api.ideogram.ai/generate',
       {
@@ -171,7 +184,7 @@ No watermarks, no logos.`;
     );
     const url = response.data?.data?.[0]?.url;
     if (!url) throw new Error('Ideogram returned no image');
-    console.log(`📌 Pinterest: image ready → ${url.substring(0, 60)}...`);
+    console.log(`📌 Pinterest: Ideogram image ready → ${url.substring(0, 60)}...`);
     return url;
   }
 
