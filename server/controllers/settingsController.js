@@ -148,7 +148,7 @@ class SettingsController {
       // Sensitive keys: skip update if value is empty (preserve existing token)
       const sensitiveKeys = ['pinterest_access_token', 'instagram_access_token', 'linkedin_access_token',
         'twitter_access_token', 'twitter_access_secret', 'stripe_secret_key', 'stripe_webhook_secret',
-        'sendgrid_api_key', 'anthropic_api_key', 'ideogram_api_key', 'wordpress_app_password'];
+        'sendgrid_api_key', 'anthropic_api_key', 'ideogram_api_key', 'openai_api_key', 'wordpress_app_password'];
 
       for (const [key, value] of Object.entries(settings)) {
         if (sensitiveKeys.includes(key) && !value) continue;

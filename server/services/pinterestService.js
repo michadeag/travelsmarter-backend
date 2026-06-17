@@ -90,6 +90,7 @@ class PinterestService {
     this.boardId = null;
     this.boardName = null;
     this.ideogramKey = null;
+    this.openaiKey = null;
     this.postCounter = 0;
     this.topicIndex = 0;
     this.userBoards = [];
