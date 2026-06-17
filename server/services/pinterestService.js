@@ -134,19 +134,18 @@ class PinterestService {
     return !!(this.accessToken && (this.openaiKey || this.ideogramKey));
   }
 
-  // Pick the best matching board from user's actual boards
+  // Pick a random matching board from user's actual boards
   _pickBoard(topic) {
     if (!this.userBoards.length) return { id: this.boardId, name: this.boardName || 'Travel' };
-    // Try to match by name
-    for (const preferred of topic.boards) {
-      const match = this.userBoards.find(b =>
+    // Collect all matching boards
+    const matches = this.userBoards.filter(b =>
+      topic.boards.some(preferred =>
         b.name.toLowerCase().includes(preferred.toLowerCase()) ||
         preferred.toLowerCase().includes(b.name.toLowerCase())
-      );
-      if (match) return match;
-    }
-    // Rotate through boards as fallback
-    return this.userBoards[this.topicIndex % this.userBoards.length];
+      )
+    );
+    const pool = matches.length ? matches : this.userBoards;
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   async generateImage(topic) {
