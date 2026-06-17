@@ -161,11 +161,12 @@ No watermarks, no logos.`;
       const response = await axios.post(
         'https://api.openai.com/v1/images/generations',
         { model: 'gpt-image-1', prompt, n: 1, size: '1024x1536' },
-        { headers: { 'Authorization': `Bearer ${this.openaiKey}`, 'Content-Type': 'application/json' }, timeout: 60000 }
+        { headers: { 'Authorization': `Bearer ${this.openaiKey}`, 'Content-Type': 'application/json' }, timeout: 120000 }
       );
-      const url = response.data?.data?.[0]?.url;
-      if (!url) throw new Error('DALL-E 3 returned no image');
-      console.log(`📌 Pinterest: DALL-E 3 image ready → ${url.substring(0, 60)}...`);
+      const imgData = response.data?.data?.[0];
+      const url = imgData?.url || (imgData?.b64_json ? `data:image/png;base64,${imgData.b64_json}` : null);
+      if (!url) throw new Error('OpenAI returned no image');
+      console.log(`📌 Pinterest: OpenAI image ready (${imgData?.url ? 'url' : 'base64'})`);
       return url;
     }
 
