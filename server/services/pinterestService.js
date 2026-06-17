@@ -160,7 +160,7 @@ No watermarks, no logos.`;
     if (this.openaiKey) {
       const response = await axios.post(
         'https://api.openai.com/v1/images/generations',
-        { model: 'dall-e-3', prompt, n: 1, size: '1024x1792', quality: 'standard' },
+        { model: 'gpt-image-1', prompt, n: 1, size: '1024x1536' },
         { headers: { 'Authorization': `Bearer ${this.openaiKey}`, 'Content-Type': 'application/json' }, timeout: 60000 }
       );
       const url = response.data?.data?.[0]?.url;
