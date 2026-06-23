@@ -12,11 +12,15 @@ const {
   getUserCount,
   updateUser,
   deleteUser,
+  forgotPassword,
+  resetPassword,
 } = require('../controllers/authController');
 
 // Public routes
 router.post('/signup', signup);
 router.post('/login', login);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 // Admin routes - Works with both user and admin tokens
 router.get('/users', protectWithAdminFallback, getAllUsers);

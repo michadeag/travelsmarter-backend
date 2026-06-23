@@ -242,12 +242,16 @@ exports.sendTestEmail = async (req, res) => {
 
     const template = result.rows[0];
     const emailService = require('../services/emailService');
+    const appUrl = process.env.FRONTEND_URL || 'https://travelsmarterapp.com';
+
+    const renderedHtml = (template.html_content || template.content || '<p>No content</p>')
+      .split('{firstName}').join('Michael')
+      .split('{appUrl}').join(appUrl);
 
     const emailResult = await emailService.sendEmail({
       to: toEmail,
       subject: `[TEST] ${template.subject}`,
-      html: template.html_content || template.content || '<p>No content</p>',
-      text: template.content || template.html_content || 'No content'
+      html: renderedHtml
     });
 
     if (emailResult.success) {

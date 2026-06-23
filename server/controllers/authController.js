@@ -1,8 +1,99 @@
 const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const sgMail = require('@sendgrid/mail');
 const { generateToken } = require('../middleware/auth');
 const emailService = require('../services/emailService');
 const emailSequenceService = require('../services/emailSequenceService');
+
+const APP_URL = process.env.FRONTEND_URL || 'https://travelsmarterapp.com';
+const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com';
+
+// @desc Request password reset
+// @route POST /api/auth/forgot-password
+// @access Public
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+
+    const result = await pool.query('SELECT id, first_name FROM users WHERE email = $1', [email.toLowerCase()]);
+
+    // Always respond OK — don't leak whether email exists
+    res.json({ success: true, message: 'If that email is registered you will receive a reset link.' });
+
+    if (!result.rows.length) return;
+
+    const user = result.rows[0];
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await pool.query(
+      `UPDATE users SET password_reset_token = $1, password_reset_expires = $2 WHERE id = $3`,
+      [token, expires, user.id]
+    );
+
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    const resetUrl = `${APP_URL}/reset-password.html?token=${token}`;
+    await sgMail.send({
+      to: email.toLowerCase(),
+      from: FROM_EMAIL,
+      subject: '🔑 Reset your TravelSmarter password',
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;">
+          <div style="background:#1a2744;padding:24px;border-radius:12px 12px 0 0;text-align:center;">
+            <span style="color:#ff6b4a;font-size:1.5em;font-weight:800;">✈️ TravelSmarter</span>
+          </div>
+          <div style="padding:32px 24px;background:#fff;border:1px solid #e5e7eb;">
+            <h2 style="margin:0 0 16px;color:#1a2744;">Hi ${user.first_name || 'there'},</h2>
+            <p style="color:#374151;line-height:1.6;">You requested a password reset. Click the button below — the link is valid for 1 hour.</p>
+            <div style="text-align:center;margin:32px 0;">
+              <a href="${resetUrl}" style="background:#ff6b4a;color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:1.05em;">Reset My Password →</a>
+            </div>
+            <p style="color:#6b7280;font-size:0.88em;">If you didn't request this, ignore this email — your password won't change.</p>
+          </div>
+          <div style="background:#f9fafb;padding:16px;text-align:center;border-radius:0 0 12px 12px;font-size:0.8em;color:#9ca3af;">
+            © 2026 TravelSmarter · <a href="${APP_URL}/auth.html" style="color:#9ca3af;">Sign in</a>
+          </div>
+        </div>`
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+  }
+};
+
+// @desc Reset password with token
+// @route POST /api/auth/reset-password
+// @access Public
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) return res.status(400).json({ success: false, message: 'Token and password required' });
+    if (password.length < 8) return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+
+    const result = await pool.query(
+      `SELECT id FROM users WHERE password_reset_token = $1 AND password_reset_expires > NOW()`,
+      [token]
+    );
+
+    if (!result.rows.length) {
+      return res.status(400).json({ success: false, message: 'Reset link is invalid or has expired.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    await pool.query(
+      `UPDATE users SET password_hash = $1, password_reset_token = NULL, password_reset_expires = NULL, updated_at = NOW() WHERE id = $2`,
+      [hashedPassword, result.rows[0].id]
+    );
+
+    res.json({ success: true, message: 'Password updated successfully.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ success: false, message: 'Error resetting password' });
+  }
+};
 
 // @desc Register user
 // @route POST /api/auth/signup
@@ -72,7 +163,10 @@ exports.signup = async (req, res) => {
       user.id,
       user.email,
       user.first_name
-    ).catch(err => {
+    ).then(() => {
+      emailSequenceService.sendDay0Email(user.id, user.email, user.first_name)
+        .catch(err => console.error('Failed to send Day-0 email:', err.message));
+    }).catch(err => {
       console.error('Failed to initialize email sequence:', err.message || err);
     });
 

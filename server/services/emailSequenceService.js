@@ -414,9 +414,9 @@ async function sendPendingEmails() {
 
     for (const row of result.rows) {
       try {
-        const emailHtml = row.html_content
-          .replace(/{firstName}/g, row.first_name || 'Traveler')
-          .replace(/{appUrl}/g, appUrl);
+        const emailHtml = (row.html_content || '')
+          .split('{firstName}').join(row.first_name || 'Traveler')
+          .split('{appUrl}').join(appUrl);
 
         const fullHtml = `
           <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
@@ -481,9 +481,82 @@ async function sendPendingEmails() {
   }
 }
 
+// ─── SEND DAY-0 IMMEDIATELY ───────────────────────────────────────────────────
+// Called right after signup so the user gets their first email without waiting
+// for the hourly cron job.
+
+async function sendDay0Email(userId, userEmail, firstName) {
+  try {
+    const appUrl = process.env.FRONTEND_URL || 'https://travelsmarterapp.com';
+
+    const seqResult = await pool.query(
+      `SELECT id FROM email_sequences WHERE name = 'Welcome Email Sequence' LIMIT 1`
+    );
+    if (!seqResult.rows.length) return;
+
+    const templateResult = await pool.query(
+      `SELECT et.id, et.subject, et.html_content
+       FROM email_templates et
+       WHERE et.sequence_id = $1 AND et.day = 0 AND et.is_active = true
+       LIMIT 1`,
+      [seqResult.rows[0].id]
+    );
+    if (!templateResult.rows.length) return;
+
+    const t = templateResult.rows[0];
+    const emailHtml = (t.html_content || '')
+      .split('{firstName}').join(firstName || 'Traveler')
+      .split('{appUrl}').join(appUrl);
+
+    const fullHtml = `
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+        <tr><td align="center" style="padding:32px 16px;">
+          <table cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+            <tr>
+              <td style="background:#1a2744;padding:18px 32px;border-radius:12px 12px 0 0;">
+                <span style="font-size:19px;font-weight:700;color:white;font-family:-apple-system,sans-serif;">
+                  Travel<span style="color:#ff6b4a;">Smarter</span>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:white;padding:36px 32px;border-radius:0 0 12px 12px;color:#1f2937;line-height:1.7;font-size:15px;">
+                ${emailHtml}
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:36px 0 24px;">
+                <p style="font-size:12px;color:#9ca3af;margin:0;line-height:1.7;">
+                  You received this because you signed up for TravelSmarter.<br>
+                  <a href="${appUrl}/account.html" style="color:#667eea;text-decoration:none;">Manage preferences</a>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>`;
+
+    await emailService.sendEmail({ to: userEmail, subject: t.subject, html: fullHtml });
+
+    // Mark the scheduled Day-0 email as already sent so cron doesn't send it again
+    await pool.query(
+      `UPDATE scheduled_emails se
+       SET status = 'sent', sent_at = NOW()
+       FROM email_templates et
+       WHERE se.template_id = et.id
+         AND se.user_id = $1
+         AND et.day = 0
+         AND se.status = 'pending'`,
+      [userId]
+    );
+
+    console.log(`✅ Day-0 email sent immediately to ${userEmail}`);
+  } catch (err) {
+    console.error('❌ Error sending Day-0 email immediately:', err.message);
+  }
+}
+
 module.exports = {
   initializeEmailSequence,
   sendPendingEmails,
   seedEmailSequence,
-  updateEmailTemplates
+  updateEmailTemplates,
+  sendDay0Email
 };
