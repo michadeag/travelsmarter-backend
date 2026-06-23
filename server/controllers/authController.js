@@ -9,6 +9,53 @@ const emailSequenceService = require('../services/emailSequenceService');
 const APP_URL = process.env.FRONTEND_URL || 'https://travelsmarterapp.com';
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com';
 
+// @desc Magic link login
+// @route GET /api/auth/magic-login
+// @access Public
+exports.magicLogin = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ success: false, message: 'Token missing' });
+
+    const result = await pool.query(
+      `SELECT id, email, first_name, last_name, subscription_tier, subscription_status
+       FROM users
+       WHERE magic_login_token = $1 AND magic_login_expires > NOW()`,
+      [token]
+    );
+
+    if (!result.rows.length) {
+      return res.status(400).json({ success: false, message: 'Link is invalid or has expired.' });
+    }
+
+    const user = result.rows[0];
+
+    // Consume token — one-time use
+    await pool.query(
+      `UPDATE users SET magic_login_token = NULL, magic_login_expires = NULL, last_login = NOW() WHERE id = $1`,
+      [user.id]
+    );
+
+    const jwtToken = generateToken(user.id);
+
+    res.json({
+      success: true,
+      token: jwtToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        subscriptionTier: user.subscription_tier,
+        subscriptionStatus: user.subscription_status
+      }
+    });
+  } catch (error) {
+    console.error('Magic login error:', error);
+    res.status(500).json({ success: false, message: 'Error processing login link' });
+  }
+};
+
 // @desc Request password reset
 // @route POST /api/auth/forgot-password
 // @access Public

@@ -14,11 +14,13 @@ const {
   deleteUser,
   forgotPassword,
   resetPassword,
+  magicLogin,
 } = require('../controllers/authController');
 
 // Public routes
 router.post('/signup', signup);
 router.post('/login', login);
+router.get('/magic-login', magicLogin);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 

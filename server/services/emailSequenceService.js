@@ -49,7 +49,7 @@ const defaultEmailSequence = [
       `)}
       ${p('Over the next 10 days you\'ll get one focused hack per email — actionable, specific, and immediately usable.')}
       ${p('But first — your hacks are waiting:')}
-      ${btn('{appUrl}/index.html', 'Go to My Free Hacks')}
+      ${btn('{magicUrl}', 'Go to My Free Hacks')}
       ${small('<a href="{appUrl}/cheat-sheet.html" style="color:#9ca3af;">📄 Or download the cheat sheet</a> — all 20 hacks on one page, ready to print.')}
       ${small('Tomorrow: the flight booking window most people miss — and why it saves €300–600 per ticket.')}
     `
@@ -505,9 +505,21 @@ async function sendDay0Email(userId, userEmail, firstName) {
     if (!templateResult.rows.length) return;
 
     const t = templateResult.rows[0];
+
+    // Generate magic login token (7-day expiry)
+    const crypto = require('crypto');
+    const magicToken = crypto.randomBytes(32).toString('hex');
+    const magicExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await pool.query(
+      `UPDATE users SET magic_login_token = $1, magic_login_expires = $2 WHERE id = $3`,
+      [magicToken, magicExpires, userId]
+    );
+    const magicUrl = `${appUrl}/index.html?magic=${magicToken}`;
+
     const emailHtml = (t.html_content || '')
       .split('{firstName}').join(firstName || 'Traveler')
-      .split('{appUrl}').join(appUrl);
+      .split('{appUrl}').join(appUrl)
+      .split('{magicUrl}').join(magicUrl);
 
     const fullHtml = `
       <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">

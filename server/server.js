@@ -1302,11 +1302,13 @@ async function initializeApp() {
       console.warn('⚠️ Reddit service init failed (non-blocking):', redditErr.message);
     }
 
-    // Ensure password reset columns exist (idempotent migration)
+    // Ensure password reset + magic login columns exist (idempotent migration)
     await pool.query(`
       ALTER TABLE users
         ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(64),
-        ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMPTZ
+        ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS magic_login_token VARCHAR(64),
+        ADD COLUMN IF NOT EXISTS magic_login_expires TIMESTAMPTZ
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
 
     // Seed default email sequence (first run), then sync templates from code
