@@ -50,6 +50,7 @@ const defaultEmailSequence = [
       ${p('Over the next 10 days you\'ll get one focused hack per email — actionable, specific, and immediately usable.')}
       ${p('But first — your hacks are waiting:')}
       ${btn('{appUrl}/index.html', 'Go to My Free Hacks')}
+      ${small('<a href="{appUrl}/cheat-sheet.html" style="color:#9ca3af;">📄 Or download the cheat sheet</a> — all 20 hacks on one page, ready to print.')}
       ${small('Tomorrow: the flight booking window most people miss — and why it saves €300–600 per ticket.')}
     `
   },
