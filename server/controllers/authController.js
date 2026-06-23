@@ -129,8 +129,8 @@ exports.signup = async (req, res) => {
 
     // Create user
     const newUser = await pool.query(
-      `INSERT INTO users (email, password_hash, first_name, last_name, subscription_tier)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO users (email, password_hash, first_name, last_name, subscription_tier, last_login)
+       VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
        RETURNING id, email, first_name, last_name, subscription_tier, created_at`,
       [email.toLowerCase(), hashedPassword, firstName || '', lastName || '', 'free']
     );
