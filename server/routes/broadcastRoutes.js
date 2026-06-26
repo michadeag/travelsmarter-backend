@@ -18,7 +18,7 @@ const BROADCAST_TEMPLATES = [
 </ol>
 <p>Just hit reply — we read every response personally.</p>
 <p>By the way, if you haven't explored our full library of 87 hacks yet, you're leaving a lot on the table. Members on our Smart Traveler plan save an average of €500+ on their first trip after upgrading.</p>
-<p><a href="{appUrl}/pricing" style="background:#667eea;color:white;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:10px;">See what's included →</a></p>
+<p><a href="{appUrl}/sales-page.html" style="background:#667eea;color:white;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:10px;">See what's included →</a></p>
 <p>Safe travels,<br>The TravelSmarter Team</p>`
   },
   {
@@ -34,7 +34,7 @@ const BROADCAST_TEMPLATES = [
   <li>📊 Weekly deal alerts for Smart Traveler and Elite members</li>
 </ul>
 <p>The weekly deal alerts alone have helped members save hundreds of euros this month. That feature is available on our paid plans — worth a look if you haven't already.</p>
-<p><a href="{appUrl}/pricing" style="background:#667eea;color:white;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:10px;">Explore plans →</a></p>
+<p><a href="{appUrl}/sales-page.html" style="background:#667eea;color:white;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:10px;">Explore plans →</a></p>
 <p>The TravelSmarter Team</p>`
   },
   {
@@ -52,7 +52,7 @@ const BROADCAST_TEMPLATES = [
   <li>📚 The complete 87-hack library with no restrictions</li>
 </ul>
 <p>Smart Traveler is €9.99/month. Most members recover that in their first booking.</p>
-<p><a href="{appUrl}/pricing" style="background:#10b981;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:10px;font-weight:bold;">Start saving more →</a></p>
+<p><a href="{appUrl}/sales-page.html" style="background:#10b981;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:10px;font-weight:bold;">Start saving more →</a></p>
 <p>The TravelSmarter Team</p>`
   },
   {
