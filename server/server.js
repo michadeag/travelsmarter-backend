@@ -34,6 +34,7 @@ const eliteStatusRoutes = require('./routes/eliteStatusRoutes');
 // Email template routes
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 const broadcastRoutes = require('./routes/broadcastRoutes');
+const hiddenGemRoutes = require('./routes/hiddenGemRoutes');
 const redditRoutes = require('./routes/redditRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
 const pinterestRoutes = require('./routes/pinterestRoutes');
@@ -165,6 +166,7 @@ app.use('/api/contact', contactRoutes);
 // Email template routes
 app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/broadcast', broadcastRoutes);
+app.use('/api/hidden-gem', hiddenGemRoutes);
 app.use('/api/reddit', redditRoutes);
 app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/pinterest', pinterestRoutes);
