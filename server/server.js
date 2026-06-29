@@ -35,6 +35,8 @@ const eliteStatusRoutes = require('./routes/eliteStatusRoutes');
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 const broadcastRoutes = require('./routes/broadcastRoutes');
 const hiddenGemRoutes = require('./routes/hiddenGemRoutes');
+const flightAlertRoutes = require('./routes/flightAlertRoutes');
+const { runDailyPriceCheck } = require('./services/flightPriceService');
 const redditRoutes = require('./routes/redditRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
 const pinterestRoutes = require('./routes/pinterestRoutes');
@@ -167,6 +169,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/broadcast', broadcastRoutes);
 app.use('/api/hidden-gem', hiddenGemRoutes);
+app.use('/api/flight-alerts', flightAlertRoutes);
 app.use('/api/reddit', redditRoutes);
 app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/pinterest', pinterestRoutes);
@@ -1390,6 +1393,23 @@ async function initializeApp() {
     console.error('❌ Error during app initialization:', error);
   }
 }
+
+// Daily flight price check at 06:00 UTC
+function scheduleDailyFlightCheck() {
+  const now = new Date();
+  const next = new Date();
+  next.setUTCHours(6, 0, 0, 0);
+  if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
+  const delay = next - now;
+  setTimeout(() => {
+    runDailyPriceCheck().catch(e => console.error('[FlightAlerts] Cron error:', e));
+    setInterval(() => {
+      runDailyPriceCheck().catch(e => console.error('[FlightAlerts] Cron error:', e));
+    }, 24 * 60 * 60 * 1000);
+  }, delay);
+  console.log(`[FlightAlerts] Daily check scheduled in ${Math.round(delay/3600000)}h`);
+}
+scheduleDailyFlightCheck();
 
 // Start server IMMEDIATELY (non-blocking DB init)
 const PORT = process.env.PORT || 5000;
