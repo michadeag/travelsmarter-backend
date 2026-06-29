@@ -170,6 +170,7 @@ app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/broadcast', broadcastRoutes);
 app.use('/api/hidden-gem', hiddenGemRoutes);
 app.use('/api/flight-alerts', flightAlertRoutes);
+app.use('/api/travel-ai', require('./routes/travelAiRoutes'));
 app.use('/api/reddit', redditRoutes);
 app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/pinterest', pinterestRoutes);
