@@ -1,56 +1,88 @@
 const pool = require('../config/database');
 
-let amadeusToken = null;
-let tokenExpiry = 0;
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
+const RAPIDAPI_HOST = 'sky-scrapper.p.rapidapi.com';
 
-async function getAmadeusToken() {
-  if (amadeusToken && Date.now() < tokenExpiry) return amadeusToken;
+// In-memory cache for airport SkyIds (avoids repeated lookups)
+const skyIdCache = {};
 
-  const key = process.env.AMADEUS_API_KEY;
-  const secret = process.env.AMADEUS_API_SECRET;
-  if (!key || !secret) throw new Error('Amadeus credentials not configured');
+async function getAirportSkyId(iataCode) {
+  if (skyIdCache[iataCode]) return skyIdCache[iataCode];
 
-  const res = await fetch('https://api.amadeus.com/v1/security/oauth2/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=client_credentials&client_id=${key}&client_secret=${secret}`
-  });
+  const res = await fetch(
+    `https://${RAPIDAPI_HOST}/api/v1/flights/searchAirport?query=${iataCode}&locale=en-US`,
+    {
+      headers: {
+        'X-RapidAPI-Key': RAPIDAPI_KEY,
+        'X-RapidAPI-Host': RAPIDAPI_HOST
+      }
+    }
+  );
+
+  if (!res.ok) throw new Error(`Airport lookup failed for ${iataCode}: ${res.status}`);
   const data = await res.json();
-  if (!data.access_token) throw new Error('Amadeus auth failed: ' + JSON.stringify(data));
 
-  amadeusToken = data.access_token;
-  tokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
-  return amadeusToken;
+  if (!data.data || data.data.length === 0) throw new Error(`Airport not found: ${iataCode}`);
+
+  // Pick the first result that matches the IATA code
+  const match = data.data.find(a =>
+    a.navigation?.relevantFlightParams?.skyId === iataCode ||
+    a.skyId === iataCode
+  ) || data.data[0];
+
+  const skyId = match.navigation?.relevantFlightParams?.skyId || match.skyId;
+  const entityId = match.navigation?.relevantFlightParams?.entityId || match.entityId;
+
+  skyIdCache[iataCode] = { skyId, entityId };
+  return skyIdCache[iataCode];
 }
 
-// Get cheapest available price for a route in a given month
+// Get cheapest round-trip price for a route in a given month
 async function getCheapestPrice(origin, destination, travelMonth) {
-  const token = await getAmadeusToken();
+  if (!RAPIDAPI_KEY) throw new Error('RAPIDAPI_KEY not configured');
 
-  // Search on the 15th of the travel month as a representative date
+  const [originInfo, destInfo] = await Promise.all([
+    getAirportSkyId(origin),
+    getAirportSkyId(destination)
+  ]);
+
+  // Check on the 15th of the travel month
   const departureDate = `${travelMonth}-15`;
-  const returnDate = `${travelMonth}-22`;
 
-  const url = `https://api.amadeus.com/v2/shopping/flight-offers?` +
-    `originLocationCode=${origin}&destinationLocationCode=${destination}` +
-    `&departureDate=${departureDate}&returnDate=${returnDate}` +
-    `&adults=1&max=5&currencyCode=USD&nonStop=false`;
-
-  const res = await fetch(url, {
-    headers: { 'Authorization': `Bearer ${token}` }
+  const params = new URLSearchParams({
+    originSkyId: originInfo.skyId,
+    destinationSkyId: destInfo.skyId,
+    originEntityId: originInfo.entityId,
+    destinationEntityId: destInfo.entityId,
+    date: departureDate,
+    returnDate: `${travelMonth}-22`,
+    adults: '1',
+    currency: 'USD',
+    market: 'en-US',
+    countryCode: 'US'
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Amadeus API error ${res.status}: ${err}`);
-  }
+  const res = await fetch(
+    `https://${RAPIDAPI_HOST}/api/v2/flights/searchFlights?${params}`,
+    {
+      headers: {
+        'X-RapidAPI-Key': RAPIDAPI_KEY,
+        'X-RapidAPI-Host': RAPIDAPI_HOST
+      }
+    }
+  );
 
+  if (!res.ok) throw new Error(`Flight search failed: ${res.status}`);
   const data = await res.json();
-  if (!data.data || data.data.length === 0) return null;
 
-  // Find cheapest offer
-  const prices = data.data.map(o => parseFloat(o.price.grandTotal));
-  return Math.min(...prices);
+  const itineraries = data.data?.itineraries;
+  if (!itineraries || itineraries.length === 0) return null;
+
+  const prices = itineraries
+    .map(it => parseFloat(it.price?.raw || it.price?.formatted?.replace(/[^0-9.]/g, '')))
+    .filter(p => !isNaN(p) && p > 0);
+
+  return prices.length > 0 ? Math.min(...prices) : null;
 }
 
 // Ensure flight_alerts table exists
@@ -76,7 +108,7 @@ async function ensureTable() {
 }
 ensureTable().catch(console.error);
 
-// Run the daily price check for all active alerts
+// Daily price check for all active alerts
 async function runDailyPriceCheck() {
   console.log('[FlightAlerts] Starting daily price check...');
   const sgMail = require('@sendgrid/mail');
@@ -106,7 +138,6 @@ async function runDailyPriceCheck() {
       if (price !== null && price <= alert.target_price && !alert.notified) {
         const monthLabel = new Date(alert.travel_month + '-01')
           .toLocaleString('en-US', { month: 'long', year: 'numeric' });
-
         const savings = Math.round(alert.target_price - price);
 
         await sgMail.send({
@@ -120,7 +151,7 @@ async function runDailyPriceCheck() {
                   <tr><td style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px 12px 0 0;padding:32px;text-align:center;">
                     <div style="font-size:2.5em;">✈️</div>
                     <h1 style="color:white;margin:12px 0 4px;font-size:1.6em;">Price Alert Triggered!</h1>
-                    <p style="color:rgba(255,255,255,0.85);margin:0;">${alert.origin} → ${alert.destination} • ${monthLabel}</p>
+                    <p style="color:rgba(255,255,255,0.85);margin:0;">${alert.origin} to ${alert.destination} &bull; ${monthLabel}</p>
                   </td></tr>
                   <tr><td style="padding:32px;color:#1f2937;line-height:1.6;">
                     <p>Hi ${alert.first_name || 'Traveler'},</p>
@@ -128,20 +159,19 @@ async function runDailyPriceCheck() {
                     <div style="background:#f0fdf4;border:2px solid #10b981;border-radius:12px;padding:24px;text-align:center;margin:24px 0;">
                       <div style="color:#6b7280;font-size:14px;margin-bottom:4px;">Current Price</div>
                       <div style="font-size:3em;font-weight:800;color:#10b981;">$${Math.round(price)}</div>
-                      <div style="color:#6b7280;font-size:14px;margin-top:4px;">Your target was $${Math.round(alert.target_price)} — you're saving ~$${savings}</div>
+                      <div style="color:#6b7280;font-size:14px;margin-top:4px;">Your target was $${Math.round(alert.target_price)} &mdash; you save ~$${savings}</div>
                     </div>
-                    <p style="text-align:center;"><strong>${alert.origin_name || alert.origin} → ${alert.destination_name || alert.destination}</strong><br>
-                    Travel month: ${monthLabel}</p>
+                    <p style="text-align:center;"><strong>${alert.origin_name || alert.origin} to ${alert.destination_name || alert.destination}</strong><br>Travel month: ${monthLabel}</p>
                     <p style="color:#6b7280;font-size:14px;">Prices can change within hours. Book now to lock in this rate.</p>
                     <div style="text-align:center;margin-top:24px;">
                       <a href="https://www.google.com/flights#search;f=${alert.origin};t=${alert.destination}"
                          style="background:#667eea;color:white;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:700;display:inline-block;">
-                        🔍 Search Flights Now →
+                        Search Flights Now
                       </a>
                     </div>
                     <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0;">
                     <p style="font-size:12px;color:#9ca3af;">
-                      You set this alert on TravelSmarter. <a href="${appUrl}" style="color:#667eea;">Manage your alerts →</a>
+                      You set this alert on TravelSmarter. <a href="${appUrl}" style="color:#667eea;">Manage your alerts</a>
                     </p>
                   </td></tr>
                 </table>
@@ -149,17 +179,14 @@ async function runDailyPriceCheck() {
             </table>`
         });
 
-        await pool.query(
-          `UPDATE flight_alerts SET notified = true WHERE id = $1`,
-          [alert.id]
-        );
+        await pool.query(`UPDATE flight_alerts SET notified = true WHERE id = $1`, [alert.id]);
         notified++;
       }
 
-      // Rate limit — Amadeus free tier allows ~10 req/s
-      await new Promise(r => setTimeout(r, 200));
+      // Respect rate limits (~1 req/s to be safe)
+      await new Promise(r => setTimeout(r, 1000));
     } catch (err) {
-      console.error(`[FlightAlerts] Error checking alert ${alert.id}:`, err.message);
+      console.error(`[FlightAlerts] Error on alert ${alert.id}:`, err.message);
       errors++;
     }
   }
