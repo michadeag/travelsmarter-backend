@@ -1,20 +1,43 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const { protect } = require('../middleware/auth');
 const { protectWithAdminFallback } = require('../middleware/auth');
 const { getCheapestPrice, runDailyPriceCheck } = require('../services/flightPriceService');
+const jwt = require('jsonwebtoken');
 
-// Middleware: only smart_traveler or elite can save alerts
+// Flexible auth: accepts both user tokens and admin tokens
+async function flexAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, error: 'No token provided' });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.type === 'admin') {
+      req.user = { id: decoded.id, email: decoded.email, subscription_tier: 'elite', isAdmin: true };
+      return next();
+    }
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
+    if (result.rows.length === 0) return res.status(401).json({ success: false, error: 'User not found' });
+    req.user = result.rows[0];
+    next();
+  } catch (err) {
+    return res.status(401).json({ success: false, error: 'Token invalid: ' + err.message });
+  }
+}
+
+// Only smart_traveler or elite can save alerts
 function requirePaid(req, res, next) {
-  const tier = (req.user?.subscriptionTier || req.user?.subscription_tier || 'free').toLowerCase();
+  if (req.user?.isAdmin) return next();
+  const tier = (req.user?.subscription_tier || 'free').toLowerCase();
   if (tier === 'free') {
     return res.status(403).json({ success: false, error: 'upgrade_required', message: 'Flight alerts are available to Smart Traveler and Elite members.' });
   }
   next();
 }
 
-// GET /api/flight-alerts/diag — check config without auth
+// GET /api/flight-alerts/diag â€” check config without auth
 router.get('/diag', async (req, res) => {
   const key = process.env.SERPAPI_KEY;
   if (!key) return res.json({ configured: false, error: 'SERPAPI_KEY not set' });
@@ -33,7 +56,7 @@ router.get('/diag', async (req, res) => {
   }
 });
 
-// GET /api/flight-alerts/check-price — live price lookup (no auth required for preview)
+// GET /api/flight-alerts/check-price â€” live price lookup (no auth required for preview)
 router.get('/check-price', async (req, res) => {
   try {
     const { origin, destination, travel_month } = req.query;
@@ -57,8 +80,8 @@ router.get('/check-price', async (req, res) => {
   }
 });
 
-// GET /api/flight-alerts — list my alerts
-router.get('/', protect, async (req, res) => {
+// GET /api/flight-alerts â€” list my alerts
+router.get('/', flexAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM flight_alerts WHERE user_id = $1 ORDER BY created_at DESC`,
@@ -70,8 +93,8 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
-// POST /api/flight-alerts — create alert (paid only)
-router.post('/', protect, requirePaid, async (req, res) => {
+// POST /api/flight-alerts â€” create alert (paid only)
+router.post('/', flexAuth, requirePaid, async (req, res) => {
   try {
     const { origin, destination, origin_name, destination_name, travel_month, target_price } = req.body;
     if (!origin || !destination || !travel_month || !target_price) {
@@ -109,8 +132,8 @@ router.post('/', protect, requirePaid, async (req, res) => {
   }
 });
 
-// DELETE /api/flight-alerts/:id — delete my alert
-router.delete('/:id', protect, async (req, res) => {
+// DELETE /api/flight-alerts/:id â€” delete my alert
+router.delete('/:id', flexAuth, async (req, res) => {
   try {
     await pool.query(
       `UPDATE flight_alerts SET active = false WHERE id = $1 AND user_id = $2`,
@@ -122,7 +145,7 @@ router.delete('/:id', protect, async (req, res) => {
   }
 });
 
-// POST /api/flight-alerts/admin/run-check — manually trigger price check (admin)
+// POST /api/flight-alerts/admin/run-check â€” manually trigger price check (admin)
 router.post('/admin/run-check', protectWithAdminFallback, async (req, res) => {
   try {
     const result = await runDailyPriceCheck();
@@ -132,7 +155,7 @@ router.post('/admin/run-check', protectWithAdminFallback, async (req, res) => {
   }
 });
 
-// GET /api/flight-alerts/admin/all — admin view all alerts
+// GET /api/flight-alerts/admin/all â€” admin view all alerts
 router.get('/admin/all', protectWithAdminFallback, async (req, res) => {
   try {
     const result = await pool.query(`
@@ -149,3 +172,5 @@ router.get('/admin/all', protectWithAdminFallback, async (req, res) => {
 });
 
 module.exports = router;
+
+
