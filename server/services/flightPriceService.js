@@ -1,43 +1,47 @@
 const pool = require('../config/database');
+const axios = require('axios');
 
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = 'sky-scrapper.p.rapidapi.com';
 
-// In-memory cache for airport SkyIds (avoids repeated lookups)
+const rapidApi = axios.create({
+  baseURL: `https://${RAPIDAPI_HOST}`,
+  headers: {
+    'X-RapidAPI-Key': RAPIDAPI_KEY || '',
+    'X-RapidAPI-Host': RAPIDAPI_HOST,
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/json',
+    'Accept-Language': 'en-US,en;q=0.9'
+  },
+  timeout: 15000
+});
+
+// In-memory cache for airport SkyIds
 const skyIdCache = {};
 
 async function getAirportSkyId(iataCode) {
   if (skyIdCache[iataCode]) return skyIdCache[iataCode];
 
-  const res = await fetch(
-    `https://${RAPIDAPI_HOST}/api/v1/flights/searchAirport?query=${iataCode}&locale=en-US`,
-    {
-      headers: {
-        'X-RapidAPI-Key': RAPIDAPI_KEY,
-        'X-RapidAPI-Host': RAPIDAPI_HOST
-      }
-    }
-  );
-
-  if (!res.ok) throw new Error(`Airport lookup failed for ${iataCode}: ${res.status}`);
-  const data = await res.json();
+  const { data } = await rapidApi.get('/api/v1/flights/searchAirport', {
+    params: { query: iataCode, locale: 'en-US' }
+  });
 
   if (!data.data || data.data.length === 0) throw new Error(`Airport not found: ${iataCode}`);
 
-  // Pick the first result that matches the IATA code
   const match = data.data.find(a =>
     a.navigation?.relevantFlightParams?.skyId === iataCode ||
     a.skyId === iataCode
   ) || data.data[0];
 
-  const skyId = match.navigation?.relevantFlightParams?.skyId || match.skyId;
-  const entityId = match.navigation?.relevantFlightParams?.entityId || match.entityId;
+  const result = {
+    skyId: match.navigation?.relevantFlightParams?.skyId || match.skyId,
+    entityId: match.navigation?.relevantFlightParams?.entityId || match.entityId
+  };
 
-  skyIdCache[iataCode] = { skyId, entityId };
-  return skyIdCache[iataCode];
+  skyIdCache[iataCode] = result;
+  return result;
 }
 
-// Get cheapest round-trip price for a route in a given month
 async function getCheapestPrice(origin, destination, travelMonth) {
   if (!RAPIDAPI_KEY) throw new Error('RAPIDAPI_KEY not configured');
 
@@ -46,40 +50,26 @@ async function getCheapestPrice(origin, destination, travelMonth) {
     getAirportSkyId(destination)
   ]);
 
-  // Check on the 15th of the travel month
-  const departureDate = `${travelMonth}-15`;
-
-  const params = new URLSearchParams({
-    originSkyId: originInfo.skyId,
-    destinationSkyId: destInfo.skyId,
-    originEntityId: originInfo.entityId,
-    destinationEntityId: destInfo.entityId,
-    date: departureDate,
-    returnDate: `${travelMonth}-22`,
-    adults: '1',
-    currency: 'USD',
-    market: 'en-US',
-    countryCode: 'US'
-  });
-
-  const res = await fetch(
-    `https://${RAPIDAPI_HOST}/api/v2/flights/searchFlights?${params}`,
-    {
-      headers: {
-        'X-RapidAPI-Key': RAPIDAPI_KEY,
-        'X-RapidAPI-Host': RAPIDAPI_HOST
-      }
+  const { data } = await rapidApi.get('/api/v2/flights/searchFlights', {
+    params: {
+      originSkyId: originInfo.skyId,
+      destinationSkyId: destInfo.skyId,
+      originEntityId: originInfo.entityId,
+      destinationEntityId: destInfo.entityId,
+      date: `${travelMonth}-15`,
+      returnDate: `${travelMonth}-22`,
+      adults: '1',
+      currency: 'USD',
+      market: 'en-US',
+      countryCode: 'US'
     }
-  );
-
-  if (!res.ok) throw new Error(`Flight search failed: ${res.status}`);
-  const data = await res.json();
+  });
 
   const itineraries = data.data?.itineraries;
   if (!itineraries || itineraries.length === 0) return null;
 
   const prices = itineraries
-    .map(it => parseFloat(it.price?.raw || it.price?.formatted?.replace(/[^0-9.]/g, '')))
+    .map(it => parseFloat(it.price?.raw))
     .filter(p => !isNaN(p) && p > 0);
 
   return prices.length > 0 ? Math.min(...prices) : null;
@@ -108,7 +98,6 @@ async function ensureTable() {
 }
 ensureTable().catch(console.error);
 
-// Daily price check for all active alerts
 async function runDailyPriceCheck() {
   console.log('[FlightAlerts] Starting daily price check...');
   const sgMail = require('@sendgrid/mail');
@@ -128,7 +117,6 @@ async function runDailyPriceCheck() {
   for (const alert of alerts.rows) {
     try {
       const price = await getCheapestPrice(alert.origin, alert.destination, alert.travel_month);
-
       await pool.query(
         `UPDATE flight_alerts SET current_price = $1, last_checked_at = CURRENT_TIMESTAMP WHERE id = $2`,
         [price, alert.id]
@@ -155,14 +143,13 @@ async function runDailyPriceCheck() {
                   </td></tr>
                   <tr><td style="padding:32px;color:#1f2937;line-height:1.6;">
                     <p>Hi ${alert.first_name || 'Traveler'},</p>
-                    <p>Good news — the price you were watching just dropped below your target.</p>
+                    <p>The price you were watching just dropped below your target.</p>
                     <div style="background:#f0fdf4;border:2px solid #10b981;border-radius:12px;padding:24px;text-align:center;margin:24px 0;">
                       <div style="color:#6b7280;font-size:14px;margin-bottom:4px;">Current Price</div>
                       <div style="font-size:3em;font-weight:800;color:#10b981;">$${Math.round(price)}</div>
                       <div style="color:#6b7280;font-size:14px;margin-top:4px;">Your target was $${Math.round(alert.target_price)} &mdash; you save ~$${savings}</div>
                     </div>
-                    <p style="text-align:center;"><strong>${alert.origin_name || alert.origin} to ${alert.destination_name || alert.destination}</strong><br>Travel month: ${monthLabel}</p>
-                    <p style="color:#6b7280;font-size:14px;">Prices can change within hours. Book now to lock in this rate.</p>
+                    <p style="text-align:center;"><strong>${alert.origin} to ${alert.destination}</strong><br>Travel month: ${monthLabel}</p>
                     <div style="text-align:center;margin-top:24px;">
                       <a href="https://www.google.com/flights#search;f=${alert.origin};t=${alert.destination}"
                          style="background:#667eea;color:white;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:700;display:inline-block;">
@@ -183,7 +170,6 @@ async function runDailyPriceCheck() {
         notified++;
       }
 
-      // Respect rate limits (~1 req/s to be safe)
       await new Promise(r => setTimeout(r, 1000));
     } catch (err) {
       console.error(`[FlightAlerts] Error on alert ${alert.id}:`, err.message);
