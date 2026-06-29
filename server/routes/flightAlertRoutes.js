@@ -29,20 +29,26 @@ router.get('/diag', async (req, res) => {
   }
 });
 
-// GET /api/flight-alerts/check-price — live price lookup (free users can preview)
-router.get('/check-price', protect, async (req, res) => {
+// GET /api/flight-alerts/check-price — live price lookup (no auth required for preview)
+router.get('/check-price', async (req, res) => {
   try {
     const { origin, destination, travel_month } = req.query;
     if (!origin || !destination || !travel_month) {
       return res.status(400).json({ success: false, error: 'origin, destination, and travel_month are required' });
     }
+    if (!process.env.RAPIDAPI_KEY) {
+      return res.status(500).json({ success: false, error: 'RAPIDAPI_KEY not configured on server' });
+    }
+    console.log(`[FlightAlert] Checking price: ${origin} -> ${destination} ${travel_month}`);
     const price = await getCheapestPrice(
       origin.toUpperCase(),
       destination.toUpperCase(),
       travel_month
     );
+    console.log(`[FlightAlert] Result: $${price}`);
     res.json({ success: true, price, origin: origin.toUpperCase(), destination: destination.toUpperCase(), travel_month });
   } catch (err) {
+    console.error('[FlightAlert] check-price error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
