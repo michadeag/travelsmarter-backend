@@ -14,6 +14,21 @@ function requirePaid(req, res, next) {
   next();
 }
 
+// GET /api/flight-alerts/diag — check config without auth
+router.get('/diag', async (req, res) => {
+  const key = process.env.RAPIDAPI_KEY;
+  if (!key) return res.json({ configured: false, error: 'RAPIDAPI_KEY not set' });
+  try {
+    const r = await fetch('https://sky-scrapper.p.rapidapi.com/api/v1/flights/searchAirport?query=FRA&locale=en-US', {
+      headers: { 'X-RapidAPI-Key': key, 'X-RapidAPI-Host': 'sky-scrapper.p.rapidapi.com' }
+    });
+    const d = await r.json();
+    res.json({ configured: true, apiStatus: r.status, resultCount: d.data?.length || 0 });
+  } catch (e) {
+    res.json({ configured: true, error: e.message });
+  }
+});
+
 // GET /api/flight-alerts/check-price — live price lookup (free users can preview)
 router.get('/check-price', protect, async (req, res) => {
   try {
