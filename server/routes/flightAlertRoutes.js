@@ -16,16 +16,20 @@ function requirePaid(req, res, next) {
 
 // GET /api/flight-alerts/diag — check config without auth
 router.get('/diag', async (req, res) => {
-  const key = process.env.RAPIDAPI_KEY;
-  if (!key) return res.json({ configured: false, error: 'RAPIDAPI_KEY not set' });
+  const key = process.env.SERPAPI_KEY;
+  if (!key) return res.json({ configured: false, error: 'SERPAPI_KEY not set' });
   try {
-    const r = await fetch('https://sky-scrapper.p.rapidapi.com/api/v1/flights/searchAirport?query=FRA&locale=en-US', {
-      headers: { 'X-RapidAPI-Key': key, 'X-RapidAPI-Host': 'sky-scrapper.p.rapidapi.com' }
+    const axios = require('axios');
+    const { data, status } = await axios.get('https://serpapi.com/search', {
+      params: { engine: 'google_flights', departure_id: 'FRA', arrival_id: 'JFK', outbound_date: '2026-09-15', return_date: '2026-09-22', currency: 'USD', hl: 'en', adults: 1, api_key: key },
+      timeout: 15000
     });
-    const d = await r.json();
-    res.json({ configured: true, apiStatus: r.status, resultCount: d.data?.length || 0 });
+    const count = [...(data.best_flights || []), ...(data.other_flights || [])].length;
+    res.json({ configured: true, apiStatus: status, flightsFound: count });
   } catch (e) {
-    res.json({ configured: true, error: e.message });
+    const status = e.response?.status;
+    const msg = e.response?.data?.error || e.message;
+    res.json({ configured: true, error: msg, apiStatus: status });
   }
 });
 

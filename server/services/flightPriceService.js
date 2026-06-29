@@ -1,80 +1,6 @@
 const pool = require('../config/database');
 const axios = require('axios');
 
-const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
-const RAPIDAPI_HOST = 'sky-scrapper.p.rapidapi.com';
-
-const rapidApi = axios.create({
-  baseURL: `https://${RAPIDAPI_HOST}`,
-  headers: {
-    'X-RapidAPI-Key': RAPIDAPI_KEY || '',
-    'X-RapidAPI-Host': RAPIDAPI_HOST,
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'application/json',
-    'Accept-Language': 'en-US,en;q=0.9'
-  },
-  timeout: 15000
-});
-
-// In-memory cache for airport SkyIds
-const skyIdCache = {};
-
-async function getAirportSkyId(iataCode) {
-  if (skyIdCache[iataCode]) return skyIdCache[iataCode];
-
-  const { data } = await rapidApi.get('/api/v1/flights/searchAirport', {
-    params: { query: iataCode, locale: 'en-US' }
-  });
-
-  if (!data.data || data.data.length === 0) throw new Error(`Airport not found: ${iataCode}`);
-
-  const match = data.data.find(a =>
-    a.navigation?.relevantFlightParams?.skyId === iataCode ||
-    a.skyId === iataCode
-  ) || data.data[0];
-
-  const result = {
-    skyId: match.navigation?.relevantFlightParams?.skyId || match.skyId,
-    entityId: match.navigation?.relevantFlightParams?.entityId || match.entityId
-  };
-
-  skyIdCache[iataCode] = result;
-  return result;
-}
-
-async function getCheapestPrice(origin, destination, travelMonth) {
-  if (!RAPIDAPI_KEY) throw new Error('RAPIDAPI_KEY not configured');
-
-  const [originInfo, destInfo] = await Promise.all([
-    getAirportSkyId(origin),
-    getAirportSkyId(destination)
-  ]);
-
-  const { data } = await rapidApi.get('/api/v2/flights/searchFlights', {
-    params: {
-      originSkyId: originInfo.skyId,
-      destinationSkyId: destInfo.skyId,
-      originEntityId: originInfo.entityId,
-      destinationEntityId: destInfo.entityId,
-      date: `${travelMonth}-15`,
-      returnDate: `${travelMonth}-22`,
-      adults: '1',
-      currency: 'USD',
-      market: 'en-US',
-      countryCode: 'US'
-    }
-  });
-
-  const itineraries = data.data?.itineraries;
-  if (!itineraries || itineraries.length === 0) return null;
-
-  const prices = itineraries
-    .map(it => parseFloat(it.price?.raw))
-    .filter(p => !isNaN(p) && p > 0);
-
-  return prices.length > 0 ? Math.min(...prices) : null;
-}
-
 // Ensure flight_alerts table exists
 async function ensureTable() {
   await pool.query(`
@@ -97,6 +23,36 @@ async function ensureTable() {
   `);
 }
 ensureTable().catch(console.error);
+
+async function getCheapestPrice(origin, destination, travelMonth) {
+  const key = process.env.SERPAPI_KEY;
+  if (!key) throw new Error('SERPAPI_KEY not configured');
+
+  const departureDate = `${travelMonth}-15`;
+  const returnDate   = `${travelMonth}-22`;
+
+  const { data } = await axios.get('https://serpapi.com/search', {
+    params: {
+      engine:        'google_flights',
+      departure_id:  origin,
+      arrival_id:    destination,
+      outbound_date: departureDate,
+      return_date:   returnDate,
+      currency:      'USD',
+      hl:            'en',
+      adults:        1,
+      api_key:       key
+    },
+    timeout: 20000
+  });
+
+  // SerpAPI returns best_flights and other_flights arrays
+  const all = [...(data.best_flights || []), ...(data.other_flights || [])];
+  if (all.length === 0) return null;
+
+  const prices = all.map(f => f.price).filter(p => typeof p === 'number' && p > 0);
+  return prices.length > 0 ? Math.min(...prices) : null;
+}
 
 async function runDailyPriceCheck() {
   console.log('[FlightAlerts] Starting daily price check...');
