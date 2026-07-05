@@ -500,9 +500,12 @@ async function initializeEmailSequence(userId, userEmail, firstName) {
 
     let scheduledCount = 0;
     for (const template of templatesResult.rows) {
+      // setUTCHours (not setHours) so this lands at a fixed 14:00 UTC
+      // (~10am US Eastern, ~7am US Pacific) regardless of the server's
+      // local timezone, rather than an ambiguous "9am server-local".
       const scheduledAt = new Date();
-      scheduledAt.setDate(scheduledAt.getDate() + template.day);
-      scheduledAt.setHours(9, 0, 0, 0);
+      scheduledAt.setUTCDate(scheduledAt.getUTCDate() + template.day);
+      scheduledAt.setUTCHours(14, 0, 0, 0);
 
       try {
         await pool.query(
@@ -523,6 +526,8 @@ async function initializeEmailSequence(userId, userEmail, firstName) {
     throw error;
   }
 }
+
+const WELCOME_SEQUENCE_NAME = 'Welcome Email Sequence';
 
 // ─── FEATURE SPOTLIGHT: SEED / UPDATE / ENROLL ───────────────────────────────
 
@@ -659,9 +664,9 @@ async function sendPendingEmails() {
       return { sent: 0 };
     }
 
-    // Feature Spotlight is a free->paid nurture sequence: cancel any of its
-    // still-pending emails for users who have since upgraded, so it stops
-    // immediately instead of just silently skipping them every hour.
+    // Both drip sequences should stop the moment a user upgrades: cancel any
+    // still-pending emails for users who have since converted to paid, so
+    // it stops immediately instead of just silently skipping them every hour.
     const cancelResult = await pool.query(`
       UPDATE scheduled_emails se
       SET status = 'cancelled'
@@ -670,13 +675,13 @@ async function sendPendingEmails() {
       LEFT JOIN subscriptions s ON s.user_id = se.user_id AND s.status = 'active'
       JOIN users u ON u.id = se.user_id
       WHERE se.template_id = et.id
-        AND es.name = $1
+        AND es.name = ANY($1)
         AND se.status = 'pending'
         AND COALESCE(s.tier, u.subscription_tier, 'free') != 'free'
       RETURNING se.id
-    `, [FEATURE_SPOTLIGHT_SEQUENCE_NAME]);
+    `, [[WELCOME_SEQUENCE_NAME, FEATURE_SPOTLIGHT_SEQUENCE_NAME]]);
     if (cancelResult.rows.length > 0) {
-      console.log(`🚫 Cancelled ${cancelResult.rows.length} Feature Spotlight email(s) for users who upgraded`);
+      console.log(`🚫 Cancelled ${cancelResult.rows.length} drip-sequence email(s) for users who upgraded`);
     }
 
     const result = await pool.query(`
