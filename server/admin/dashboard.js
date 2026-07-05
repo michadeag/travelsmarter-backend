@@ -68,6 +68,7 @@ function initDashboard() {
     loadDeals();
     loadHacks();
     loadPromos();
+    loadAffiliatePartners();
     loadEmailTemplates();
     loadAnalytics();
     loadPageviews();
@@ -125,6 +126,7 @@ function switchTab(tabName) {
         deals: 'Deals Management',
         hacks: 'Hacks & Modules',
         promos: 'Promo Codes',
+        affiliates: 'Affiliate Links',
         'email-templates': 'Email Templates',
         analytics: 'Analytics',
         settings: 'Settings'
@@ -895,6 +897,141 @@ async function deletePromo(promoId) {
     } catch (error) {
         console.error('Error deleting promo:', error);
         showAlert('Error deleting promo code', 'error');
+    }
+}
+
+// AFFILIATE LINKS
+
+let affiliatePartnersData = [];
+
+async function loadAffiliatePartners() {
+    try {
+        const response = await fetch(`${API_URL}/api/affiliate/admin`, {
+            headers: getAuthHeaders()
+        });
+        if (response.ok) {
+            const data = await response.json();
+            displayAffiliatePartners(data.partners || []);
+        } else {
+            displayError('affiliates-table', `Failed to load affiliate partners: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('Error loading affiliate partners:', error);
+        displayError('affiliates-table', 'Failed to load affiliate partners');
+    }
+}
+
+function displayAffiliatePartners(partners) {
+    affiliatePartnersData = partners;
+    const tbody = document.getElementById('affiliates-table');
+
+    if (partners.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No affiliate partners yet</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = partners.map(p => `
+        <tr>
+            <td><strong>${p.name}</strong><br><span style="color:#9ca3af;font-size:12px;">${p.slug}</span></td>
+            <td>${p.category || '-'}</td>
+            <td><input type="text" id="aff-url-${p.id}" value="${p.affiliate_url || ''}" placeholder="Paste affiliate link once accepted" style="width:220px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;"></td>
+            <td style="font-size:12px;color:#9ca3af;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.fallback_url || '-'}</td>
+            <td>${p.click_count || 0}</td>
+            <td><span class="badge badge-${p.affiliate_url ? 'success' : 'pending'}">${p.affiliate_url ? 'Live' : 'Fallback only'}</span></td>
+            <td>
+                <div class="actions">
+                    <button class="btn btn-sm btn-primary" onclick="saveAffiliateUrl('${p.id}')">Save</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteAffiliatePartner('${p.id}')">Delete</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function saveAffiliateUrl(partnerId) {
+    const affiliateUrl = document.getElementById(`aff-url-${partnerId}`).value.trim();
+    try {
+        const response = await fetch(`${API_URL}/api/affiliate/admin/${partnerId}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ affiliate_url: affiliateUrl || null })
+        });
+        if (response.ok) {
+            showAlert('Affiliate link saved', 'success');
+            loadAffiliatePartners();
+        } else {
+            showAlert('Failed to save affiliate link', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving affiliate link:', error);
+        showAlert('Error saving affiliate link', 'error');
+    }
+}
+
+async function deleteAffiliatePartner(partnerId) {
+    if (!confirm('Delete this affiliate partner? Any content linking to it will fall back to the homepage.')) {
+        return;
+    }
+    try {
+        const response = await fetch(`${API_URL}/api/affiliate/admin/${partnerId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        if (response.ok) {
+            showAlert('Affiliate partner deleted', 'success');
+            loadAffiliatePartners();
+        } else {
+            showAlert('Failed to delete affiliate partner', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting affiliate partner:', error);
+        showAlert('Error deleting affiliate partner', 'error');
+    }
+}
+
+function openAffiliateModal() {
+    document.getElementById('affiliate-modal').classList.add('active');
+}
+
+function closeAffiliateModal() {
+    const modal = document.getElementById('affiliate-modal');
+    modal.classList.remove('active');
+    document.getElementById('modal-affiliate-name').value = '';
+    document.getElementById('modal-affiliate-slug').value = '';
+    document.getElementById('modal-affiliate-category').value = '';
+    document.getElementById('modal-affiliate-fallback').value = '';
+    document.getElementById('modal-affiliate-url').value = '';
+}
+
+async function saveNewAffiliatePartner() {
+    const name = document.getElementById('modal-affiliate-name').value.trim();
+    const slug = document.getElementById('modal-affiliate-slug').value.trim().toLowerCase();
+    const category = document.getElementById('modal-affiliate-category').value.trim();
+    const fallback_url = document.getElementById('modal-affiliate-fallback').value.trim();
+    const affiliate_url = document.getElementById('modal-affiliate-url').value.trim();
+
+    if (!name || !slug) {
+        showAlert('Name and slug are required', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/affiliate/admin`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ name, slug, category, fallback_url, affiliate_url })
+        });
+        if (response.ok) {
+            showAlert('Affiliate partner added', 'success');
+            closeAffiliateModal();
+            loadAffiliatePartners();
+        } else {
+            const errorData = await response.json();
+            showAlert(errorData.error || 'Failed to add affiliate partner', 'error');
+        }
+    } catch (error) {
+        console.error('Error adding affiliate partner:', error);
+        showAlert('Error adding affiliate partner', 'error');
     }
 }
 

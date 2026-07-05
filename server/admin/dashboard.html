@@ -594,6 +594,7 @@
                 <a class="nav-link" data-tab="deals">🎯 Deals</a>
                 <a class="nav-link" data-tab="hacks">💡 Hacks</a>
                 <a class="nav-link" data-tab="promos">🎟️ Promo Codes</a>
+                <a class="nav-link" data-tab="affiliates">🔗 Affiliate Links</a>
                 <a class="nav-link" data-tab="email-templates">📧 Email Templates</a>
                 <a class="nav-link" data-tab="analytics">📈 Analytics</a>
                 <a class="nav-link" data-tab="twitter">🐦 Twitter</a>
@@ -890,6 +891,36 @@
                                 <td><span class="badge badge-success">Active</span></td>
                                 <td><button class="btn btn-sm btn-primary">Edit</button></td>
                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AFFILIATE LINKS TAB -->
+            <div id="affiliates" class="tab-content">
+                <p style="color:#6b7280;margin-bottom:20px;">
+                    One row per partner/program. Paste in the affiliate URL once you're accepted —
+                    it's used everywhere that partner is linked (Partner Deals, hack content, emails)
+                    without needing any content changes. Until then, links fall back to the partner's
+                    plain public site.
+                </p>
+                <button class="btn btn-primary" style="margin-bottom: 20px;" onclick="openAffiliateModal()">+ Add Partner</button>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Partner</th>
+                                <th>Category</th>
+                                <th>Affiliate URL</th>
+                                <th>Fallback URL</th>
+                                <th>Clicks</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="affiliates-table">
+                            <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1942,6 +1973,46 @@
             <div class="actions" style="margin-top: 30px;">
                 <button class="btn btn-primary" onclick="savePromo()">Create Code</button>
                 <button class="btn btn-secondary" onclick="closePromoModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Affiliate Partner Modal -->
+    <div id="affiliate-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Affiliate Partner</h3>
+                <button class="close-modal" onclick="closeAffiliateModal()">✕</button>
+            </div>
+
+            <div class="form-group">
+                <label>Partner Name</label>
+                <input type="text" id="modal-affiliate-name" placeholder="e.g. Wise">
+            </div>
+
+            <div class="form-group">
+                <label>Slug (used in links, lowercase, no spaces)</label>
+                <input type="text" id="modal-affiliate-slug" placeholder="e.g. wise" style="text-transform: lowercase;">
+            </div>
+
+            <div class="form-group">
+                <label>Category</label>
+                <input type="text" id="modal-affiliate-category" placeholder="e.g. money, credit_cards, insurance">
+            </div>
+
+            <div class="form-group">
+                <label>Fallback URL (used until you have an affiliate link)</label>
+                <input type="text" id="modal-affiliate-fallback" placeholder="https://...">
+            </div>
+
+            <div class="form-group">
+                <label>Affiliate URL (optional — can add later)</label>
+                <input type="text" id="modal-affiliate-url" placeholder="https://...">
+            </div>
+
+            <div class="actions" style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="saveNewAffiliatePartner()">Add Partner</button>
+                <button class="btn btn-secondary" onclick="closeAffiliateModal()">Cancel</button>
             </div>
         </div>
     </div>

@@ -35,6 +35,8 @@ const eliteStatusRoutes = require('./routes/eliteStatusRoutes');
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 const broadcastRoutes = require('./routes/broadcastRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
+const affiliateRoutes = require('./routes/affiliateRoutes');
+const affiliateController = require('./controllers/affiliateController');
 const hiddenGemRoutes = require('./routes/hiddenGemRoutes');
 const flightAlertRoutes = require('./routes/flightAlertRoutes');
 const { runDailyPriceCheck } = require('./services/flightPriceService');
@@ -170,6 +172,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/broadcast', broadcastRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/affiliate', affiliateRoutes);
 app.use('/api/hidden-gem', hiddenGemRoutes);
 app.use('/api/flight-alerts', flightAlertRoutes);
 app.use('/api/travel-ai', require('./routes/travelAiRoutes'));
@@ -1366,6 +1369,38 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_email_events_type ON email_events(event_type);
       CREATE INDEX IF NOT EXISTS idx_email_events_scheduled_email ON email_events(scheduled_email_id);
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    // Affiliate partner link registry: one row per partner/program, referenced
+    // by slug from hack content, Partner Deals, and emails via the
+    // /api/affiliate/go/:slug redirect, so approving a new affiliate program
+    // is a single admin edit instead of a content change everywhere it's
+    // mentioned.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS affiliate_partners (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        slug VARCHAR(100) UNIQUE NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        category VARCHAR(100),
+        fallback_url TEXT,
+        affiliate_url TEXT,
+        is_active BOOLEAN DEFAULT true,
+        notes TEXT,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS affiliate_clicks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        partner_slug VARCHAR(100) NOT NULL,
+        source_page TEXT,
+        used_affiliate_link BOOLEAN,
+        clicked_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_affiliate_clicks_slug ON affiliate_clicks(partner_slug);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    await affiliateController.seedAffiliatePartners().catch(err => {
+      console.warn('⚠️ Error seeding affiliate partners:', err.message);
+    });
 
     // Seed default email sequence (first run), then sync templates from code
     await emailSequenceService.seedEmailSequence().catch(err => {
