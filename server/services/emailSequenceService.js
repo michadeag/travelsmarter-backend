@@ -687,10 +687,11 @@ async function sendPendingEmails() {
     const result = await pool.query(`
       SELECT se.id, se.user_id, se.template_id, u.email, u.first_name,
              u.unsubscribe_token, u.email_marketing_opt_out,
-             et.day, et.subject, et.html_content
+             et.day, et.subject, et.html_content, es.name AS sequence_name
       FROM scheduled_emails se
       JOIN users u ON se.user_id = u.id
       JOIN email_templates et ON se.template_id = et.id
+      JOIN email_sequences es ON et.sequence_id = es.id
       WHERE se.status = 'pending'
         AND se.scheduled_at <= NOW()
         AND et.is_active = true
@@ -748,7 +749,18 @@ async function sendPendingEmails() {
         await emailService.sendEmail({
           to: row.email,
           subject: row.subject,
-          html: fullHtml
+          html: fullHtml,
+          trackingSettings: {
+            clickTracking: { enable: true, enableText: false },
+            openTracking: { enable: true }
+          },
+          customArgs: {
+            scheduled_email_id: String(row.id),
+            user_id: String(row.user_id),
+            template_id: String(row.template_id),
+            sequence_name: row.sequence_name,
+            day: String(row.day)
+          }
         });
 
         await pool.query(

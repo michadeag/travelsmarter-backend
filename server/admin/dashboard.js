@@ -1316,6 +1316,46 @@ async function loadAnalytics() {
     } catch (error) {
         console.error('Error loading analytics:', error);
     }
+
+    loadEmailEngagement();
+}
+
+async function loadEmailEngagement() {
+    const tbody = document.getElementById('email-engagement-table');
+    if (!tbody) return;
+    try {
+        const response = await fetch(`${API_URL}/api/webhooks/sendgrid/stats`, {
+            headers: getAuthHeaders()
+        });
+        if (!response.ok) {
+            tbody.innerHTML = `<tr><td colspan="7" style="color:#ef4444;">Failed to load engagement stats</td></tr>`;
+            return;
+        }
+        const { stats } = await response.json();
+        if (!stats || stats.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="color:#9ca3af;">No email engagement data yet — check back after emails have gone out and SendGrid's webhook is configured.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = stats.map(row => {
+            const delivered = parseInt(row.delivered) || 0;
+            const uniqueOpens = parseInt(row.unique_opens) || 0;
+            const uniqueClicks = parseInt(row.unique_clicks) || 0;
+            const openRate = delivered > 0 ? ((uniqueOpens / delivered) * 100).toFixed(1) : '0.0';
+            const clickRate = delivered > 0 ? ((uniqueClicks / delivered) * 100).toFixed(1) : '0.0';
+            return `<tr>
+                <td>${row.sequence_name}</td>
+                <td>${row.day}</td>
+                <td>${delivered}</td>
+                <td>${uniqueOpens}</td>
+                <td>${openRate}%</td>
+                <td>${uniqueClicks}</td>
+                <td>${clickRate}%</td>
+            </tr>`;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading email engagement:', error);
+        tbody.innerHTML = `<tr><td colspan="7" style="color:#ef4444;">Error loading engagement stats</td></tr>`;
+    }
 }
 
 async function loadPageviews() {

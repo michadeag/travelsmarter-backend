@@ -34,6 +34,7 @@ const eliteStatusRoutes = require('./routes/eliteStatusRoutes');
 // Email template routes
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 const broadcastRoutes = require('./routes/broadcastRoutes');
+const webhookRoutes = require('./routes/webhookRoutes');
 const hiddenGemRoutes = require('./routes/hiddenGemRoutes');
 const flightAlertRoutes = require('./routes/flightAlertRoutes');
 const { runDailyPriceCheck } = require('./services/flightPriceService');
@@ -168,6 +169,7 @@ app.use('/api/contact', contactRoutes);
 // Email template routes
 app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/broadcast', broadcastRoutes);
+app.use('/api/webhooks', webhookRoutes);
 app.use('/api/hidden-gem', hiddenGemRoutes);
 app.use('/api/flight-alerts', flightAlertRoutes);
 app.use('/api/travel-ai', require('./routes/travelAiRoutes'));
@@ -1341,6 +1343,26 @@ async function initializeApp() {
         ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMPTZ,
         ADD COLUMN IF NOT EXISTS magic_login_token VARCHAR(64),
         ADD COLUMN IF NOT EXISTS magic_login_expires TIMESTAMPTZ
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    // Email engagement tracking (SendGrid event webhook lands here)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS email_events (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        scheduled_email_id UUID,
+        user_id UUID,
+        template_id UUID,
+        sequence_name VARCHAR(255),
+        event_type VARCHAR(50) NOT NULL,
+        email VARCHAR(255),
+        url TEXT,
+        sg_message_id VARCHAR(255),
+        event_timestamp TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_email_events_template ON email_events(template_id);
+      CREATE INDEX IF NOT EXISTS idx_email_events_type ON email_events(event_type);
+      CREATE INDEX IF NOT EXISTS idx_email_events_scheduled_email ON email_events(scheduled_email_id);
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
 
     // Seed default email sequence (first run), then sync templates from code
