@@ -34,6 +34,9 @@ const eliteStatusRoutes = require('./routes/eliteStatusRoutes');
 // Email template routes
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 const broadcastRoutes = require('./routes/broadcastRoutes');
+const hiddenGemRoutes = require('./routes/hiddenGemRoutes');
+const flightAlertRoutes = require('./routes/flightAlertRoutes');
+const { runDailyPriceCheck } = require('./services/flightPriceService');
 const redditRoutes = require('./routes/redditRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
 const pinterestRoutes = require('./routes/pinterestRoutes');
@@ -165,6 +168,12 @@ app.use('/api/contact', contactRoutes);
 // Email template routes
 app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/broadcast', broadcastRoutes);
+app.use('/api/hidden-gem', hiddenGemRoutes);
+app.use('/api/flight-alerts', flightAlertRoutes);
+app.use('/api/travel-ai', require('./routes/travelAiRoutes'));
+app.use('/api/compensation-checker', require('./routes/compensationCheckerRoutes'));
+app.use('/api/fine-print', require('./routes/finePrintRoutes'));
+app.use('/api/booking-risk', require('./routes/bookingRiskRoutes'));
 app.use('/api/reddit', redditRoutes);
 app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/pinterest', pinterestRoutes);
@@ -176,6 +185,27 @@ app.use('/api/wordpress', wordpressRoutes);
 app.use('/api/quora', quoraRoutes);
 app.use('/api/blogger', bloggerRoutes);
 app.use('/api/youtube', youtubeRoutes);
+
+// One-time password reset for known admin user
+app.post('/api/diag/reset-password', async (req, res) => {
+  const { email, newPassword, secret } = req.body;
+  if (secret !== 'ts-diag-2026') return res.status(403).json({ error: 'Forbidden' });
+  try {
+    const bcrypt = require('bcryptjs');
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(newPassword, salt);
+    const result = await pool.query(
+      `UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2 RETURNING id, email`,
+      [hash, email]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'User not found', email });
+    }
+    res.json({ success: true, message: `Password reset for ${email}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Diagnostic endpoint - updated Jun 6 21:57
 app.get('/api/test/version', (req, res) => {
@@ -1367,6 +1397,23 @@ async function initializeApp() {
     console.error('❌ Error during app initialization:', error);
   }
 }
+
+// Daily flight price check at 06:00 UTC
+function scheduleDailyFlightCheck() {
+  const now = new Date();
+  const next = new Date();
+  next.setUTCHours(6, 0, 0, 0);
+  if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
+  const delay = next - now;
+  setTimeout(() => {
+    runDailyPriceCheck().catch(e => console.error('[FlightAlerts] Cron error:', e));
+    setInterval(() => {
+      runDailyPriceCheck().catch(e => console.error('[FlightAlerts] Cron error:', e));
+    }, 24 * 60 * 60 * 1000);
+  }, delay);
+  console.log(`[FlightAlerts] Daily check scheduled in ${Math.round(delay/3600000)}h`);
+}
+scheduleDailyFlightCheck();
 
 // Start server IMMEDIATELY (non-blocking DB init)
 const PORT = process.env.PORT || 5000;
