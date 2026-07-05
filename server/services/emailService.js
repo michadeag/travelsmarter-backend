@@ -53,8 +53,8 @@ const templates = {
       <div style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:10px;padding:18px 20px;margin:0 0 24px;">
         <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
           <tr><td style="padding:5px 0;color:#6b7280;">Plan</td><td style="text-align:right;font-weight:700;">${subscription.planName}</td></tr>
-          <tr><td style="padding:5px 0;color:#6b7280;">Price</td><td style="text-align:right;">€${subscription.priceMonthly}/month</td></tr>
-          <tr><td style="padding:5px 0;color:#6b7280;">Next renewal</td><td style="text-align:right;">${new Date(subscription.nextBillingDate).toLocaleDateString('de-DE')}</td></tr>
+          <tr><td style="padding:5px 0;color:#6b7280;">Price</td><td style="text-align:right;">$${subscription.priceMonthly}/month</td></tr>
+          <tr><td style="padding:5px 0;color:#6b7280;">Next renewal</td><td style="text-align:right;">${new Date(subscription.nextBillingDate).toLocaleDateString('en-US')}</td></tr>
         </table>
       </div>
       <p style="color:#374151;line-height:1.7;margin:0 0 8px;"><strong>What's unlocked:</strong></p>
@@ -81,14 +81,14 @@ const templates = {
   paymentSuccessful: (user, payment) => ({
     to: user.email,
     from: process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com',
-    subject: `Payment confirmed — €${payment.amount}`,
+    subject: `Payment confirmed — $${payment.amount}`,
     html: wrap(`
       <p style="font-size:16px;color:#1f2937;margin:0 0 16px;">Hi ${user.firstName || 'there'},</p>
       <p style="color:#374151;line-height:1.7;margin:0 0 20px;">Your payment went through successfully. Here's your receipt:</p>
       <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:18px 20px;margin:0 0 24px;">
         <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
-          <tr><td style="padding:5px 0;color:#6b7280;">Amount</td><td style="text-align:right;font-weight:700;">€${payment.amount}</td></tr>
-          <tr><td style="padding:5px 0;color:#6b7280;">Date</td><td style="text-align:right;">${new Date().toLocaleDateString('de-DE')}</td></tr>
+          <tr><td style="padding:5px 0;color:#6b7280;">Amount</td><td style="text-align:right;font-weight:700;">$${payment.amount}</td></tr>
+          <tr><td style="padding:5px 0;color:#6b7280;">Date</td><td style="text-align:right;">${new Date().toLocaleDateString('en-US')}</td></tr>
           <tr><td style="padding:5px 0;color:#6b7280;">Plan</td><td style="text-align:right;">${payment.tier}</td></tr>
         </table>
       </div>

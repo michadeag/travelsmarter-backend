@@ -282,7 +282,7 @@ class APIService {
             category,
             dealType,
             valueAmount,
-            valueCurrency: 'EUR',
+            valueCurrency: 'USD',
         });
     }
 

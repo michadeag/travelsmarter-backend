@@ -136,7 +136,7 @@ async function loadPaymentHistory() {
             const paymentDate = subscription.currentPeriodStart || new Date().toISOString();
             row.innerHTML = `
                 <td>${formatDate(paymentDate)}</td>
-                <td>€${subscription.priceMonthly || '0.00'}</td>
+                <td>$${subscription.priceMonthly || '0.00'}</td>
                 <td>${subscription.tier === 'smart_traveler' ? 'Smart Traveler' : subscription.tier === 'elite' ? 'Elite' : 'Free'}</td>
                 <td><span class="status-badge status-success">Completed</span></td>
             `;

@@ -2305,7 +2305,7 @@ async function loadMediumRecentPosts() {
                 </div>
                 <div style="display:flex;gap:8px;align-items:center;">
                     ${p.medium_url ? `<a href="${p.medium_url}" target="_blank" style="font-size:12px;color:#1d9bf0;">Ansehen ↗</a>` : ''}
-                    <span style="font-size:12px;color:#6b7280;">${new Date(p.posted_at).toLocaleDateString('de-DE')}</span>
+                    <span style="font-size:12px;color:#6b7280;">${new Date(p.posted_at).toLocaleDateString('en-US')}</span>
                 </div>
             </div>`).join('');
     } catch { el.innerHTML = '<p style="color:#ef4444">Fehler beim Laden</p>'; }

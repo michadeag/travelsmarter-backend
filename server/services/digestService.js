@@ -116,7 +116,7 @@ async function triggerHackDigest() {
     const templateIds = [];
     for (let i = 0; i < hacks.length; i++) {
       const hack = hacks[i];
-      const savings = hack.avg_savings_euros ? `Save up to €${Math.round(hack.avg_savings_euros)}` : null;
+      const savings = hack.avg_savings_euros ? `Save up to $${Math.round(hack.avg_savings_euros)}` : null;
       const moduleLabels = {
         1:'Flight Hacking',2:'Credit Cards',3:'Hotel Hacking',4:'Timing Intelligence',
         5:'Airport & Transit',6:'Destinations',7:'Car Rentals',8:'Community',

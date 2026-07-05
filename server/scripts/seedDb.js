@@ -16,23 +16,23 @@ const seedDeals = `
 INSERT INTO deals (title, description, category, deal_type, value_amount, value_currency, source, verified, verification_count)
 VALUES
   (
-    'Mistake Fare: New York to Tokyo Business Class €890',
-    'Lufthansa pricing error - business class normally €3,200. Only 2 hours left!',
+    'Mistake Fare: New York to Tokyo Business Class $890',
+    'Lufthansa pricing error - business class normally $3,200. Only 2 hours left!',
     'flights',
     'mistake_fare',
     3110,
-    'EUR',
+    'USD',
     'system',
     true,
     42
   ),
   (
     'Chase Sapphire 80,000 Point Bonus',
-    'Sign-up bonus increased to 80,000 points (usually 60k). Worth €800 in travel.',
+    'Sign-up bonus increased to 80,000 points (usually 60k). Worth $800 in travel.',
     'credit_cards',
     'card_bonus',
     800,
-    'EUR',
+    'USD',
     'system',
     true,
     156
@@ -43,7 +43,7 @@ VALUES
     'hotels',
     'status_match',
     500,
-    'EUR',
+    'USD',
     'system',
     true,
     89
@@ -54,18 +54,18 @@ VALUES
     'flights',
     'upgrade_opportunity',
     250,
-    'EUR',
+    'USD',
     'system',
     true,
     67
   ),
   (
     'Amex Platinum $550 Annual Fee',
-    'Includes $200 airline fee credit + $100 hotel credit = €240 value. Net cost: €310.',
+    'Includes $200 airline fee credit + $100 hotel credit = $240 value. Net cost: $310.',
     'credit_cards',
     'fee_credit',
     240,
-    'EUR',
+    'USD',
     'system',
     true,
     123

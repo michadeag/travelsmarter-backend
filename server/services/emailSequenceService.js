@@ -51,7 +51,7 @@ const defaultEmailSequence = [
       ${p('But first — your hacks are waiting:')}
       ${btn('{magicUrl}', 'Go to My Free Hacks')}
       ${small('<a href="{appUrl}/cheat-sheet.html" style="color:#9ca3af;">📄 Or download the cheat sheet</a> — all 20 hacks on one page, ready to print.')}
-      ${small('Tomorrow: the flight booking window most people miss — and why it saves €300–600 per ticket.')}
+      ${small('Tomorrow: the flight booking window most people miss — and why it saves $300–600 per ticket.')}
     `
   },
 
@@ -59,7 +59,7 @@ const defaultEmailSequence = [
     day: 1,
     subject: '✈️ The booking window airlines don\'t advertise',
     html: `
-      ${h('This 15-day window saves €300–600 per flight.')}
+      ${h('This 15-day window saves $300–600 per flight.')}
       ${p('Airlines manage pricing with an algorithm. It optimises for revenue — which means prices are lowest when the algorithm hasn\'t yet decided to push them up.')}
       ${p('That window sits between <strong>30 and 45 days before departure</strong> for most European and short-haul routes (6–10 weeks for transatlantic). Inside 3 weeks, prices spike 40–80%.')}
       ${hackBox(`
@@ -69,7 +69,7 @@ const defaultEmailSequence = [
         3. Buy when it dips — usually Tuesday/Wednesday evening (airlines reset prices then)<br>
         4. If it hasn\'t moved in 10 days, buy — it won\'t get better
       `)}
-      ${p('Pair this with flying Tuesday–Wednesday instead of Friday–Sunday and you can add another €80–150 to the saving.')}
+      ${p('Pair this with flying Tuesday–Wednesday instead of Friday–Sunday and you can add another $80–150 to the saving.')}
       ${btn('{appUrl}/module.html?id=1', 'See All Flight Hacks')}
       ${small('Tomorrow: a single sentence at hotel check-in that gets you a room upgrade about 40% of the time.')}
     `
@@ -98,7 +98,7 @@ const defaultEmailSequence = [
     subject: '💳 How to earn a free flight without flying',
     html: `
       ${h('Sign-up bonuses are the fastest path to free flights. Here\'s exactly how they work.')}
-      ${p('Most premium travel credit cards offer a sign-up bonus worth €400–900 in flights if you spend a certain amount in the first 3 months. The key insight most people miss:')}
+      ${p('Most premium travel credit cards offer a sign-up bonus worth $400–900 in flights if you spend a certain amount in the first 3 months. The key insight most people miss:')}
       ${hackBox(`
         <strong>The timing trick:</strong><br>
         Apply for a new travel card 4–6 weeks before a big spend you already planned (holiday shopping, annual insurance, a work trip you\'ll expense). You hit the minimum spend with money you were going to spend anyway — and keep 60,000–80,000 bonus points.<br><br>
@@ -106,7 +106,7 @@ const defaultEmailSequence = [
       `)}
       ${p('This is just one of the strategies in the Credit Cards module — which is yours free.')}
       ${btn('{appUrl}/module.html?id=2', 'See Credit Card Hacks')}
-      ${upgradeBox('The Smart Traveler plan unlocks 6 more modules — including Travel Money, Travel Insurance, and Car Rentals. All for €19/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('The Smart Traveler plan unlocks 6 more modules — including Travel Money, Travel Insurance, and Car Rentals. All for $19/month.', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: the two weeks per year when flights AND hotels are cheapest simultaneously.')}
     `
   },
@@ -135,7 +135,7 @@ const defaultEmailSequence = [
     html: `
       ${h('Every time you use a regular card abroad, you lose 3–8% to hidden fees. Here\'s how to stop.')}
       ${p('The bank you\'ve had since you were 18 charges you a foreign transaction fee of 2–3%. Then the ATM adds 1.5–3%. Then the dynamic currency conversion screen tries to take another 5% if you\'re not careful.')}
-      ${p('On a €2,000 trip that\'s €100–200 gone to fees. Here\'s what smart travelers use instead:')}
+      ${p('On a $2,000 trip that\'s $100–200 gone to fees. Here\'s what smart travelers use instead:')}
       ${hackBox(`
         <strong>The three cards worth having:</strong><br>
         💳 <strong>Wise (best for spending):</strong> real mid-market rate, no foreign transaction fee, 2 free ATM withdrawals per month<br>
@@ -144,8 +144,8 @@ const defaultEmailSequence = [
         <strong>Always:</strong> pay in the local currency (never let a merchant "help" you by charging in euros)
       `)}
       ${p('This is a preview from the Travel Money module. The full module covers ATM strategies, when to use cash vs card, and how to handle currencies in countries where cards aren\'t reliable.')}
-      ${upgradeBox('Travel Money is part of the Smart Traveler plan (€19/month) — along with 5 other modules covering Car Rentals, Airport & Transit, Travel Insurance, and more.', '{appUrl}/sales-page.html')}
-      ${small('Tomorrow: how to get airport lounge access without a €500 credit card.')}
+      ${upgradeBox('Travel Money is part of the Smart Traveler plan ($19/month) — along with 5 other modules covering Car Rentals, Airport & Transit, Travel Insurance, and more.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: how to get airport lounge access without a $500 credit card.')}
     `
   },
 
@@ -153,17 +153,17 @@ const defaultEmailSequence = [
     day: 6,
     subject: '✈️ Airport lounge access — without the premium card',
     html: `
-      ${h('A quiet room, free food, fast Wi-Fi. Most travelers pay €50–80 to get in. Here\'s how to do it for €0.')}
+      ${h('A quiet room, free food, fast Wi-Fi. Most travelers pay $50–80 to get in. Here\'s how to do it for $0.')}
       ${p('Airport lounges used to be for business class passengers. The system has changed — and there are now 4 ways to access them for free or near-free:')}
       ${hackBox(`
         <strong>4 ways in:</strong><br>
         1. <strong>Certain travel credit cards</strong> include Priority Pass — check your card benefits, you might already have it<br>
         2. <strong>Booking the right flight:</strong> some long-haul economy fares include lounge access on the departure airport<br>
         3. <strong>Same-day flight delay:</strong> if your flight is delayed 2+ hours, many lounges will admit you for free — just ask<br>
-        4. <strong>Lounge day pass apps</strong> (LoungeBuddy, Priority Pass pay-per-use) — €25–35 vs the rack rate of €80+
+        4. <strong>Lounge day pass apps</strong> (LoungeBuddy, Priority Pass pay-per-use) — $25–35 vs the rack rate of $80+
       `)}
       ${p('The full Airport & Transit module covers 6 more strategies including TSA PreCheck equivalents in Europe, layover optimisation, and how to get fast-track security without status.')}
-      ${upgradeBox('Airport & Transit is in the Smart Traveler plan — unlocked alongside Travel Money, Car Rentals, and 3 other modules. €19/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('Airport & Transit is in the Smart Traveler plan — unlocked alongside Travel Money, Car Rentals, and 3 other modules. $19/month.', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: travel insurance — why yours might be better than you think (or worse).')}
     `
   },
@@ -176,15 +176,15 @@ const defaultEmailSequence = [
       ${p('Most premium travel credit cards include some level of travel insurance — and most cardholders never read what\'s actually covered.')}
       ${hackBox(`
         <strong>What\'s typically included:</strong><br>
-        ✓ Flight delay/cancellation (usually 4+ hours, up to €500–1,500 per person)<br>
-        ✓ Lost/delayed baggage (€200–800)<br>
-        ✓ Car rental collision damage (saves €15–30/day on rental insurance)<br>
+        ✓ Flight delay/cancellation (usually 4+ hours, up to $500–1,500 per person)<br>
+        ✓ Lost/delayed baggage ($200–800)<br>
+        ✓ Car rental collision damage (saves $15–30/day on rental insurance)<br>
         ✓ Purchase protection on items bought with the card<br><br>
         <strong>What\'s NOT included:</strong> medical evacuation, pre-existing conditions, adventure sports. You still need a standalone policy for these — but you can get a cheaper one because your card covers the rest.
       `)}
       ${p('Log into your credit card\'s benefits portal today and spend 10 minutes reading the travel section. Most people are genuinely surprised by what they already have.')}
       ${p('The full Travel Insurance module covers exactly what to look for, how to stack card benefits with a standalone policy, and how to actually make a claim (the part nobody explains).')}
-      ${upgradeBox('Travel Insurance is part of Smart Traveler — along with Travel Money, Airport & Transit, Car Rentals, and more. €19/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('Travel Insurance is part of Smart Traveler — along with Travel Money, Airport & Transit, Car Rentals, and more. $19/month.', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: how all of this fits together as a system — and where people leave the most money on the table.')}
     `
   },
@@ -201,11 +201,11 @@ const defaultEmailSequence = [
         1. Sign up for free to Marriott Bonvoy and complete their status challenge (10 stays in 90 days)<br>
         2. Email Hyatt, IHG, or Hilton with proof of your Marriott status<br>
         3. Get matched to their equivalent Elite tier — often in 24–48 hours<br><br>
-        <strong>What Elite status gets you:</strong> free room upgrades, late checkout, bonus points on every stay, lounge access at some properties. Value: €200–600 per year in upgrades alone.
+        <strong>What Elite status gets you:</strong> free room upgrades, late checkout, bonus points on every stay, lounge access at some properties. Value: $200–600 per year in upgrades alone.
       `)}
       ${p('This and 4 more status strategies are in the Hotel Hacking module — which is free with your account.')}
       ${btn('{appUrl}/module.html?id=3', 'See Hotel Hacking Module')}
-      ${small('Tomorrow: the last email in this sequence. I\'ll show you where most people stop — and what the ones saving €3,000–5,000 per year do differently.')}
+      ${small('Tomorrow: the last email in this sequence. I\'ll show you where most people stop — and what the ones saving $3,000–5,000 per year do differently.')}
     `
   },
 
@@ -214,21 +214,21 @@ const defaultEmailSequence = [
     subject: '🎯 9 hacks in. Here\'s what the full picture looks like.',
     html: `
       ${h('You\'ve had 9 hacks. Here\'s how they compound.')}
-      ${p('Most people apply one or two travel tricks and stop. The travelers saving €3,000–5,000 per year use them as a system — each element amplifying the others.')}
+      ${p('Most people apply one or two travel tricks and stop. The travelers saving $3,000–5,000 per year use them as a system — each element amplifying the others.')}
       ${hackBox(`
         <strong>The stack, in order:</strong><br>
         1. <strong>Timing:</strong> Shoulder season + Tuesday booking window → save 30–50% on base price<br>
-        2. <strong>Flight:</strong> Book in the 30–45 day window → save another €200–400<br>
-        3. <strong>Credit card:</strong> Use sign-up bonus for the ticket → net cost: €0–100<br>
+        2. <strong>Flight:</strong> Book in the 30–45 day window → save another $200–400<br>
+        3. <strong>Credit card:</strong> Use sign-up bonus for the ticket → net cost: $0–100<br>
         4. <strong>Hotel:</strong> Status match → free upgrade on arrival<br>
         5. <strong>Currency:</strong> Wise card → save 5–8% on all spending<br>
         6. <strong>Insurance:</strong> Credit card covers delays → buy cheaper standalone policy<br><br>
-        Applied together on a 10-day trip: €800–1,500 saved vs. booking the normal way.
+        Applied together on a 10-day trip: $800–1,500 saved vs. booking the normal way.
       `)}
       ${p('Your 4 free modules cover steps 1–3. The other 12 modules go deeper on everything else:')}
       ${upgradeBox(`
-        <strong>Smart Traveler (€19/month):</strong> 10 modules total — adds Airport & Transit, Travel Money, Car Rentals, Destinations, Travel Insurance, and more. 55+ hacks.<br><br>
-        <strong>Elite (€49/month):</strong> All 16 modules, 87 hacks, exclusive Partner Deals (up to 50% off Wise, Airalo, NordVPN), and access to the Travel Community of 12,340+ members.
+        <strong>Smart Traveler ($19/month):</strong> 10 modules total — adds Airport & Transit, Travel Money, Car Rentals, Destinations, Travel Insurance, and more. 55+ hacks.<br><br>
+        <strong>Elite ($49/month):</strong> All 16 modules, 87 hacks, exclusive Partner Deals (up to 50% off Wise, Airalo, NordVPN), and access to the Travel Community of 12,340+ members.
       `, '{appUrl}/sales-page.html')}
       ${btn('{appUrl}/sales-page.html', 'See All Plans')}
       ${small('Tomorrow is the last email. If you\'re happy with your 20 free hacks, that\'s great — they\'re yours forever. If you want the rest, I\'ll show you what\'s inside.')}
@@ -244,9 +244,9 @@ const defaultEmailSequence = [
       ${p('If that\'s enough for you, great. Use them, save money, travel smarter.')}
       ${p('If you want the full system — all 16 modules, 87 hacks, and everything that goes with it — here\'s what\'s available:')}
       ${hackBox(`
-        <strong>Smart Traveler — €19/month</strong><br>
+        <strong>Smart Traveler — $19/month</strong><br>
         10 modules · 55+ hacks · all tools & calculators · Goodies (PDFs & checklists) · Weekly Hack Digest · New deal alerts by email · Standard support<br><br>
-        <strong>Elite — €49/month</strong><br>
+        <strong>Elite — $49/month</strong><br>
         16 modules · 87 hacks · everything above + Partner Deals (up to 50% off Wise, Airalo, NordVPN, Booking.com) + Travel Community (12,340+ members) + Priority support<br><br>
         Both plans: no long-term commitment, cancel anytime.
       `)}

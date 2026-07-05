@@ -104,7 +104,7 @@ exports.createDeal = async (req, res) => {
       category,
       dealType,
       valueAmount,
-      valueCurrency = 'EUR',
+      valueCurrency = 'USD',
       imageUrl,
       source,
       expiresAt,

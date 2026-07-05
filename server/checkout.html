@@ -458,7 +458,7 @@
                             <div class="plan-name">Smart Traveler</div>
                             <div class="plan-desc">For occasional travelers</div>
                         </div>
-                        <div class="plan-price">€19<span style="font-size: 0.6em; color: #6b7280;">/mo</span></div>
+                        <div class="plan-price">$19<span style="font-size: 0.6em; color: #6b7280;">/mo</span></div>
                     </div>
 
                     <div class="plan-option" onclick="selectPlan('elite')">
@@ -467,7 +467,7 @@
                             <div class="plan-name">Elite</div>
                             <div class="plan-desc">For frequent travelers</div>
                         </div>
-                        <div class="plan-price">€49<span style="font-size: 0.6em; color: #6b7280;">/mo</span></div>
+                        <div class="plan-price">$49<span style="font-size: 0.6em; color: #6b7280;">/mo</span></div>
                     </div>
                 </div>
 
@@ -845,7 +845,7 @@
                 const planPrice = selectedPlan === 'elite' ? 49 : 19;
                 gtag('event', 'view_item', {
                     value: planPrice,
-                    currency: 'EUR',
+                    currency: 'USD',
                     items: [{
                         item_id: selectedPlan,
                         item_name: selectedPlan === 'elite' ? 'Elite' : 'Smart Traveler',
@@ -900,7 +900,7 @@
                     const planPrice = selectedPlan === 'elite' ? 49 : 19;
                     gtag('event', 'begin_checkout', {
                         value: planPrice,
-                        currency: 'EUR',
+                        currency: 'USD',
                         items: [{
                             item_id: selectedPlan,
                             item_name: selectedPlan === 'elite' ? 'Elite' : 'Smart Traveler',

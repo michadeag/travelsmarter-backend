@@ -175,7 +175,7 @@ function createTierMatrix() {
           <h3 style="margin-bottom: 10px; font-size: 1.5em; color: #3b82f6;">✈️ Smart Traveler</h3>
           <p style="color: #6b7280; margin-bottom: 20px;">For serious travelers</p>
           <p style="font-size: 2em; font-weight: bold; margin-bottom: 5px; color: #3b82f6;">$19<span style="font-size: 0.5em;">/month</span></p>
-          <p style="color: #6b7280; margin-bottom: 20px; font-size: 0.9em;">Or €190/year (Save 17%)</p>
+          <p style="color: #6b7280; margin-bottom: 20px; font-size: 0.9em;">Or $190/year (Save 17%)</p>
           <ul style="text-align: left; list-style: none; margin-bottom: 20px;">
             <li style="padding: 10px 0; border-bottom: 1px solid #dbeafe;">✅ 10 modules</li>
             <li style="padding: 10px 0; border-bottom: 1px solid #dbeafe;">✅ 50+ hacks</li>
@@ -205,7 +205,7 @@ function createTierMatrix() {
           <h3 style="margin-bottom: 10px; font-size: 1.5em; color: #10b981;">👑 Elite</h3>
           <p style="color: #6b7280; margin-bottom: 20px;">For master travelers</p>
           <p style="font-size: 2em; font-weight: bold; margin-bottom: 5px; color: #10b981;">$49<span style="font-size: 0.5em;">/month</span></p>
-          <p style="color: #6b7280; margin-bottom: 20px; font-size: 0.9em;">Or €490/year (Save 17%)</p>
+          <p style="color: #6b7280; margin-bottom: 20px; font-size: 0.9em;">Or $490/year (Save 17%)</p>
           <ul style="text-align: left; list-style: none; margin-bottom: 20px;">
             <li style="padding: 10px 0; border-bottom: 1px solid #dcfce7;">✅ All 16 modules</li>
             <li style="padding: 10px 0; border-bottom: 1px solid #dcfce7;">✅ 80+ hacks</li>

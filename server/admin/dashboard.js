@@ -197,7 +197,7 @@ async function loadSubscriptionStats() {
             const eliteMRR = (data.elite || 0) * 49;
             const totalMRR = smartMRR + eliteMRR;
 
-            document.getElementById('total-mrr').textContent = `€${totalMRR.toLocaleString()}`;
+            document.getElementById('total-mrr').textContent = `$${totalMRR.toLocaleString()}`;
         }
     } catch (error) {
         console.error('Error loading subscription stats:', error);
@@ -434,7 +434,7 @@ function displaySubscriptions(subscriptions) {
             <td><span class="badge badge-${sub.status === 'active' ? 'success' : 'danger'}">${sub.status}</span></td>
             <td>${formatDate(sub.created_at)}</td>
             <td>${formatDate(sub.current_period_end)}</td>
-            <td>€${sub.price_monthly || '0'}</td>
+            <td>$${sub.price_monthly || '0'}</td>
             <td>
                 <div class="actions">
                     <button class="btn btn-sm btn-primary" onclick="editSubscription('${sub.id}')">Edit</button>
@@ -576,7 +576,7 @@ function displayDeals(deals) {
         <tr>
             <td>${deal.title}</td>
             <td>${deal.category}</td>
-            <td>€${deal.value_amount}</td>
+            <td>$${deal.value_amount}</td>
             <td><span class="badge badge-${deal.verified ? 'success' : 'pending'}">${deal.verified ? 'Yes' : 'No'}</span></td>
             <td>${deal.upvote_count}</td>
             <td>${deal.expires_at ? formatDate(deal.expires_at) : 'No expiry'}</td>
@@ -655,7 +655,7 @@ async function saveDeal() {
                 category,
                 deal_type: 'featured',
                 value_amount: parseFloat(value),
-                value_currency: 'EUR'
+                value_currency: 'USD'
             })
         });
 
@@ -781,7 +781,7 @@ function displayPromos(promos) {
     tbody.innerHTML = promos.map(promo => `
         <tr>
             <td><strong>${promo.code}</strong></td>
-            <td>${promo.discount_percent || promo.discount_amount}${promo.discount_percent ? '%' : '€'}</td>
+            <td>${promo.discount_percent || promo.discount_amount}${promo.discount_percent ? '%' : '$'}</td>
             <td>${promo.current_uses || '0'}</td>
             <td>${promo.max_uses || '∞'}</td>
             <td>${promo.valid_until ? formatDate(promo.valid_until) : 'No expiry'}</td>
@@ -1309,7 +1309,7 @@ async function loadAnalytics() {
         // Update LTV card
         document.getElementById('analytics-ltv').innerHTML = `
             <h3>Avg LTV</h3>
-            <div class="number">€${ltv.ltv}</div>
+            <div class="number">$${ltv.ltv}</div>
             <div class="change">${ltv.label}</div>
         `;
 
@@ -1340,7 +1340,7 @@ async function loadPageviews() {
                 byDayEl.innerHTML = '<tr><td colspan="2" style="text-align:center;padding:20px;">Noch keine Daten</td></tr>';
             } else {
                 byDayEl.innerHTML = data.byDay.map(r =>
-                    `<tr><td>${new Date(r.day).toLocaleDateString('de-DE')}</td><td>${r.count}</td></tr>`
+                    `<tr><td>${new Date(r.day).toLocaleDateString('en-US')}</td><td>${r.count}</td></tr>`
                 ).join('');
             }
         }
@@ -2337,7 +2337,7 @@ async function loadMediumRecentPosts() {
                 </div>
                 <div style="display:flex;gap:8px;align-items:center;">
                     ${p.medium_url ? `<a href="${p.medium_url}" target="_blank" style="font-size:12px;color:#1d9bf0;">Ansehen ↗</a>` : ''}
-                    <span style="font-size:12px;color:#6b7280;">${new Date(p.posted_at).toLocaleDateString('de-DE')}</span>
+                    <span style="font-size:12px;color:#6b7280;">${new Date(p.posted_at).toLocaleDateString('en-US')}</span>
                 </div>
             </div>`).join('');
     } catch { el.innerHTML = '<p style="color:#ef4444">Fehler beim Laden</p>'; }

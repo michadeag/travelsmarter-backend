@@ -33,6 +33,7 @@ const eliteStatusRoutes = require('./routes/eliteStatusRoutes');
 
 // Email template routes
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
+const broadcastRoutes = require('./routes/broadcastRoutes');
 const redditRoutes = require('./routes/redditRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
 const pinterestRoutes = require('./routes/pinterestRoutes');
@@ -163,6 +164,7 @@ app.use('/api/contact', contactRoutes);
 
 // Email template routes
 app.use('/api/email-templates', emailTemplateRoutes);
+app.use('/api/broadcast', broadcastRoutes);
 app.use('/api/reddit', redditRoutes);
 app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/pinterest', pinterestRoutes);
@@ -723,7 +725,7 @@ async function initializeApp() {
         category VARCHAR(100),
         deal_type VARCHAR(50),
         value_amount DECIMAL(10, 2),
-        value_currency VARCHAR(10) DEFAULT 'EUR',
+        value_currency VARCHAR(10) DEFAULT 'USD',
         image_url VARCHAR(500),
         source VARCHAR(100),
         verified BOOLEAN DEFAULT false,

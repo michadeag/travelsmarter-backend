@@ -6,13 +6,13 @@ const emailService = require('../services/emailService');
 const PRICING = {
   smart_traveler: {
     name: 'Smart Traveler',
-    price: 1900, // in cents = €19.00
+    price: 1900, // in cents = $19.00
     priceMonthly: 19.00,
     stripeProductId: 'prod_smart_traveler', // Will be set up in Stripe
   },
   elite: {
     name: 'Elite',
-    price: 4900, // in cents = €49.00
+    price: 4900, // in cents = $49.00
     priceMonthly: 49.00,
     stripeProductId: 'prod_elite', // Will be set up in Stripe
   },
@@ -97,7 +97,7 @@ exports.createCheckoutSession = async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: 'eur',
+            currency: 'usd',
             product_data: {
               name: PRICING[tier].name,
               description: `TravelSmarter ${PRICING[tier].name} - Monthly Subscription`,

@@ -93,7 +93,7 @@ const travelTips = [
   },
   {
     category: 'transport',
-    tip: '🚕 Avoid airport taxis! Use Uber, public transport, or shuttle buses. Save €20-50 per transfer.',
+    tip: '🚕 Avoid airport taxis! Use Uber, public transport, or shuttle buses. Save $20-50 per transfer.',
     hashtags: '#TravelHack #AirportTips #BudgetTravel'
   },
   {
@@ -137,12 +137,12 @@ const travelTips = [
   },
   {
     category: 'general',
-    tip: '🧳 Pack light - carry-on only saves €30-50 per trip. Most airlines charge for checked bags!',
+    tip: '🧳 Pack light - carry-on only saves $30-50 per trip. Most airlines charge for checked bags!',
     hashtags: '#PackingHacks #BudgetTravel #TravelTips'
   },
   {
     category: 'general',
-    tip: '🛡️ Travel insurance saves thousands in medical emergencies. €3-5/day is worth the protection!',
+    tip: '🛡️ Travel insurance saves thousands in medical emergencies. $3-5/day is worth the protection!',
     hashtags: '#TravelSafety #ProTips #TravelSmarter'
   },
   {
@@ -206,7 +206,7 @@ const travelTips = [
   },
   {
     category: 'app',
-    tip: '📱 Smart Traveler plan: €9.99/month for all travel hacks + Elite plan: €29.99 for VIP deals!',
+    tip: '📱 Smart Traveler plan: $19/month for all travel hacks + Elite plan: $49/month for VIP deals!',
     hashtags: '#TravelSmarter #Pricing #Plans'
   }
 ];
