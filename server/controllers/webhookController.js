@@ -14,14 +14,15 @@ exports.handleSendGridEvent = async (req, res) => {
       try {
         await pool.query(
           `INSERT INTO email_events (
-             scheduled_email_id, user_id, template_id, sequence_name,
+             scheduled_email_id, user_id, template_id, sequence_name, day,
              event_type, email, url, sg_message_id, event_timestamp
-           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, to_timestamp($9))`,
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, to_timestamp($10))`,
           [
             event.scheduled_email_id || null,
             event.user_id || null,
             event.template_id || null,
             event.sequence_name || null,
+            event.day ? parseInt(event.day, 10) : null,
             event.event || 'unknown',
             event.email || null,
             event.url || null,

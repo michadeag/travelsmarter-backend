@@ -1353,6 +1353,7 @@ async function initializeApp() {
         user_id UUID,
         template_id UUID,
         sequence_name VARCHAR(255),
+        day INTEGER,
         event_type VARCHAR(50) NOT NULL,
         email VARCHAR(255),
         url TEXT,
@@ -1360,6 +1361,7 @@ async function initializeApp() {
         event_timestamp TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       );
+      ALTER TABLE email_events ADD COLUMN IF NOT EXISTS day INTEGER;
       CREATE INDEX IF NOT EXISTS idx_email_events_template ON email_events(template_id);
       CREATE INDEX IF NOT EXISTS idx_email_events_type ON email_events(event_type);
       CREATE INDEX IF NOT EXISTS idx_email_events_scheduled_email ON email_events(scheduled_email_id);
