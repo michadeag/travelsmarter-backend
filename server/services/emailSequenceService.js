@@ -272,7 +272,7 @@ const featureSpotlightSequence = [
         <strong>Here's how it could look:</strong><br>
         Andy T. from New York set an alert on a Lisbon flight he'd been watching. Six days later, an alert email landed: the fare had dropped $210. He booked in the same afternoon.
       `)}
-      ${upgradeBox('Flight Price Alerts is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('Flight Price Alerts is a Smart Traveler feature — $19/month. Use code <strong>SPOTLIGHT20</strong> for 20% off your first month, through July 30 (limited to the first 100 people).', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: the weekly digest that surfaces deals you\'d never find yourself.')}
     `
   },
@@ -286,7 +286,7 @@ const featureSpotlightSequence = [
         <strong>Here's how it could look:</strong><br>
         Sarah M. from Chicago almost skipped her digest email one Friday. It had a mistake-fare alert to Rome. She booked in 20 minutes and saved $340 off the normal fare.
       `)}
-      ${upgradeBox('The Weekly Deal Digest is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('The Weekly Deal Digest is a Smart Traveler feature — $19/month. Use code <strong>SPOTLIGHT20</strong> for 20% off your first month, through July 30 (limited to the first 100 people).', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: an underrated destination most travelers overlook.')}
     `
   },
@@ -300,7 +300,7 @@ const featureSpotlightSequence = [
         <strong>Here's how it could look:</strong><br>
         Jason R. from Austin followed last quarter's Hidden Gem pick to Tbilisi. Flights and hotels were still cheap ahead of peak season — he estimated the timing alone saved him $280 versus booking a few months later.
       `)}
-      ${upgradeBox('Hidden Gem of the Month is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('Hidden Gem of the Month is a Smart Traveler feature — $19/month. Use code <strong>SPOTLIGHT20</strong> for 20% off your first month, through July 30 (limited to the first 100 people).', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: what to do the moment a flight gets delayed or cancelled.')}
     `
   },
@@ -314,7 +314,7 @@ const featureSpotlightSequence = [
         <strong>Here's how it could look:</strong><br>
         Priya K. from Boston had a 4-hour delay on a trip home and assumed there was nothing to do about it. The Compensation Checker flagged it as a likely claim. She filed that night and received $300 a few weeks later.
       `)}
-      ${upgradeBox('The Compensation Checker is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('The Compensation Checker is a Smart Traveler feature — $19/month. Use code <strong>SPOTLIGHT20</strong> for 20% off your first month, through July 30 (limited to the first 100 people).', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: making sense of the fine print before you book, not after.')}
     `
   },
@@ -328,7 +328,7 @@ const featureSpotlightSequence = [
         <strong>Here's how it could look:</strong><br>
         Marcus L. from Seattle nearly booked a "flexible" hotel rate that turned out to have a strict 7-day cutoff buried in the terms. The Fine Print Decoder caught it before he paid, steering him to a plan that avoided a $150 cancellation fee.
       `)}
-      ${upgradeBox('The Fine Print Decoder is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('The Fine Print Decoder is a Smart Traveler feature — $19/month. Use code <strong>SPOTLIGHT20</strong> for 20% off your first month, through July 30 (limited to the first 100 people).', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: spotting a bad booking before you click confirm.')}
     `
   },
@@ -342,7 +342,7 @@ const featureSpotlightSequence = [
         <strong>Here's how it could look:</strong><br>
         Emma W. from Denver ran a tempting all-inclusive deal through the Booking Risk Analyzer. It flagged a mandatory resort fee that wasn't shown in the headline price — about $220 for her stay. She booked a cleaner alternative instead.
       `)}
-      ${upgradeBox('The Booking Risk Analyzer is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('The Booking Risk Analyzer is a Smart Traveler feature — $19/month. Use code <strong>SPOTLIGHT20</strong> for 20% off your first month, through July 30 (limited to the first 100 people).', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: real discounts from real travel brands, built into your plan.')}
     `
   },
@@ -356,7 +356,7 @@ const featureSpotlightSequence = [
         <strong>Here's how it could look:</strong><br>
         David C. from Miami used the Partner Deals page before a 3-country trip: an eSIM discount through Airalo and a Booking.com rate that together came to roughly $95 saved before he even left home.
       `)}
-      ${upgradeBox('Partner Deals is an Elite feature — $49/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('Partner Deals is an Elite feature — $49/month. Use code <strong>SPOTLIGHT20</strong> for 20% off your first month, through July 30 (limited to the first 100 people).', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: a community that\'s already found today\'s best deals.')}
     `
   },
@@ -370,7 +370,7 @@ const featureSpotlightSequence = [
         <strong>Here's how it could look:</strong><br>
         Rachel S. from Portland spotted a mistake fare posted by another member just 40 minutes after it went live. She booked before it was corrected and saved $310 off the normal fare.
       `)}
-      ${upgradeBox('The Travel Community is an Elite feature — $49/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('The Travel Community is an Elite feature — $49/month. Use code <strong>SPOTLIGHT20</strong> for 20% off your first month, through July 30 (limited to the first 100 people).', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: what the other 67 hacks you haven\'t seen yet look like.')}
     `
   },
@@ -384,7 +384,7 @@ const featureSpotlightSequence = [
         <strong>Here's how it could look:</strong><br>
         Tom H. from San Francisco upgraded mainly for one module he didn't have. By his next trip he'd used three hacks he'd never seen before, and figures they saved him roughly $430 combined.
       `)}
-      ${upgradeBox('The full 87-hack library is unlocked on Smart Traveler and Elite, from $19/month.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('The full 87-hack library is unlocked on Smart Traveler and Elite, from $19/month. Use code <strong>SPOTLIGHT20</strong> for 20% off your first month, through July 30 (limited to the first 100 people).', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: the last email in this series — how it adds up as a system.')}
     `
   },
@@ -398,7 +398,7 @@ const featureSpotlightSequence = [
         <strong>Here's how it could look:</strong><br>
         Lisa B. from Atlanta combined a price alert, a digest deal, and one credit card hack across a single trip. None of them alone was dramatic — together they added up to roughly $610 saved on one vacation.
       `)}
-      ${upgradeBox('Smart Traveler is $19/month, Elite is $49/month. Most members recover that on their first trip.', '{appUrl}/sales-page.html')}
+      ${upgradeBox('Smart Traveler is $19/month, Elite is $49/month. Most members recover that on their first trip — and code <strong>SPOTLIGHT20</strong> takes 20% off your first month through July 30 (limited to the first 100 people).', '{appUrl}/sales-page.html')}
       ${small('This is the last scheduled email in this series. You\'ll still hear from us occasionally when we add new hacks or find something worth sharing. Unsubscribe anytime — the link is below.')}
     `
   }

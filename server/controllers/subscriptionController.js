@@ -75,7 +75,9 @@ exports.createCheckoutSession = async (req, res) => {
     if (promoCode) {
       const promoResult = await pool.query(
         `SELECT discount_percent, discount_amount, current_uses, max_uses FROM promo_codes
-         WHERE code = $1 AND is_active = true AND (max_uses IS NULL OR current_uses < max_uses)`,
+         WHERE code = $1 AND is_active = true AND (max_uses IS NULL OR current_uses < max_uses)
+           AND (valid_from IS NULL OR valid_from <= NOW())
+           AND (valid_until IS NULL OR valid_until >= NOW())`,
         [promoCode.toUpperCase()]
       );
 
