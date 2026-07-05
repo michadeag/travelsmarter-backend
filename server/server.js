@@ -1351,6 +1351,14 @@ async function initializeApp() {
       console.warn('⚠️ Error updating email templates:', err.message);
     });
 
+    // Seed Feature Spotlight (free->paid nurture) sequence, then sync from code
+    await emailSequenceService.seedFeatureSpotlightSequence().catch(err => {
+      console.warn('⚠️ Error seeding Feature Spotlight templates:', err.message);
+    });
+    await emailSequenceService.updateFeatureSpotlightTemplates().catch(err => {
+      console.warn('⚠️ Error updating Feature Spotlight templates:', err.message);
+    });
+
     // Seed travel hacks if database is empty (skip in production for faster startup)
     if (process.env.SKIP_SEED !== 'true') {
       await seedTravelHacks().catch(err => {

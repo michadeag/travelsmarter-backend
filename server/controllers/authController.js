@@ -207,6 +207,12 @@ exports.signup = async (req, res) => {
       console.error('Failed to initialize email sequence:', err.message || err);
     });
 
+    // Enroll in the Feature Spotlight (free->paid nurture) sequence, days 11-20.
+    // Automatically stops sending once the user upgrades — see sendPendingEmails().
+    emailSequenceService.initializeFeatureSpotlightSequence(user.id, user.email).catch(err => {
+      console.error('Failed to initialize Feature Spotlight sequence:', err.message || err);
+    });
+
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -287,6 +293,11 @@ exports.createUser = async (req, res) => {
       user.first_name
     ).catch(err => {
       console.error('Failed to initialize email sequence:', err.message || err);
+    });
+
+    // Enroll in the Feature Spotlight (free->paid nurture) sequence, days 11-20.
+    emailSequenceService.initializeFeatureSpotlightSequence(user.id, user.email).catch(err => {
+      console.error('Failed to initialize Feature Spotlight sequence:', err.message || err);
     });
 
     // Also send welcome email

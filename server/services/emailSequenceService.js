@@ -257,6 +257,153 @@ const defaultEmailSequence = [
   }
 ];
 
+// ─── FEATURE SPOTLIGHT SEQUENCE (free -> paid nurture, days 11-20) ───────────
+// Runs after the 10-day welcome sequence. One premium feature per email.
+// sendPendingEmails() skips/cancels these automatically once a user upgrades.
+
+const featureSpotlightSequence = [
+  {
+    day: 11,
+    subject: '✈️ The feature that catches price drops while you sleep',
+    html: `
+      ${h('One thing free members miss: Flight Price Alerts')}
+      ${p('Smart Traveler runs a daily check on your saved routes and emails you the moment the price drops — no manual refreshing, no missed windows.')}
+      ${hackBox(`
+        <strong>Here's how it could look:</strong><br>
+        Andy T. from New York set an alert on a Lisbon flight he'd been watching. Six days later, an alert email landed: the fare had dropped $210. He booked in the same afternoon.
+      `)}
+      ${upgradeBox('Flight Price Alerts is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: the weekly digest that surfaces deals you\'d never find yourself.')}
+    `
+  },
+  {
+    day: 12,
+    subject: '📧 We do the deal-hunting so you don\'t have to',
+    html: `
+      ${h('One thing free members miss: the Weekly Deal Digest')}
+      ${p('Every week, Smart Traveler members get a short email with the 3 best verified deals we\'ve found that week — mistake fares, hotel status matches, card bonuses. You just read and decide.')}
+      ${hackBox(`
+        <strong>Here's how it could look:</strong><br>
+        Sarah M. from Chicago almost skipped her digest email one Friday. It had a mistake-fare alert to Rome. She booked in 20 minutes and saved $340 off the normal fare.
+      `)}
+      ${upgradeBox('The Weekly Deal Digest is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: an underrated destination most travelers overlook.')}
+    `
+  },
+  {
+    day: 13,
+    subject: '🗺️ This month\'s Hidden Gem, before everyone else finds it',
+    html: `
+      ${h('One thing free members miss: Hidden Gem of the Month')}
+      ${p('Each month Smart Traveler and Elite members get one underrated destination — timing, budget, and why now is the window before it gets crowded and prices climb.')}
+      ${hackBox(`
+        <strong>Here's how it could look:</strong><br>
+        Jason R. from Austin followed last quarter's Hidden Gem pick to Tbilisi. Flights and hotels were still cheap ahead of peak season — he estimated the timing alone saved him $280 versus booking a few months later.
+      `)}
+      ${upgradeBox('Hidden Gem of the Month is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: what to do the moment a flight gets delayed or cancelled.')}
+    `
+  },
+  {
+    day: 14,
+    subject: '⚖️ Delayed flight? This tells you in seconds if you\'re owed money',
+    html: `
+      ${h('One thing free members miss: the Compensation Checker')}
+      ${p('Paste in your delay or cancellation email and Smart Traveler tells you instantly whether you likely qualify for compensation, and what to do next — no digging through airline policy pages.')}
+      ${hackBox(`
+        <strong>Here's how it could look:</strong><br>
+        Priya K. from Boston had a 4-hour delay on a trip home and assumed there was nothing to do about it. The Compensation Checker flagged it as a likely claim. She filed that night and received $300 a few weeks later.
+      `)}
+      ${upgradeBox('The Compensation Checker is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: making sense of the fine print before you book, not after.')}
+    `
+  },
+  {
+    day: 15,
+    subject: '📄 Read any travel policy in plain English in seconds',
+    html: `
+      ${h('One thing free members miss: the Fine Print Decoder')}
+      ${p('Paste any booking, insurance, or cancellation policy and get a plain-English breakdown of what\'s actually covered — before you\'re stuck arguing with an airline or hotel after the fact.')}
+      ${hackBox(`
+        <strong>Here's how it could look:</strong><br>
+        Marcus L. from Seattle nearly booked a "flexible" hotel rate that turned out to have a strict 7-day cutoff buried in the terms. The Fine Print Decoder caught it before he paid, steering him to a plan that avoided a $150 cancellation fee.
+      `)}
+      ${upgradeBox('The Fine Print Decoder is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: spotting a bad booking before you click confirm.')}
+    `
+  },
+  {
+    day: 16,
+    subject: '🔍 Spot hidden fees and red flags before you book',
+    html: `
+      ${h('One thing free members miss: the Booking Risk Analyzer')}
+      ${p('Paste in a booking link or confirmation and Smart Traveler flags hidden resort fees, poor cancellation terms, and other red flags most people only discover after paying.')}
+      ${hackBox(`
+        <strong>Here's how it could look:</strong><br>
+        Emma W. from Denver ran a tempting all-inclusive deal through the Booking Risk Analyzer. It flagged a mandatory resort fee that wasn't shown in the headline price — about $220 for her stay. She booked a cleaner alternative instead.
+      `)}
+      ${upgradeBox('The Booking Risk Analyzer is a Smart Traveler feature — $19/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: real discounts from real travel brands, built into your plan.')}
+    `
+  },
+  {
+    day: 17,
+    subject: '🤝 Real discounts on the tools you already use to travel',
+    html: `
+      ${h('One thing Elite members get: Partner Deals')}
+      ${p('Elite unlocks ongoing discounts with travel brands members actually use — Wise, Airalo, NordVPN, Booking.com and more — with real affiliate links, not generic coupon codes.')}
+      ${hackBox(`
+        <strong>Here's how it could look:</strong><br>
+        David C. from Miami used the Partner Deals page before a 3-country trip: an eSIM discount through Airalo and a Booking.com rate that together came to roughly $95 saved before he even left home.
+      `)}
+      ${upgradeBox('Partner Deals is an Elite feature — $49/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: a community that\'s already found today\'s best deals.')}
+    `
+  },
+  {
+    day: 18,
+    subject: '💬 12,340+ travelers already trading live deals',
+    html: `
+      ${h('One thing Elite members get: the Travel Community')}
+      ${p('The Travel Community is where Elite members post live deals, mistake fares, and status-match wins as they find them — often before we\'ve even added them to the digest.')}
+      ${hackBox(`
+        <strong>Here's how it could look:</strong><br>
+        Rachel S. from Portland spotted a mistake fare posted by another member just 40 minutes after it went live. She booked before it was corrected and saved $310 off the normal fare.
+      `)}
+      ${upgradeBox('The Travel Community is an Elite feature — $49/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: what the other 67 hacks you haven\'t seen yet look like.')}
+    `
+  },
+  {
+    day: 19,
+    subject: '📚 You\'ve seen 20 hacks. There are 87.',
+    html: `
+      ${h('One thing free members miss: the rest of the library')}
+      ${p('Free gives you 20 verified hacks across 4 modules. Smart Traveler unlocks 55+ across 10 modules; Elite unlocks all 87 across all 16 — updated as new strategies get verified.')}
+      ${hackBox(`
+        <strong>Here's how it could look:</strong><br>
+        Tom H. from San Francisco upgraded mainly for one module he didn't have. By his next trip he'd used three hacks he'd never seen before, and figures they saved him roughly $430 combined.
+      `)}
+      ${upgradeBox('The full 87-hack library is unlocked on Smart Traveler and Elite, from $19/month.', '{appUrl}/sales-page.html')}
+      ${small('Tomorrow: the last email in this series — how it adds up as a system.')}
+    `
+  },
+  {
+    day: 20,
+    subject: '🎯 What changes when you use these as a system',
+    html: `
+      ${h('The last one: how it all fits together')}
+      ${p('Individually, each feature saves you money once in a while. Used together — alerts, deals, community, the full hack library — members tend to save consistently, trip after trip, instead of getting lucky occasionally.')}
+      ${hackBox(`
+        <strong>Here's how it could look:</strong><br>
+        Lisa B. from Atlanta combined a price alert, a digest deal, and one credit card hack across a single trip. None of them alone was dramatic — together they added up to roughly $610 saved on one vacation.
+      `)}
+      ${upgradeBox('Smart Traveler is $19/month, Elite is $49/month. Most members recover that on their first trip.', '{appUrl}/sales-page.html')}
+      ${small('This is the last scheduled email in this series. You\'ll still hear from us occasionally when we add new hacks or find something worth sharing. Unsubscribe anytime — the link is below.')}
+    `
+  }
+];
+
 // ─── SEED (first run only) ────────────────────────────────────────────────────
 
 async function seedEmailSequence() {
@@ -377,6 +524,124 @@ async function initializeEmailSequence(userId, userEmail, firstName) {
   }
 }
 
+// ─── FEATURE SPOTLIGHT: SEED / UPDATE / ENROLL ───────────────────────────────
+
+const FEATURE_SPOTLIGHT_SEQUENCE_NAME = 'Feature Spotlight Sequence';
+
+async function seedFeatureSpotlightSequence() {
+  try {
+    const existing = await pool.query(
+      `SELECT id FROM email_sequences WHERE name = $1`,
+      [FEATURE_SPOTLIGHT_SEQUENCE_NAME]
+    );
+
+    if (existing.rows.length > 0) {
+      console.log('✅ Feature Spotlight sequence already seeded');
+      return existing.rows[0].id;
+    }
+
+    const sequenceId = uuidv4();
+    await pool.query(
+      `INSERT INTO email_sequences (id, name, description, is_active, trigger_event, created_at)
+       VALUES ($1, $2, $3, true, 'signup', CURRENT_TIMESTAMP)`,
+      [sequenceId, FEATURE_SPOTLIGHT_SEQUENCE_NAME, 'Days 11-20 after signup: one premium feature per email, aimed at converting free users to paid. Auto-cancelled once a user upgrades.']
+    );
+
+    for (const email of featureSpotlightSequence) {
+      await pool.query(
+        `INSERT INTO email_templates (id, sequence_id, day, subject, content, html_content, is_active, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, true, CURRENT_TIMESTAMP)`,
+        [uuidv4(), sequenceId, email.day, email.subject, email.html.replace(/<[^>]*>/g, ''), email.html]
+      );
+    }
+
+    console.log('✅ Feature Spotlight sequence seeded with 10 templates');
+    return sequenceId;
+  } catch (error) {
+    console.error('❌ Error seeding Feature Spotlight sequence:', error);
+    throw error;
+  }
+}
+
+async function updateFeatureSpotlightTemplates() {
+  try {
+    const seqResult = await pool.query(
+      `SELECT id FROM email_sequences WHERE name = $1 LIMIT 1`,
+      [FEATURE_SPOTLIGHT_SEQUENCE_NAME]
+    );
+    if (seqResult.rows.length === 0) return;
+
+    const sequenceId = seqResult.rows[0].id;
+
+    for (const email of featureSpotlightSequence) {
+      await pool.query(
+        `UPDATE email_templates
+         SET subject = $1, html_content = $2, content = $3
+         WHERE sequence_id = $4 AND day = $5`,
+        [email.subject, email.html, email.html.replace(/<[^>]*>/g, ''), sequenceId, email.day]
+      );
+    }
+
+    console.log('✅ Feature Spotlight templates updated from code');
+  } catch (error) {
+    console.error('❌ Error updating Feature Spotlight templates:', error);
+  }
+}
+
+// Enrolls one user into the Feature Spotlight sequence (days 11-20 from today).
+// Safe to call even if the user is already enrolled — skips templates that
+// already have a scheduled_emails row for this user.
+async function initializeFeatureSpotlightSequence(userId, userEmail) {
+  try {
+    const sequenceResult = await pool.query(
+      `SELECT id FROM email_sequences WHERE name = $1 AND is_active = true LIMIT 1`,
+      [FEATURE_SPOTLIGHT_SEQUENCE_NAME]
+    );
+
+    if (sequenceResult.rows.length === 0) {
+      console.warn('⚠️ No active Feature Spotlight sequence found, skipping');
+      return { success: false, message: 'No active Feature Spotlight sequence configured' };
+    }
+
+    const sequenceId = sequenceResult.rows[0].id;
+
+    const templatesResult = await pool.query(
+      `SELECT et.id, et.day
+       FROM email_templates et
+       WHERE et.sequence_id = $1 AND et.is_active = true
+         AND NOT EXISTS (
+           SELECT 1 FROM scheduled_emails se WHERE se.user_id = $2 AND se.template_id = et.id
+         )
+       ORDER BY et.day ASC`,
+      [sequenceId, userId]
+    );
+
+    let scheduledCount = 0;
+    for (const template of templatesResult.rows) {
+      const scheduledAt = new Date();
+      scheduledAt.setDate(scheduledAt.getDate() + template.day);
+      scheduledAt.setHours(9, 0, 0, 0);
+
+      try {
+        await pool.query(
+          `INSERT INTO scheduled_emails (user_id, template_id, scheduled_at, status, created_at)
+           VALUES ($1, $2, $3, 'pending', CURRENT_TIMESTAMP)`,
+          [userId, template.id, scheduledAt]
+        );
+        scheduledCount++;
+      } catch (insertError) {
+        console.error(`❌ Failed to schedule Feature Spotlight day ${template.day} email:`, insertError.message);
+      }
+    }
+
+    console.log(`✅ Feature Spotlight sequence initialized for ${userEmail || userId} (${scheduledCount} emails scheduled)`);
+    return { success: true, scheduledCount };
+  } catch (error) {
+    console.error('❌ Error initializing Feature Spotlight sequence:', error);
+    throw error;
+  }
+}
+
 // ─── SEND PENDING EMAILS ──────────────────────────────────────────────────────
 
 async function sendPendingEmails() {
@@ -389,6 +654,26 @@ async function sendPendingEmails() {
     if (!tableCheck.rows[0].exists) {
       console.warn('⚠️ scheduled_emails table does not exist yet, skipping');
       return { sent: 0 };
+    }
+
+    // Feature Spotlight is a free->paid nurture sequence: cancel any of its
+    // still-pending emails for users who have since upgraded, so it stops
+    // immediately instead of just silently skipping them every hour.
+    const cancelResult = await pool.query(`
+      UPDATE scheduled_emails se
+      SET status = 'cancelled'
+      FROM email_templates et
+      JOIN email_sequences es ON et.sequence_id = es.id
+      LEFT JOIN subscriptions s ON s.user_id = se.user_id AND s.status = 'active'
+      JOIN users u ON u.id = se.user_id
+      WHERE se.template_id = et.id
+        AND es.name = $1
+        AND se.status = 'pending'
+        AND COALESCE(s.tier, u.subscription_tier, 'free') != 'free'
+      RETURNING se.id
+    `, [FEATURE_SPOTLIGHT_SEQUENCE_NAME]);
+    if (cancelResult.rows.length > 0) {
+      console.log(`🚫 Cancelled ${cancelResult.rows.length} Feature Spotlight email(s) for users who upgraded`);
     }
 
     const result = await pool.query(`
@@ -571,5 +856,8 @@ module.exports = {
   sendPendingEmails,
   seedEmailSequence,
   updateEmailTemplates,
-  sendDay0Email
+  sendDay0Email,
+  seedFeatureSpotlightSequence,
+  updateFeatureSpotlightTemplates,
+  initializeFeatureSpotlightSequence
 };
