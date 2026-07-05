@@ -618,9 +618,12 @@ async function initializeFeatureSpotlightSequence(userId, userEmail) {
 
     let scheduledCount = 0;
     for (const template of templatesResult.rows) {
+      // setUTCHours (not setHours) so this lands at a fixed 14:00 UTC
+      // (~10am US Eastern, ~7am US Pacific) regardless of the server's
+      // local timezone, rather than an ambiguous "9am server-local".
       const scheduledAt = new Date();
-      scheduledAt.setDate(scheduledAt.getDate() + template.day);
-      scheduledAt.setHours(9, 0, 0, 0);
+      scheduledAt.setUTCDate(scheduledAt.getUTCDate() + template.day);
+      scheduledAt.setUTCHours(14, 0, 0, 0);
 
       try {
         await pool.query(
