@@ -18,6 +18,32 @@ const PRICING = {
   },
 };
 
+// Gets (or creates, idempotently) a Stripe Coupon that applies a promo code's
+// discount to exactly the first invoice of a subscription (duration: 'once').
+// This is the correct way to do "X% off your first month" in Stripe — setting
+// a discounted unit_amount directly on the recurring price would make the
+// discount apply forever, not just once.
+async function getOrCreateOnceCoupon(promo, promoCode) {
+  const couponId = `PROMO_${promoCode.toUpperCase()}_ONCE`;
+
+  try {
+    return await stripe.coupons.retrieve(couponId);
+  } catch (err) {
+    const params = {
+      id: couponId,
+      duration: 'once',
+      name: `${promoCode.toUpperCase()} (first payment only)`,
+    };
+    if (promo.discount_percent) {
+      params.percent_off = parseFloat(promo.discount_percent);
+    } else if (promo.discount_amount) {
+      params.amount_off = Math.round(promo.discount_amount * 100);
+      params.currency = 'usd';
+    }
+    return await stripe.coupons.create(params);
+  }
+}
+
 // @desc Create checkout session
 // @route POST /api/subscriptions/checkout
 // @access Private
@@ -68,9 +94,12 @@ exports.createCheckoutSession = async (req, res) => {
       );
     }
 
-    // Calculate price with promo code
-    let amount = PRICING[tier].price;
+    // Recurring price always stays full price — a promo code discounts only
+    // the first invoice, via a Stripe Coupon with duration:'once' (below),
+    // not by lowering unit_amount (which would discount every future month).
+    const amount = PRICING[tier].price;
     let discountPercent = 0;
+    let stripeCouponId = null;
 
     if (promoCode) {
       const promoResult = await pool.query(
@@ -83,12 +112,9 @@ exports.createCheckoutSession = async (req, res) => {
 
       if (promoResult.rows.length > 0) {
         const promo = promoResult.rows[0];
-        if (promo.discount_percent) {
-          discountPercent = promo.discount_percent;
-          amount = Math.round(amount * (1 - promo.discount_percent / 100));
-        } else if (promo.discount_amount) {
-          amount = Math.max(0, amount - Math.round(promo.discount_amount * 100));
-        }
+        discountPercent = promo.discount_percent || 0;
+        const coupon = await getOrCreateOnceCoupon(promo, promoCode);
+        stripeCouponId = coupon.id;
       }
     }
 
@@ -117,6 +143,7 @@ exports.createCheckoutSession = async (req, res) => {
         },
       ],
       mode: 'subscription',
+      ...(stripeCouponId ? { discounts: [{ coupon: stripeCouponId }] } : {}),
       success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/checkout?tier=${tier}`,
       metadata: {
@@ -241,11 +268,17 @@ async function handleCheckoutSessionCompleted(session) {
 
     const nextBillingDate = subscriptionResult.rows[0].current_period_end;
 
-    // Log payment
+    // Log payment — use the session's actual charged total (session.amount_total,
+    // in cents), not the flat tier price, since a promo coupon may have
+    // discounted this specific first invoice.
+    const firstChargeAmount = typeof session.amount_total === 'number'
+      ? session.amount_total / 100
+      : PRICING[tier].priceMonthly;
+
     await pool.query(
       `INSERT INTO payment_history (user_id, stripe_payment_intent_id, amount, status, subscription_tier)
        VALUES ($1, $2, $3, 'completed', $4)`,
-      [userId, session.payment_intent, PRICING[tier].priceMonthly, tier]
+      [userId, session.payment_intent, firstChargeAmount, tier]
     );
 
     // Update promo code usage if applicable
