@@ -39,7 +39,7 @@ const templates = {
       <div style="text-align:center;margin:28px 0;">
         <a href="${process.env.FRONTEND_URL || 'https://travelsmarterapp.com'}/index.html" style="display:inline-block;background:#ff6b4a;color:white;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">Go to My Free Hacks →</a>
       </div>
-      <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0;">Over the next 10 days I'll send you one focused hack per email — actionable and specific. Tomorrow: the flight booking window most people miss, and why it saves €300–600 per ticket.</p>
+      <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0;">Over the next 10 days I'll send you one focused hack per email — actionable and specific. Tomorrow: the flight booking window most people miss, and why it saves $300–600 per ticket.</p>
     `)
   }),
 

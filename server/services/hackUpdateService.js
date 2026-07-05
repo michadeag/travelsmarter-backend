@@ -189,7 +189,7 @@ async function addNewHack(hack) {
     ]
   );
 
-  console.log(`✅ Added new hack: "${hack.title}" (${initialUsageCount} users, €${initialAvgSavings.toFixed(2)} savings, ${initialSuccessRate.toFixed(1)}% success)`);
+  console.log(`✅ Added new hack: "${hack.title}" (${initialUsageCount} users, $${initialAvgSavings.toFixed(2)} savings, ${initialSuccessRate.toFixed(1)}% success)`);
   return hackId;
 }
 
@@ -292,7 +292,7 @@ async function updateExistingHack(hackId, newData) {
     ]
   );
 
-  console.log(`✏️  Updated hack: "${newData.title}" (preserved metrics: ${updatedMetrics.usage_count} users, €${updatedMetrics.avg_savings_euros.toFixed(2)}, ${updatedMetrics.success_rate.toFixed(1)}%)`);
+  console.log(`✏️  Updated hack: "${newData.title}" (preserved metrics: ${updatedMetrics.usage_count} users, $${updatedMetrics.avg_savings_euros.toFixed(2)}, ${updatedMetrics.success_rate.toFixed(1)}%)`);
 }
 
 /**

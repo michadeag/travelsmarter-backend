@@ -28,7 +28,7 @@ Extract and return ONLY a JSON object (no markdown, no explanation) with:
   "difficulty": "One of: easy, medium, hard",
   "moduleId": "1-16 (1=Flight, 2=Credit Cards, 3=Hotel, 4=Timing, 5=Airport, 6=Destinations, 7=CarRental, 8=Community, 9=Money, 10=Insurance, 11=Visa, 12=Accommodation, 13=Transport, 14=Bookings, 15=Food, 16=Shopping)",
   "validity": "One of: current (still valid), seasonal (only certain times), deprecated (no longer works)",
-  "estimatedSavings": "Rough annual savings in euros (e.g., 500, 1000, etc)",
+  "estimatedSavings": "Rough annual savings in US dollars (e.g., 500, 1000, etc)",
   "keywords": ["keyword1", "keyword2", "keyword3"]
 }
 

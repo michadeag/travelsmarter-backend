@@ -457,7 +457,7 @@
                 <p>CPP is the value you get from each mile or point when redeeming. Higher is better!</p>
                 <ul>
                     <li><strong>CPP Calculation:</strong> (Cash Equivalent Price ÷ Miles Required) × 100</li>
-                    <li><strong>Example:</strong> €1,200 redemption ÷ 50,000 miles = 2.4¢ per point</li>
+                    <li><strong>Example:</strong> $1,200 redemption ÷ 50,000 miles = 2.4¢ per point</li>
                     <li><strong>Good Value:</strong> 1.5¢+ per point is excellent</li>
                     <li><strong>Comparison:</strong> Shows which airlines offer best value on same route</li>
                 </ul>
@@ -516,7 +516,7 @@
                                 <th>Route</th>
                                 <th>Cabin</th>
                                 <th>Miles Required</th>
-                                <th>Cash Value (€)</th>
+                                <th>Cash Value ($)</th>
                                 <th>CPP ¢</th>
                                 <th>Notes</th>
                             </tr>
@@ -671,7 +671,7 @@
                             <td>${chart.origin_airport} → ${chart.destination_airport}</td>
                             <td>${cabinDisplay}</td>
                             <td style="font-weight: 600;">${chart.miles_required.toLocaleString()}</td>
-                            <td>€${chart.cash_equivalent_eur.toFixed(2)}</td>
+                            <td>$${chart.cash_equivalent_eur.toFixed(2)}</td>
                             <td><span class="cpp-value">${(chart.value_cpp || 0).toFixed(2)}¢</span> ${bestBadge}</td>
                             <td style="font-size: 0.9em; color: #6b7280;">${chart.notes || '-'}</td>
                         `;

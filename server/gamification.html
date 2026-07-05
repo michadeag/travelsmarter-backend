@@ -346,7 +346,7 @@
                 </div>
                 <div class="stat-card">
                     <h3>Total Savings</h3>
-                    <div class="value" id="totalSavings">€0</div>
+                    <div class="value" id="totalSavings">$0</div>
                     <div class="label">estimated</div>
                 </div>
                 <div class="stat-card">
@@ -444,8 +444,8 @@
             'savings-champion': {
                 name: 'Savings Champion',
                 icon: '🏆',
-                description: 'Estimated €1,000+ in savings',
-                requirement: 'Achieve €1,000 estimated savings'
+                description: 'Estimated $1,000+ in savings',
+                requirement: 'Achieve $1,000 estimated savings'
             },
             'level-5': {
                 name: 'Level 5 Traveler',
@@ -521,7 +521,7 @@
 
             document.getElementById('userLevel').textContent = userProgress.level;
             document.getElementById('hacksMastered').textContent = userProgress.hacksMastered;
-            document.getElementById('totalSavings').textContent = '€' + userProgress.totalSavings.toLocaleString();
+            document.getElementById('totalSavings').textContent = '$' + userProgress.totalSavings.toLocaleString();
             document.getElementById('badgesCount').textContent = userProgress.badgesEarned;
 
             // XP progress
@@ -567,7 +567,7 @@
                         <td><div class="user-name">${entry.name}</div></td>
                         <td><div class="user-stats">Level ${entry.level}</div></td>
                         <td><div class="user-stats">${entry.hacks}/87</div></td>
-                        <td><strong>€${entry.savings.toLocaleString()}</strong></td>
+                        <td><strong>$${entry.savings.toLocaleString()}</strong></td>
                     </tr>
                 `;
             });

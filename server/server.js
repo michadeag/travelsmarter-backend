@@ -1439,19 +1439,32 @@ app.listen(PORT, () => {
     }
   }, 60 * 60 * 1000);
 
-  // Hack update scheduler - runs biweekly (every 14 days) to search for and update hacks
-  console.log('🤖 Hack update scheduler started (runs biweekly)');
-  setInterval(async () => {
+  // Hack update scheduler - durable check against the database, not an in-memory
+  // timer. A plain setInterval(14 days) resets to zero on every deploy/restart,
+  // so on an actively-developed app it could go months without ever firing.
+  // Instead, check on boot and periodically whether 14 days have passed since
+  // the last *completed* run (per hack_update_logs), and run if so.
+  console.log('🤖 Hack update scheduler started (durable, checks every 6h, runs biweekly)');
+  const HACK_UPDATE_INTERVAL_MS = 14 * 24 * 60 * 60 * 1000;
+  async function maybeRunHackUpdate() {
     try {
-      await hackUpdateService.runHackUpdateCycle();
+      const result = await pool.query(
+        `SELECT completed_at FROM hack_update_logs WHERE stage = 'completed' ORDER BY completed_at DESC LIMIT 1`
+      );
+      const lastRun = result.rows[0]?.completed_at;
+      const dueAt = lastRun ? new Date(lastRun).getTime() + HACK_UPDATE_INTERVAL_MS : 0;
+      if (Date.now() >= dueAt) {
+        console.log('🤖 Hack update is due — running now...');
+        await hackUpdateService.runHackUpdateCycle();
+      } else {
+        console.log(`🤖 Hack update not due yet. Next run: ${new Date(dueAt).toISOString()}`);
+      }
     } catch (error) {
       console.error('❌ Error in hack update scheduler:', error);
     }
-  }, 14 * 24 * 60 * 60 * 1000); // 14 days
-
-  // Run hack update immediately on startup (optional - comment out to skip)
-  // Uncomment next line to run immediately on server start
-  // hackUpdateService.runHackUpdateCycle().catch(err => console.error('Initial hack update failed:', err));
+  }
+  maybeRunHackUpdate();
+  setInterval(maybeRunHackUpdate, 6 * 60 * 60 * 1000); // re-check every 6h
 });
 
 // Initialize app in background (non-blocking)

@@ -474,21 +474,21 @@
                 <div class="order-details">
                     <div class="detail-row">
                         <strong>Subtotal (1 month)</strong>
-                        <span class="value">€<span id="subtotal">19</span></span>
+                        <span class="value">$<span id="subtotal">19</span></span>
                     </div>
                     <div class="detail-row">
                         <strong>Promo Code</strong>
-                        <span class="value">-€<span id="discount">0</span></span>
+                        <span class="value">-$<span id="discount">0</span></span>
                     </div>
                     <div class="detail-row total-row">
                         <strong>Total Due Today</strong>
-                        <span class="value">€<span id="total">19</span></span>
+                        <span class="value">$<span id="total">19</span></span>
                     </div>
                 </div>
 
                 <div class="info-box">
                     <strong>✓ First 30 days free to try</strong><br>
-                    Then auto-renews at €<span id="infoBoxPrice">19</span>/month. Cancel anytime, no questions asked.
+                    Then auto-renews at $<span id="infoBoxPrice">19</span>/month. Cancel anytime, no questions asked.
                 </div>
 
                 <div class="guarantee-badge">
@@ -596,7 +596,7 @@
 
                     <!-- PAYMENT BUTTON -->
                     <button type="submit" class="pay-button" id="payButton">
-                        Complete Purchase - €<span id="buttonPrice">19</span>/month
+                        Complete Purchase - $<span id="buttonPrice">19</span>/month
                     </button>
 
                     <div class="loading" id="loading">
@@ -808,7 +808,7 @@
                     window.appliedPromoCode = code;
                     window.promoDiscount = discountAmount;
 
-                    alert(`Promo code applied! Saving €${discountAmount} this month.`);
+                    alert(`Promo code applied! Saving $${discountAmount} this month.`);
                     document.getElementById('promoCode').disabled = true;
                 } else {
                     alert('Invalid or expired promo code');
