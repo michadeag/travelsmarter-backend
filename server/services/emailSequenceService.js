@@ -138,9 +138,9 @@ const defaultEmailSequence = [
       ${p('On a $2,000 trip that\'s $100–200 gone to fees. Here\'s what smart travelers use instead:')}
       ${hackBox(`
         <strong>The three cards worth having:</strong><br>
-        💳 <strong>Wise (best for spending):</strong> real mid-market rate, no foreign transaction fee, 2 free ATM withdrawals per month<br>
-        💳 <strong>Revolut:</strong> free plan works for light users, great for multi-currency<br>
-        💳 <strong>N26:</strong> best for Eurozone travel, instant notifications, virtual cards<br><br>
+        💳 <strong><a href="https://api.travelsmarterapp.com/api/affiliate/go/wise" target="_blank" rel="noopener sponsored">Wise</a> (best for spending):</strong> real mid-market rate, no foreign transaction fee, 2 free ATM withdrawals per month<br>
+        💳 <strong><a href="https://api.travelsmarterapp.com/api/affiliate/go/revolut" target="_blank" rel="noopener sponsored">Revolut</a>:</strong> free plan works for light users, great for multi-currency<br>
+        💳 <strong><a href="https://api.travelsmarterapp.com/api/affiliate/go/n26" target="_blank" rel="noopener sponsored">N26</a>:</strong> best for Eurozone travel, instant notifications, virtual cards<br><br>
         <strong>Always:</strong> pay in the local currency (never let a merchant "help" you by charging in euros)
       `)}
       ${p('This is a preview from the Travel Money module. The full module covers ATM strategies, when to use cash vs card, and how to handle currencies in countries where cards aren\'t reliable.')}
@@ -157,10 +157,10 @@ const defaultEmailSequence = [
       ${p('Airport lounges used to be for business class passengers. The system has changed — and there are now 4 ways to access them for free or near-free:')}
       ${hackBox(`
         <strong>4 ways in:</strong><br>
-        1. <strong>Certain travel credit cards</strong> include Priority Pass — check your card benefits, you might already have it<br>
+        1. <strong>Certain travel credit cards</strong> include <a href="https://api.travelsmarterapp.com/api/affiliate/go/priority-pass" target="_blank" rel="noopener sponsored">Priority Pass</a> — check your card benefits, you might already have it<br>
         2. <strong>Booking the right flight:</strong> some long-haul economy fares include lounge access on the departure airport<br>
         3. <strong>Same-day flight delay:</strong> if your flight is delayed 2+ hours, many lounges will admit you for free — just ask<br>
-        4. <strong>Lounge day pass apps</strong> (LoungeBuddy, Priority Pass pay-per-use) — $25–35 vs the rack rate of $80+
+        4. <strong>Lounge day pass apps</strong> (LoungeBuddy, <a href="https://api.travelsmarterapp.com/api/affiliate/go/priority-pass" target="_blank" rel="noopener sponsored">Priority Pass</a> pay-per-use) — $25–35 vs the rack rate of $80+
       `)}
       ${p('The full Airport & Transit module covers 6 more strategies including TSA PreCheck equivalents in Europe, layover optimisation, and how to get fast-track security without status.')}
       ${upgradeBox('Airport & Transit is in the Smart Traveler plan — unlocked alongside Travel Money, Car Rentals, and 3 other modules. $19/month.', '{appUrl}/sales-page.html')}
@@ -221,14 +221,14 @@ const defaultEmailSequence = [
         2. <strong>Flight:</strong> Book in the 30–45 day window → save another $200–400<br>
         3. <strong>Credit card:</strong> Use sign-up bonus for the ticket → net cost: $0–100<br>
         4. <strong>Hotel:</strong> Status match → free upgrade on arrival<br>
-        5. <strong>Currency:</strong> Wise card → save 5–8% on all spending<br>
+        5. <strong>Currency:</strong> <a href="https://api.travelsmarterapp.com/api/affiliate/go/wise" target="_blank" rel="noopener sponsored">Wise</a> card → save 5–8% on all spending<br>
         6. <strong>Insurance:</strong> Credit card covers delays → buy cheaper standalone policy<br><br>
         Applied together on a 10-day trip: $800–1,500 saved vs. booking the normal way.
       `)}
       ${p('Your 4 free modules cover steps 1–3. The other 12 modules go deeper on everything else:')}
       ${upgradeBox(`
         <strong>Smart Traveler ($19/month):</strong> 10 modules total — adds Airport & Transit, Travel Money, Car Rentals, Destinations, Travel Insurance, and more. 55+ hacks.<br><br>
-        <strong>Elite ($49/month):</strong> All 16 modules, 87 hacks, exclusive Partner Deals (up to 50% off Wise, Airalo, NordVPN), and access to the Travel Community of 12,340+ members.
+        <strong>Elite ($49/month):</strong> All 16 modules, 87 hacks, exclusive Partner Deals (up to 50% off <a href="https://api.travelsmarterapp.com/api/affiliate/go/wise" target="_blank" rel="noopener sponsored">Wise</a>, <a href="https://api.travelsmarterapp.com/api/affiliate/go/airalo" target="_blank" rel="noopener sponsored">Airalo</a>, <a href="https://api.travelsmarterapp.com/api/affiliate/go/nordvpn" target="_blank" rel="noopener sponsored">NordVPN</a>), and access to the Travel Community of 12,340+ members.
       `, '{appUrl}/sales-page.html')}
       ${btn('{appUrl}/sales-page.html', 'See All Plans')}
       ${small('Tomorrow is the last email. If you\'re happy with your 20 free hacks, that\'s great — they\'re yours forever. If you want the rest, I\'ll show you what\'s inside.')}
@@ -247,7 +247,7 @@ const defaultEmailSequence = [
         <strong>Smart Traveler — $19/month</strong><br>
         10 modules · 55+ hacks · all tools & calculators · Goodies (PDFs & checklists) · Weekly Hack Digest · New deal alerts by email · Standard support<br><br>
         <strong>Elite — $49/month</strong><br>
-        16 modules · 87 hacks · everything above + Partner Deals (up to 50% off Wise, Airalo, NordVPN, Booking.com) + Travel Community (12,340+ members) + Priority support<br><br>
+        16 modules · 87 hacks · everything above + Partner Deals (up to 50% off <a href="https://api.travelsmarterapp.com/api/affiliate/go/wise" target="_blank" rel="noopener sponsored">Wise</a>, <a href="https://api.travelsmarterapp.com/api/affiliate/go/airalo" target="_blank" rel="noopener sponsored">Airalo</a>, <a href="https://api.travelsmarterapp.com/api/affiliate/go/nordvpn" target="_blank" rel="noopener sponsored">NordVPN</a>, <a href="https://api.travelsmarterapp.com/api/affiliate/go/booking-com" target="_blank" rel="noopener sponsored">Booking.com</a>) + Travel Community (12,340+ members) + Priority support<br><br>
         Both plans: no long-term commitment, cancel anytime.
       `)}
       ${btn('{appUrl}/sales-page.html', 'See Plans & Features')}
@@ -351,10 +351,10 @@ const featureSpotlightSequence = [
     subject: '🤝 Real discounts on the tools you already use to travel',
     html: `
       ${h('One thing Elite members get: Partner Deals')}
-      ${p('Elite unlocks ongoing discounts with travel brands members actually use — Wise, Airalo, NordVPN, Booking.com and more — with real affiliate links, not generic coupon codes.')}
+      ${p('Elite unlocks ongoing discounts with travel brands members actually use — <a href="https://api.travelsmarterapp.com/api/affiliate/go/wise" target="_blank" rel="noopener sponsored">Wise</a>, <a href="https://api.travelsmarterapp.com/api/affiliate/go/airalo" target="_blank" rel="noopener sponsored">Airalo</a>, <a href="https://api.travelsmarterapp.com/api/affiliate/go/nordvpn" target="_blank" rel="noopener sponsored">NordVPN</a>, <a href="https://api.travelsmarterapp.com/api/affiliate/go/booking-com" target="_blank" rel="noopener sponsored">Booking.com</a> and more — with real affiliate links, not generic coupon codes.')}
       ${hackBox(`
         <strong>Here's how it could look:</strong><br>
-        David C. from Miami used the Partner Deals page before a 3-country trip: an eSIM discount through Airalo and a Booking.com rate that together came to roughly $95 saved before he even left home.
+        David C. from Miami used the Partner Deals page before a 3-country trip: an eSIM discount through <a href="https://api.travelsmarterapp.com/api/affiliate/go/airalo" target="_blank" rel="noopener sponsored">Airalo</a> and a <a href="https://api.travelsmarterapp.com/api/affiliate/go/booking-com" target="_blank" rel="noopener sponsored">Booking.com</a> rate that together came to roughly $95 saved before he even left home.
       `)}
       ${upgradeBox('Partner Deals is an Elite feature — $49/month. Use code <strong>SPOTLIGHT20</strong> for 20% off your first month, through July 30 (limited to the first 100 people).', '{appUrl}/sales-page.html')}
       ${small('Tomorrow: a community that\'s already found today\'s best deals.')}
