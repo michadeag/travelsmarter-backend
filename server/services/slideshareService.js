@@ -132,9 +132,13 @@ Separate sections clearly with the ## headers.`;
     anthropic = await getAnthropicClient();
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 2000,
+      max_tokens: 8000,
       messages: [{ role: 'user', content: prompt }],
     });
+
+    if (response.stop_reason === 'max_tokens') {
+      console.warn(`⚠️ SlideShare generation for "${topic.title}" hit the max_tokens limit and was cut off mid-response. Consider raising max_tokens further.`);
+    }
 
     const raw = response.content[0].text.trim();
 
