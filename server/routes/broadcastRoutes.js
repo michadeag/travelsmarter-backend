@@ -150,9 +150,28 @@ const BROADCAST_TEMPLATES = [
   }
 ];
 
-// GET /api/broadcast/templates — list available templates
-router.get('/templates', protectWithAdminFallback, (req, res) => {
-  res.json({ success: true, templates: BROADCAST_TEMPLATES.map(t => ({ id: t.id, name: t.name, subject: t.subject })) });
+// GET /api/broadcast/templates — list available templates, with how many
+// free users have already received each one
+router.get('/templates', protectWithAdminFallback, async (req, res) => {
+  try {
+    const countResult = await pool.query(
+      `SELECT template_id, COUNT(*) AS sent_count FROM broadcast_sends GROUP BY template_id`
+    );
+    const countsByTemplate = {};
+    countResult.rows.forEach(row => { countsByTemplate[row.template_id] = parseInt(row.sent_count, 10); });
+
+    res.json({
+      success: true,
+      templates: BROADCAST_TEMPLATES.map(t => ({
+        id: t.id,
+        name: t.name,
+        subject: t.subject,
+        sentCount: countsByTemplate[t.id] || 0,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // Broadcasts are a free->paid nurture tool: always restrict to free-tier
