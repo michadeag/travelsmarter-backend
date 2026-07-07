@@ -20,12 +20,12 @@ router.get('/pricing', getPricing);
 router.post('/webhook', handleWebhook);
 
 // Private routes - SPECIFIC routes BEFORE parameter routes
-router.get('/stats', protect, getSubscriptionStats);
 router.post('/checkout', protect, createCheckoutSession);
 router.get('/current', protect, getCurrentSubscription);
 router.post('/cancel', protect, cancelSubscription);
 
 // Admin routes - Works with both user and admin tokens
+router.get('/stats', protectWithAdminFallback, getSubscriptionStats);
 router.get('/', protectWithAdminFallback, getSubscriptions);
 router.put('/:id', protectWithAdminFallback, updateSubscription);
 router.delete('/:id', protectWithAdminFallback, deleteSubscription);
