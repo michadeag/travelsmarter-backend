@@ -1402,6 +1402,19 @@ async function initializeApp() {
       console.warn('⚠️ Error seeding affiliate partners:', err.message);
     });
 
+    // Tracks which one-off broadcast templates each user has already received,
+    // so the same broadcast is never sent to the same user twice.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS broadcast_sends (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL,
+        template_id VARCHAR(100) NOT NULL,
+        sent_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, template_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_broadcast_sends_template ON broadcast_sends(template_id);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
     // Seed default email sequence (first run), then sync templates from code
     await emailSequenceService.seedEmailSequence().catch(err => {
       console.warn('⚠️ Error seeding email templates:', err.message);
