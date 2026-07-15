@@ -37,6 +37,7 @@ const broadcastRoutes = require('./routes/broadcastRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
 const affiliateRoutes = require('./routes/affiliateRoutes');
 const affiliateController = require('./controllers/affiliateController');
+const referralRoutes = require('./routes/referralRoutes');
 const hiddenGemRoutes = require('./routes/hiddenGemRoutes');
 const flightAlertRoutes = require('./routes/flightAlertRoutes');
 const { runDailyPriceCheck } = require('./services/flightPriceService');
@@ -173,6 +174,7 @@ app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/broadcast', broadcastRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/affiliate', affiliateRoutes);
+app.use('/api/referrals', referralRoutes);
 app.use('/api/hidden-gem', hiddenGemRoutes);
 app.use('/api/flight-alerts', flightAlertRoutes);
 app.use('/api/travel-ai', require('./routes/travelAiRoutes'));
@@ -1177,6 +1179,55 @@ async function initializeApp() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_wordpress_posts_posted_at ON wordpress_posts(posted_at DESC);
+
+      -- Referral partners (bloggers/YouTubers recruited to promote TravelSmarter —
+      -- distinct from affiliate_partners, which are outbound links TO other companies)
+      CREATE TABLE IF NOT EXISTS referral_partners (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        referral_code VARCHAR(50) UNIQUE NOT NULL,
+        channel_type VARCHAR(50) DEFAULT 'other',
+        website_url TEXT,
+        audience_size VARCHAR(100),
+        status VARCHAR(20) DEFAULT 'pending',
+        stripe_connect_account_id VARCHAR(255),
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_referral_partners_code ON referral_partners(referral_code);
+      CREATE INDEX IF NOT EXISTS idx_referral_partners_status ON referral_partners(status);
+
+      CREATE TABLE IF NOT EXISTS referral_clicks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        referral_code VARCHAR(50) NOT NULL,
+        partner_id UUID REFERENCES referral_partners(id),
+        source_page TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_referral_clicks_code ON referral_clicks(referral_code);
+
+      -- One-time commission per converted paying customer (100% of first month's
+      -- revenue, per business decision) — eligible for payout 14 days after the
+      -- charge, to cover the refund/chargeback window.
+      CREATE TABLE IF NOT EXISTS referral_conversions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        partner_id UUID NOT NULL REFERENCES referral_partners(id),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        tier VARCHAR(50) NOT NULL,
+        commission_amount DECIMAL(10, 2) NOT NULL,
+        stripe_payment_intent_id VARCHAR(255),
+        status VARCHAR(20) DEFAULT 'pending',
+        eligible_at TIMESTAMP NOT NULL,
+        paid_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(partner_id, user_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_referral_conversions_partner ON referral_conversions(partner_id);
+      CREATE INDEX IF NOT EXISTS idx_referral_conversions_status ON referral_conversions(status);
+
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by_code VARCHAR(50);
     `;
 
     try {
@@ -1545,6 +1596,20 @@ app.listen(PORT, () => {
   }
   maybeRunHackUpdate();
   setInterval(maybeRunHackUpdate, 6 * 60 * 60 * 1000); // re-check every 6h
+
+  // Referral commission eligibility — flips 'pending' conversions to
+  // 'eligible' once their 14-day refund/chargeback hold has passed, so the
+  // admin dashboard can see what's actually payable.
+  console.log('💸 Referral eligibility scheduler started (runs every 6h)');
+  const referralService = require('./services/referralService');
+  setInterval(async () => {
+    try {
+      const count = await referralService.processEligibility();
+      if (count > 0) console.log(`💸 ${count} referral conversion(s) marked eligible for payout`);
+    } catch (error) {
+      console.error('❌ Error in referral eligibility scheduler:', error);
+    }
+  }, 6 * 60 * 60 * 1000);
 });
 
 // Initialize app in background (non-blocking)

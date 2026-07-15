@@ -147,7 +147,7 @@ exports.resetPassword = async (req, res) => {
 // @access Public
 exports.signup = async (req, res) => {
   try {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName, referralCode } = req.body;
 
     // Validate input
     if (!email || !password) {
@@ -176,10 +176,10 @@ exports.signup = async (req, res) => {
 
     // Create user
     const newUser = await pool.query(
-      `INSERT INTO users (email, password_hash, first_name, last_name, subscription_tier, last_login)
-       VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+      `INSERT INTO users (email, password_hash, first_name, last_name, subscription_tier, last_login, referred_by_code)
+       VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, $6)
        RETURNING id, email, first_name, last_name, subscription_tier, created_at`,
-      [email.toLowerCase(), hashedPassword, firstName || '', lastName || '', 'free']
+      [email.toLowerCase(), hashedPassword, firstName || '', lastName || '', 'free', referralCode || null]
     );
 
     const user = newUser.rows[0];

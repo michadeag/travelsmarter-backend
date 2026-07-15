@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const emailService = require('../services/emailService');
+const referralService = require('../services/referralService');
 
 // Pricing configuration
 const PRICING = {
@@ -234,7 +235,7 @@ async function handleCheckoutSessionCompleted(session) {
   try {
     // Get user details for email
     const userResult = await pool.query(
-      'SELECT id, email, first_name FROM users WHERE id = $1',
+      'SELECT id, email, first_name, referred_by_code FROM users WHERE id = $1',
       [userId]
     );
 
@@ -280,6 +281,19 @@ async function handleCheckoutSessionCompleted(session) {
        VALUES ($1, $2, $3, 'completed', $4)`,
       [userId, session.payment_intent, firstChargeAmount, tier]
     );
+
+    // Attribute a one-time referral commission (100% of this first charge) if
+    // this user signed up through an approved partner's link. Only fires here,
+    // on the first checkout — not on renewal invoices — since the commission
+    // is one-time, not recurring.
+    referralService.recordConversion({
+      userId,
+      userEmail: user.email,
+      referralCode: user.referred_by_code,
+      tier,
+      chargeAmount: firstChargeAmount,
+      paymentIntentId: session.payment_intent,
+    }).catch(err => console.error('Referral conversion attribution failed:', err.message));
 
     // Update promo code usage if applicable
     if (session.metadata.promoCode) {
