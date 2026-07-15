@@ -5,6 +5,7 @@ const sgMail = require('@sendgrid/mail');
 const { protectWithAdminFallback } = require('../middleware/auth');
 const pool = require('../config/database');
 const referralService = require('../services/referralService');
+const outreachSequenceService = require('../services/outreachSequenceService');
 
 const CHANNEL_TYPES = ['blog', 'youtube', 'pinterest', 'instagram', 'newsletter', 'other'];
 const PROSPECT_STATUSES = ['new', 'contacted', 'replied', 'converted', 'declined', 'bounced'];
@@ -298,6 +299,31 @@ router.post('/admin/campaigns/send', protectWithAdminFallback, async (req, res) 
     });
   } catch (error) {
     console.error('Send outreach campaign error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// @desc The fixed 3-step sequence content, for the admin UI to preview
+// @route GET /api/outreach/admin/sequence/steps
+router.get('/admin/sequence/steps', protectWithAdminFallback, async (req, res) => {
+  res.status(200).json({ success: true, steps: outreachSequenceService.SEQUENCE_STEPS });
+});
+
+// @desc Enroll selected prospects in the 3-step sequence — sends step 1
+// immediately, and the scheduler in server.js sends steps 2/3 automatically
+// on the configured day gaps, stopping for anyone whose status moves away
+// from 'contacted' (i.e. they replied, declined, converted, or bounced).
+// @route POST /api/outreach/admin/sequence/enroll
+router.post('/admin/sequence/enroll', protectWithAdminFallback, async (req, res) => {
+  try {
+    const { prospectIds } = req.body;
+    if (!Array.isArray(prospectIds) || prospectIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'prospectIds must be a non-empty array' });
+    }
+    const result = await outreachSequenceService.enrollProspects(prospectIds);
+    res.status(200).json({ success: true, ...result });
+  } catch (error) {
+    console.error('Enroll outreach sequence error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

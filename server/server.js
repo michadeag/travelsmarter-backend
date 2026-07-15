@@ -1271,6 +1271,15 @@ async function initializeApp() {
         UNIQUE(campaign_id, prospect_id)
       );
       CREATE INDEX IF NOT EXISTS idx_outreach_sends_campaign ON outreach_sends(campaign_id);
+
+      -- Sequence automation state: sequence_step is how many steps have been
+      -- sent so far (0 = not enrolled), last_step_sent_at gates the next
+      -- follow-up's wait period. Automation only ever touches prospects still
+      -- in status='contacted' — any other status (replied/declined/etc.)
+      -- stops it, since that's set manually by whoever reads the reply.
+      ALTER TABLE outreach_prospects ADD COLUMN IF NOT EXISTS sequence_step INTEGER DEFAULT 0;
+      ALTER TABLE outreach_prospects ADD COLUMN IF NOT EXISTS enrolled_at TIMESTAMP;
+      ALTER TABLE outreach_prospects ADD COLUMN IF NOT EXISTS last_step_sent_at TIMESTAMP;
     `;
 
     try {
@@ -1653,6 +1662,24 @@ app.listen(PORT, () => {
       console.error('❌ Error in referral eligibility scheduler:', error);
     }
   }, 6 * 60 * 60 * 1000);
+
+  // Outreach sequence follow-ups — sends the day-2/day-4 steps automatically
+  // to prospects still in status='contacted' (anyone who replied, declined,
+  // converted, or bounced is excluded by that same check, which is what
+  // stops the automation for them). Runs on boot too since it's gated by a
+  // durable DB timestamp (last_step_sent_at), not an in-memory schedule.
+  console.log('📮 Outreach sequence scheduler started (runs every 6h)');
+  const outreachSequenceService = require('./services/outreachSequenceService');
+  async function runOutreachSequenceCheck() {
+    try {
+      const result = await outreachSequenceService.processSequenceFollowUps();
+      if (result.sent > 0) console.log(`📮 Outreach sequence: ${result.sent} follow-up(s) sent`);
+    } catch (error) {
+      console.error('❌ Error in outreach sequence scheduler:', error);
+    }
+  }
+  runOutreachSequenceCheck();
+  setInterval(runOutreachSequenceCheck, 6 * 60 * 60 * 1000);
 });
 
 // Initialize app in background (non-blocking)
