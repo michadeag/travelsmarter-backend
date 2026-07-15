@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mediumService = require('../services/mediumService');
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 router.get('/status', async (req, res) => {
   try {
@@ -15,7 +16,7 @@ router.get('/status', async (req, res) => {
   }
 });
 
-router.post('/reload-settings', async (req, res) => {
+router.post('/reload-settings', protectWithAdminFallback, async (req, res) => {
   try {
     mediumService.userId = null;
     const configured = await mediumService.loadSettings();
@@ -25,7 +26,7 @@ router.post('/reload-settings', async (req, res) => {
   }
 });
 
-router.post('/publish', async (req, res) => {
+router.post('/publish', protectWithAdminFallback, async (req, res) => {
   try {
     const result = await mediumService.createAndPost();
     res.json({ success: true, ...result });
@@ -52,7 +53,7 @@ router.get('/recent-posts', async (req, res) => {
 });
 
 // POST /api/medium/generate — generate article + image for manual copy-paste
-router.post('/generate', async (req, res) => {
+router.post('/generate', protectWithAdminFallback, async (req, res) => {
   try {
     const { topicIndex } = req.body;
     const result = await mediumService.generateForManual(topicIndex ?? null);
@@ -63,7 +64,7 @@ router.post('/generate', async (req, res) => {
 });
 
 // POST /api/medium/log-manual — mark a generated article as posted
-router.post('/log-manual', async (req, res) => {
+router.post('/log-manual', protectWithAdminFallback, async (req, res) => {
   try {
     const { dbId, title, body, tags, category, mediumUrl, includeCTA } = req.body;
     if (!dbId && !title) return res.status(400).json({ success: false, error: 'dbId or title required' });
@@ -74,7 +75,7 @@ router.post('/log-manual', async (req, res) => {
   }
 });
 
-router.post('/scheduler/start', async (req, res) => {
+router.post('/scheduler/start', protectWithAdminFallback, async (req, res) => {
   try {
     await mediumService.loadSettings();
     const result = mediumService.startScheduler();
@@ -84,7 +85,7 @@ router.post('/scheduler/start', async (req, res) => {
   }
 });
 
-router.post('/scheduler/stop', async (req, res) => {
+router.post('/scheduler/stop', protectWithAdminFallback, async (req, res) => {
   try {
     const result = mediumService.stopScheduler();
     res.json({ success: true, ...result });

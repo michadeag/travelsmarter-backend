@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const wordpressService = require('../services/wordpressService');
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 router.get('/status', async (req, res) => {
   try {
@@ -15,7 +16,7 @@ router.get('/status', async (req, res) => {
   }
 });
 
-router.post('/reload-settings', async (req, res) => {
+router.post('/reload-settings', protectWithAdminFallback, async (req, res) => {
   try {
     const configured = await wordpressService.loadSettings();
     res.json({ success: true, configured });
@@ -25,7 +26,7 @@ router.post('/reload-settings', async (req, res) => {
 });
 
 // Test connection with current credentials
-router.post('/test-connection', async (req, res) => {
+router.post('/test-connection', protectWithAdminFallback, async (req, res) => {
   try {
     await wordpressService.loadSettings();
     const result = await wordpressService.testConnection();
@@ -36,7 +37,7 @@ router.post('/test-connection', async (req, res) => {
   }
 });
 
-router.post('/publish', async (req, res) => {
+router.post('/publish', protectWithAdminFallback, async (req, res) => {
   try {
     const { topicIndex } = req.body;
     const result = await wordpressService.createAndPost(
@@ -49,7 +50,7 @@ router.post('/publish', async (req, res) => {
   }
 });
 
-router.post('/scheduler/start', async (req, res) => {
+router.post('/scheduler/start', protectWithAdminFallback, async (req, res) => {
   try {
     await wordpressService.loadSettings();
     const result = wordpressService.startScheduler();
@@ -59,7 +60,7 @@ router.post('/scheduler/start', async (req, res) => {
   }
 });
 
-router.post('/scheduler/stop', async (req, res) => {
+router.post('/scheduler/stop', protectWithAdminFallback, async (req, res) => {
   try {
     const result = wordpressService.stopScheduler();
     res.json({ success: true, ...result });

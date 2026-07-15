@@ -262,17 +262,6 @@
             <button type="submit" class="login-btn" id="login-btn">Sign In</button>
         </form>
 
-        <div class="divider">Demo Credentials</div>
-
-        <div class="demo-info">
-            <h4>Test Admin Account</h4>
-            <p>Email: <code>admin@travelsmarter.com</code></p>
-            <p>Password: <code>DemoPassword123!</code></p>
-            <p style="margin-top: 10px; font-size: 0.85em; color: #666;">
-                Note: In production, use strong passwords and enable 2FA
-            </p>
-        </div>
-
         <div class="settings-link">
             <a href="#" onclick="openSettings()">API Settings</a>
         </div>
@@ -336,30 +325,32 @@
             btn.disabled = true;
 
             try {
-                // For demo purposes, accept the demo credentials
-                // In production, this would call the backend API
-                if (email === 'admin@travelsmarter.com' && password === 'DemoPassword123!') {
-                    // Simulate API call delay
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                const response = await fetch(`${API_URL}/api/admin-auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
 
-                    // Store credentials
-                    const token = 'demo_token_' + Date.now();
-                    localStorage.setItem('adminToken', token);
-                    localStorage.setItem('adminName', 'Admin');
-                    localStorage.setItem('apiUrl', API_URL);
+                const data = await response.json();
 
-                    if (remember) {
-                        localStorage.setItem('rememberMe', 'true');
-                    }
-
-                    showAlert('Login successful! Redirecting...', 'success');
-
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 500);
-                } else {
-                    showAlert('Invalid email or password', 'error');
+                if (!response.ok) {
+                    showAlert(data.message || 'Invalid email or password', 'error');
+                    return;
                 }
+
+                localStorage.setItem('adminToken', data.token);
+                localStorage.setItem('adminName', data.admin?.firstName || data.admin?.email || 'Admin');
+                localStorage.setItem('apiUrl', API_URL);
+
+                if (remember) {
+                    localStorage.setItem('rememberMe', 'true');
+                }
+
+                showAlert('Login successful! Redirecting...', 'success');
+
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 500);
             } catch (error) {
                 showAlert('Login failed. Please try again.', 'error');
             } finally {

@@ -37,8 +37,8 @@ function requirePaid(req, res, next) {
   next();
 }
 
-// GET /api/flight-alerts/diag â€” check config without auth
-router.get('/diag', async (req, res) => {
+// GET /api/flight-alerts/diag — admin-only config check (not used by any live page)
+router.get('/diag', protectWithAdminFallback, async (req, res) => {
   const key = process.env.SERPAPI_KEY;
   if (!key) return res.json({ configured: false, error: 'SERPAPI_KEY not set' });
   try {
@@ -56,7 +56,8 @@ router.get('/diag', async (req, res) => {
   }
 });
 
-// GET /api/flight-alerts/check-price â€” live price lookup (no auth required for preview)
+// GET /api/flight-alerts/check-price — live price lookup, intentionally public:
+// used by the homepage's price-check widget (index.html) before signup.
 router.get('/check-price', async (req, res) => {
   try {
     const { origin, destination, travel_month } = req.query;

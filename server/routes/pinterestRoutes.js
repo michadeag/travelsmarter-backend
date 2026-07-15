@@ -3,11 +3,12 @@ const router = express.Router();
 const pinterestService = require('../services/pinterestService');
 const axios = require('axios');
 const pool = require('../config/database');
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 const PINTEREST_REDIRECT = 'https://api.travelsmarterapp.com/api/pinterest/callback';
 
 // OAuth URL
-router.get('/auth-url', async (req, res) => {
+router.get('/auth-url', protectWithAdminFallback, async (req, res) => {
   try {
     const r = await pool.query(`SELECT value FROM settings WHERE key = 'pinterest_app_id'`);
     const appId = r.rows[0]?.value;
@@ -52,7 +53,7 @@ router.get('/callback', async (req, res) => {
 });
 
 // Load boards
-router.get('/boards', async (req, res) => {
+router.get('/boards', protectWithAdminFallback, async (req, res) => {
   try {
     await pinterestService.loadSettings();
     const token = pinterestService.accessToken;
@@ -73,7 +74,7 @@ router.get('/boards', async (req, res) => {
 });
 
 // Select a board
-router.post('/select-board', async (req, res) => {
+router.post('/select-board', protectWithAdminFallback, async (req, res) => {
   try {
     const { boardId, boardName } = req.body;
     if (!boardId) return res.status(400).json({ success: false, error: 'boardId required' });
@@ -108,7 +109,7 @@ router.get('/topics', async (req, res) => {
 });
 
 // Generate pin for copy-paste
-router.post('/generate', async (req, res) => {
+router.post('/generate', protectWithAdminFallback, async (req, res) => {
   res.setTimeout(120000); // 2 min timeout for image generation
   try {
     const { topicIndex } = req.body;
@@ -124,7 +125,7 @@ router.post('/generate', async (req, res) => {
 });
 
 // Mark as manually posted
-router.post('/log-manual', async (req, res) => {
+router.post('/log-manual', protectWithAdminFallback, async (req, res) => {
   try {
     const { dbId, pinUrl } = req.body;
     if (!dbId) return res.status(400).json({ success: false, error: 'dbId required' });
@@ -144,7 +145,7 @@ router.get('/recent-posts', async (req, res) => {
   }
 });
 
-router.post('/reload-settings', async (req, res) => {
+router.post('/reload-settings', protectWithAdminFallback, async (req, res) => {
   try {
     await pinterestService.loadSettings();
     res.json({ success: true });

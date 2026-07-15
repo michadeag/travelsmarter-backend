@@ -44,7 +44,7 @@ router.get('/status', async (req, res) => {
  * Reload Twitter settings from database and reinitialize service
  * Admin only
  */
-router.post('/reload-settings', async (req, res) => {
+router.post('/reload-settings', verifyAdminToken, requireAdminRole(['admin']), async (req, res) => {
   try {
     const pool = require('../config/database');
 
@@ -96,7 +96,7 @@ router.post('/reload-settings', async (req, res) => {
  * Post a random travel tip
  * Admin only
  */
-router.post('/post-random', async (req, res) => {
+router.post('/post-random', verifyAdminToken, requireAdminRole(['admin']), async (req, res) => {
   if (!twitterService.isConfigured()) {
     return res.status(400).json({
       success: false,
@@ -135,7 +135,7 @@ router.post('/post-random', async (req, res) => {
  * Post tip from specific category
  * Admin only
  */
-router.post('/post-category', async (req, res) => {
+router.post('/post-category', verifyAdminToken, requireAdminRole(['admin']), async (req, res) => {
   const { category } = req.body;
 
   if (!category) {
@@ -237,7 +237,7 @@ router.post('/post-custom', verifyAdminToken, requireAdminRole(['admin']), async
  * GET /api/twitter/db-test
  * Test DB write for twitter_posts — debug only
  */
-router.get('/db-test', async (req, res) => {
+router.get('/db-test', verifyAdminToken, requireAdminRole(['admin']), async (req, res) => {
   const pool = require('../config/database');
   try {
     // Check table exists and columns
@@ -334,7 +334,7 @@ router.get('/tips/categories', (req, res) => {
  * Start scheduler with specific configuration
  * Admin only
  */
-router.post('/scheduler/start', (req, res) => {
+router.post('/scheduler/start', verifyAdminToken, requireAdminRole(['admin']), (req, res) => {
   const { schedule = 'recommended', times } = req.body;
 
   if (!twitterService.isConfigured()) {
@@ -419,7 +419,7 @@ router.post('/scheduler/start', (req, res) => {
  * Stop all scheduled jobs
  * Admin only
  */
-router.post('/scheduler/stop', (req, res) => {
+router.post('/scheduler/stop', verifyAdminToken, requireAdminRole(['admin']), (req, res) => {
   try {
     twitterScheduler.stopAllJobs();
     // Persist stopped state to DB

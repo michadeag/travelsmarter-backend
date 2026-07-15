@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const quoraService = require('../services/quoraService');
 const pool = require('../config/database');
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 router.get('/status', async (req, res) => {
   try {
@@ -25,7 +26,7 @@ router.get('/topics', async (req, res) => {
 });
 
 // New copy-paste generate endpoint
-router.post('/generate', async (req, res) => {
+router.post('/generate', protectWithAdminFallback, async (req, res) => {
   try {
     const { topicIndex } = req.body;
     const result = await quoraService.generatePost(
@@ -38,7 +39,7 @@ router.post('/generate', async (req, res) => {
 });
 
 // Mark as manually posted
-router.post('/log-manual', async (req, res) => {
+router.post('/log-manual', protectWithAdminFallback, async (req, res) => {
   try {
     const { dbId, postUrl } = req.body;
     if (!dbId) return res.status(400).json({ success: false, error: 'dbId required' });

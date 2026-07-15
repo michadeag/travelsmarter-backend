@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const slideshareService = require('../services/slideshareService');
 const pool = require('../config/database');
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 router.get('/status', async (req, res) => {
   try {
@@ -24,7 +25,7 @@ router.get('/topics', async (req, res) => {
   }
 });
 
-router.post('/generate', async (req, res) => {
+router.post('/generate', protectWithAdminFallback, async (req, res) => {
   res.setTimeout(120000);
   try {
     const { topicIndex } = req.body;
@@ -39,7 +40,7 @@ router.post('/generate', async (req, res) => {
 });
 
 // Mark as posted AND optionally save as goodie
-router.post('/log-manual', async (req, res) => {
+router.post('/log-manual', protectWithAdminFallback, async (req, res) => {
   try {
     const { dbId, postUrl, saveAsGoodie, goodieTitle, goodieDescription, goodieCategory } = req.body;
     if (!dbId) return res.status(400).json({ success: false, error: 'dbId required' });
@@ -74,7 +75,7 @@ router.get('/recent-posts', async (req, res) => {
 // ─── GOODIES LIBRARY ─────────────────────────────────────────────────────────
 
 // Get all goodies (admin)
-router.get('/goodies', async (req, res) => {
+router.get('/goodies', protectWithAdminFallback, async (req, res) => {
   try {
     const r = await pool.query(`SELECT * FROM goodies ORDER BY created_at DESC`);
     res.json({ success: true, goodies: r.rows });
@@ -84,7 +85,7 @@ router.get('/goodies', async (req, res) => {
 });
 
 // Add goodie manually
-router.post('/goodies', async (req, res) => {
+router.post('/goodies', protectWithAdminFallback, async (req, res) => {
   try {
     const { title, description, slideshareUrl, pdfUrl, category, thumbnailUrl } = req.body;
     if (!title) return res.status(400).json({ success: false, error: 'title required' });
@@ -100,7 +101,7 @@ router.post('/goodies', async (req, res) => {
 });
 
 // Update goodie
-router.put('/goodies/:id', async (req, res) => {
+router.put('/goodies/:id', protectWithAdminFallback, async (req, res) => {
   try {
     const { title, description, slideshareUrl, pdfUrl, category, thumbnailUrl, active } = req.body;
     await pool.query(
@@ -114,7 +115,7 @@ router.put('/goodies/:id', async (req, res) => {
 });
 
 // Delete goodie
-router.delete('/goodies/:id', async (req, res) => {
+router.delete('/goodies/:id', protectWithAdminFallback, async (req, res) => {
   try {
     await pool.query(`DELETE FROM goodies WHERE id=$1`, [req.params.id]);
     res.json({ success: true });

@@ -3,11 +3,12 @@ const router = express.Router();
 const linkedinService = require('../services/linkedinService');
 const axios = require('axios');
 const pool = require('../config/database');
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 const LINKEDIN_REDIRECT = 'https://api.travelsmarterapp.com/api/linkedin/callback';
 
 // Step 1: Generate OAuth URL
-router.get('/auth-url', async (req, res) => {
+router.get('/auth-url', protectWithAdminFallback, async (req, res) => {
   try {
     const r = await pool.query(`SELECT value FROM settings WHERE key = 'linkedin_client_id'`);
     const clientId = r.rows[0]?.value;
@@ -85,7 +86,7 @@ router.get('/topics', async (req, res) => {
 });
 
 // Generate post text only (no posting)
-router.post('/generate', async (req, res) => {
+router.post('/generate', protectWithAdminFallback, async (req, res) => {
   try {
     await linkedinService.loadSettings();
     const { topicIndex } = req.body;
@@ -117,7 +118,7 @@ router.post('/generate', async (req, res) => {
 });
 
 // Mark manually posted
-router.post('/log-manual', async (req, res) => {
+router.post('/log-manual', protectWithAdminFallback, async (req, res) => {
   try {
     const { dbId, text, category, linkedinUrl, includeCTA } = req.body;
     if (dbId) {
@@ -151,7 +152,7 @@ router.get('/status', async (req, res) => {
   }
 });
 
-router.post('/reload-settings', async (req, res) => {
+router.post('/reload-settings', protectWithAdminFallback, async (req, res) => {
   try {
     const configured = await linkedinService.loadSettings();
     res.json({ success: true, configured });
@@ -160,7 +161,7 @@ router.post('/reload-settings', async (req, res) => {
   }
 });
 
-router.post('/post-article', async (req, res) => {
+router.post('/post-article', protectWithAdminFallback, async (req, res) => {
   try {
     await linkedinService.loadSettings();
     const c = linkedinService.credentials;
@@ -186,7 +187,7 @@ router.get('/recent-posts', async (req, res) => {
   }
 });
 
-router.post('/scheduler/start', async (req, res) => {
+router.post('/scheduler/start', protectWithAdminFallback, async (req, res) => {
   try {
     await linkedinService.loadSettings();
     const result = linkedinService.startScheduler();
@@ -196,7 +197,7 @@ router.post('/scheduler/start', async (req, res) => {
   }
 });
 
-router.post('/scheduler/stop', async (req, res) => {
+router.post('/scheduler/stop', protectWithAdminFallback, async (req, res) => {
   try {
     const result = linkedinService.stopScheduler();
     res.json({ success: true, ...result });
@@ -206,7 +207,7 @@ router.post('/scheduler/stop', async (req, res) => {
 });
 
 // Fetch and save person URN from current access token
-router.post('/fetch-urn', async (req, res) => {
+router.post('/fetch-urn', protectWithAdminFallback, async (req, res) => {
   try {
     await linkedinService.loadSettings();
     const token = linkedinService.credentials.accessToken;

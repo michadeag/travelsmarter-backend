@@ -195,64 +195,6 @@ app.use('/api/quora', quoraRoutes);
 app.use('/api/blogger', bloggerRoutes);
 app.use('/api/youtube', youtubeRoutes);
 
-// One-time password reset for known admin user
-app.post('/api/diag/reset-password', async (req, res) => {
-  const { email, newPassword, secret } = req.body;
-  if (secret !== 'ts-diag-2026') return res.status(403).json({ error: 'Forbidden' });
-  try {
-    const bcrypt = require('bcryptjs');
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(newPassword, salt);
-    const result = await pool.query(
-      `UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2 RETURNING id, email`,
-      [hash, email]
-    );
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'User not found', email });
-    }
-    res.json({ success: true, message: `Password reset for ${email}` });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Diagnostic endpoint - updated Jun 6 21:57
-app.get('/api/test/version', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Backend updated at 21:57',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// Test endpoint to verify routes are loading
-app.get('/api/promos/test', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Promo test endpoint working!',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// Test email templates endpoint (inline - to verify it works)
-app.get('/api/email-templates/test', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Email templates endpoint is working!',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// Test sequences endpoint (inline - to verify it works)
-app.get('/api/email-templates/sequences-test', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Email sequences endpoint is working!',
-    data: [],
-    timestamp: new Date().toISOString(),
-  });
-});
-
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -260,103 +202,6 @@ app.get('/health', (req, res) => {
     message: 'TravelSmarter API is running',
     timestamp: new Date().toISOString(),
   });
-});
-
-// Test email system endpoint - for debugging
-app.get('/api/test/email-system', async (req, res) => {
-  try {
-    console.log('🔍 Testing email system...');
-
-    // Check if SendGrid is configured
-    const sendgridConfigured = !!process.env.SENDGRID_API_KEY;
-    console.log(`SendGrid configured: ${sendgridConfigured}`);
-
-    // Check if email sequence exists
-    const sequenceResult = await pool.query(
-      `SELECT id, name FROM email_sequences WHERE name = 'Welcome Email Sequence' LIMIT 1`
-    );
-    const sequenceExists = sequenceResult.rows.length > 0;
-    console.log(`Email sequence exists: ${sequenceExists}`);
-
-    if (sequenceExists) {
-      console.log(`Sequence ID: ${sequenceResult.rows[0].id}`);
-    }
-
-    // Check email templates
-    const templatesResult = await pool.query(
-      `SELECT COUNT(*) as count FROM email_templates`
-    );
-    const templateCount = parseInt(templatesResult.rows[0].count);
-    console.log(`Email templates: ${templateCount}`);
-
-    // Check scheduled emails
-    const scheduledResult = await pool.query(
-      `SELECT status, COUNT(*) as count FROM scheduled_emails GROUP BY status`
-    );
-    const scheduledByStatus = {};
-    scheduledResult.rows.forEach(row => {
-      scheduledByStatus[row.status] = parseInt(row.count);
-    });
-    console.log(`Scheduled emails by status:`, scheduledByStatus);
-
-    // Check pending emails due to send
-    const pendingDueResult = await pool.query(`
-      SELECT COUNT(*) as count FROM scheduled_emails
-      WHERE status = 'pending' AND scheduled_at <= NOW()
-    `);
-    const pendingDue = parseInt(pendingDueResult.rows[0].count);
-    console.log(`Pending emails due to send: ${pendingDue}`);
-
-    // Get some sample scheduled emails
-    const sampleResult = await pool.query(`
-      SELECT se.id, u.email, et.day, et.subject, se.scheduled_at, se.status
-      FROM scheduled_emails se
-      JOIN users u ON se.user_id = u.id
-      JOIN email_templates et ON se.template_id = et.id
-      ORDER BY se.created_at DESC
-      LIMIT 5
-    `);
-
-    res.status(200).json({
-      success: true,
-      message: 'Email system diagnostics',
-      diagnostics: {
-        sendgridConfigured,
-        sequenceExists,
-        templateCount,
-        scheduledByStatus,
-        pendingDue,
-        recentScheduledEmails: sampleResult.rows
-      }
-    });
-  } catch (error) {
-    console.error('Error in email system test:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error testing email system',
-      error: error.message
-    });
-  }
-});
-
-// Manually trigger pending email sending (for testing)
-app.post('/api/test/send-pending-emails', async (req, res) => {
-  try {
-    console.log('🔄 Manually triggering pending email send...');
-    const result = await emailSequenceService.sendPendingEmails();
-    res.status(200).json({
-      success: true,
-      message: 'Triggered pending email sending',
-      result
-    });
-  } catch (error) {
-    console.error('Error sending pending emails:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error sending pending emails',
-      error: error.message
-    });
-  }
 });
 
 // Home endpoint
@@ -1363,20 +1208,29 @@ async function initializeApp() {
       console.warn('⚠️ Medium service init failed (non-blocking):', mediumErr.message);
     }
 
-    // Seed Instagram + Cloudinary credentials into settings table
+    // Seed Instagram + Cloudinary credentials into settings table from env vars,
+    // if provided — these used to be hardcoded literals here, which meant a
+    // live Instagram token and the full Cloudinary key/secret were committed
+    // to a public GitHub repo. Rotate those old values on Instagram/Cloudinary
+    // and set the new ones as INSTAGRAM_ACCESS_TOKEN / INSTAGRAM_ACCOUNT_ID /
+    // CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET in
+    // the deploy environment.
     try {
       const igCreds = [
-        ['instagram_access_token', 'EAAU3XCOp3KUBRoOIU9qICc0sab6MxejleB3JxyuXfPRsLjCCHpHxYTfpGouFPfo8EEH5aqhmLaZAiDjnN42qZBRCBwZCPeQMFJBFVCyC18yZBgiq6uF46Rxjlxaxt6I1U9sm8WPk5oNtGdxRk4KHMw0YQZCKZBzvukJUJzVn2IOzpZAvi40xHr9XfMftaYxyNNC'],
-        ['instagram_account_id', '17841477818287005'],
-        ['cloudinary_cloud_name', 'djb1xbhts'],
-        ['cloudinary_api_key', '141873827238578'],
-        ['cloudinary_api_secret', '4EUJQe2Jtk1NaatdWmzpq-6tk84'],
-      ];
+        ['instagram_access_token', process.env.INSTAGRAM_ACCESS_TOKEN],
+        ['instagram_account_id', process.env.INSTAGRAM_ACCOUNT_ID],
+        ['cloudinary_cloud_name', process.env.CLOUDINARY_CLOUD_NAME],
+        ['cloudinary_api_key', process.env.CLOUDINARY_API_KEY],
+        ['cloudinary_api_secret', process.env.CLOUDINARY_API_SECRET],
+      ].filter(([, value]) => !!value);
       for (const [key, value] of igCreds) {
         await pool.query(
           `INSERT INTO settings (key, value, type) VALUES ($1, $2, 'text') ON CONFLICT (key) DO UPDATE SET value = $2`,
           [key, value]
         );
+      }
+      if (igCreds.length === 0) {
+        console.warn('⚠️ Instagram/Cloudinary env vars not set — skipping settings seed (see server.js comment)');
       }
     } catch (seedErr) {
       console.warn('⚠️ Instagram credentials seed failed:', seedErr.message);

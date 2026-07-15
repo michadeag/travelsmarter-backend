@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const { sendDealAlert } = require('../services/digestService');
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 // Public: get active deals (frontend does tier-gating)
 router.get('/', async (req, res) => {
@@ -36,7 +37,7 @@ router.post('/:id/click', async (req, res) => {
 });
 
 // Admin: get all deals including inactive
-router.get('/admin', async (req, res) => {
+router.get('/admin', protectWithAdminFallback, async (req, res) => {
   try {
     const r = await pool.query(`SELECT * FROM partner_deals ORDER BY sort_order ASC, created_at DESC`);
     res.json({ success: true, deals: r.rows });
@@ -46,7 +47,7 @@ router.get('/admin', async (req, res) => {
 });
 
 // Admin: create deal
-router.post('/', async (req, res) => {
+router.post('/', protectWithAdminFallback, async (req, res) => {
   try {
     const { title, description, category, discountBadge, affiliateUrl, logoUrl, isVerified, sortOrder } = req.body;
     if (!title || !affiliateUrl) return res.status(400).json({ success: false, error: 'title and affiliateUrl required' });
@@ -65,7 +66,7 @@ router.post('/', async (req, res) => {
 });
 
 // Admin: update deal
-router.put('/:id', async (req, res) => {
+router.put('/:id', protectWithAdminFallback, async (req, res) => {
   try {
     const { title, description, category, discountBadge, affiliateUrl, logoUrl, isVerified, isActive, sortOrder } = req.body;
     await pool.query(
@@ -80,7 +81,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Admin: delete deal
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', protectWithAdminFallback, async (req, res) => {
   try {
     await pool.query(`DELETE FROM partner_deals WHERE id=$1`, [req.params.id]);
     res.json({ success: true });

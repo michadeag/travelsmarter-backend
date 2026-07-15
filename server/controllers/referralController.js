@@ -1,7 +1,7 @@
 const pool = require('../config/database');
 const referralService = require('../services/referralService');
 
-const CHANNEL_TYPES = ['blog', 'youtube', 'instagram', 'newsletter', 'other'];
+const CHANNEL_TYPES = ['blog', 'youtube', 'pinterest', 'instagram', 'newsletter', 'other'];
 const PARTNER_STATUSES = ['pending', 'approved', 'rejected', 'suspended'];
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://travelsmarterapp.com';
 

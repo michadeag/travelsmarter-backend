@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const instagramService = require('../services/instagramService');
 const pool = require('../config/database');
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 router.get('/status', async (req, res) => {
   try {
@@ -24,7 +25,7 @@ router.get('/topics', async (req, res) => {
 });
 
 // Generate preview (caption + image) without posting
-router.post('/generate', async (req, res) => {
+router.post('/generate', protectWithAdminFallback, async (req, res) => {
   res.setTimeout(180000);
   try {
     await instagramService.loadSettings();
@@ -40,7 +41,7 @@ router.post('/generate', async (req, res) => {
 });
 
 // Publish a previously generated draft
-router.post('/publish', async (req, res) => {
+router.post('/publish', protectWithAdminFallback, async (req, res) => {
   res.setTimeout(60000);
   try {
     await instagramService.loadSettings();

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bloggerService = require('../services/bloggerService');
 const pool = require('../config/database');
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 router.get('/status', async (req, res) => {
   try {
@@ -15,7 +16,7 @@ router.get('/status', async (req, res) => {
   }
 });
 
-router.post('/reload-settings', async (req, res) => {
+router.post('/reload-settings', protectWithAdminFallback, async (req, res) => {
   try {
     await bloggerService.loadSettings();
     res.json({ success: true });
@@ -25,7 +26,7 @@ router.post('/reload-settings', async (req, res) => {
 });
 
 // Step 1: get OAuth2 URL for user to visit
-router.get('/auth-url', async (req, res) => {
+router.get('/auth-url', protectWithAdminFallback, async (req, res) => {
   try {
     await bloggerService.loadSettings();
     const authUrl = bloggerService.getAuthUrl();
@@ -50,7 +51,7 @@ router.get('/callback', async (req, res) => {
 });
 
 // Step 2: exchange auth code for refresh token
-router.post('/exchange-token', async (req, res) => {
+router.post('/exchange-token', protectWithAdminFallback, async (req, res) => {
   try {
     const { code } = req.body;
     if (!code) return res.status(400).json({ success: false, error: 'Authorization code required' });
@@ -63,7 +64,7 @@ router.post('/exchange-token', async (req, res) => {
 });
 
 // Fetch blogs for this Google account (after connecting)
-router.get('/blogs', async (req, res) => {
+router.get('/blogs', protectWithAdminFallback, async (req, res) => {
   try {
     await bloggerService.loadSettings();
     const accessToken = await bloggerService.getAccessToken();
@@ -74,7 +75,7 @@ router.get('/blogs', async (req, res) => {
   }
 });
 
-router.post('/select-blog', async (req, res) => {
+router.post('/select-blog', protectWithAdminFallback, async (req, res) => {
   try {
     const { blogId, blogName } = req.body;
     if (!blogId) return res.status(400).json({ success: false, error: 'blogId required' });
@@ -87,7 +88,7 @@ router.post('/select-blog', async (req, res) => {
   }
 });
 
-router.post('/publish', async (req, res) => {
+router.post('/publish', protectWithAdminFallback, async (req, res) => {
   try {
     const { topicIndex } = req.body;
     const result = await bloggerService.createAndPost(
@@ -99,7 +100,7 @@ router.post('/publish', async (req, res) => {
   }
 });
 
-router.post('/scheduler/start', async (req, res) => {
+router.post('/scheduler/start', protectWithAdminFallback, async (req, res) => {
   try {
     await bloggerService.loadSettings();
     const result = bloggerService.startScheduler();
@@ -109,7 +110,7 @@ router.post('/scheduler/start', async (req, res) => {
   }
 });
 
-router.post('/scheduler/stop', async (req, res) => {
+router.post('/scheduler/stop', protectWithAdminFallback, async (req, res) => {
   try {
     const result = bloggerService.stopScheduler();
     res.json({ success: true, ...result });

@@ -2,14 +2,10 @@ const express = require('express');
 const router = express.Router();
 const SettingsController = require('../controllers/settingsController');
 const { triggerHackDigest } = require('../services/digestService');
-
-/**
- * Admin Settings Routes
- * All routes are public for now (add authentication middleware if needed)
- */
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 // Trigger 3-day hack digest email campaign
-router.post('/trigger-hack-digest', async (req, res) => {
+router.post('/trigger-hack-digest', protectWithAdminFallback, async (req, res) => {
   try {
     const result = await triggerHackDigest();
     res.json(result);
@@ -18,7 +14,7 @@ router.post('/trigger-hack-digest', async (req, res) => {
   }
 });
 
-// Health check for admin routes
+// Health check for admin routes — harmless, left public for uptime checks
 router.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
@@ -26,49 +22,23 @@ router.get('/health', (req, res) => {
   });
 });
 
-// Debug endpoint - check all settings in database
-router.get('/debug/settings', async (req, res) => {
-  try {
-    const pool = require('../config/database');
-    const result = await pool.query('SELECT key, value, type, description FROM settings ORDER BY key');
-
-    res.status(200).json({
-      success: true,
-      message: `Found ${result.rows.length} settings in database`,
-      settings: result.rows.map(row => ({
-        key: row.key,
-        value: row.value ? `${row.value.substring(0, 20)}...` : '(empty)',
-        type: row.type,
-        description: row.description
-      })),
-      allSettings: result.rows // Full data for debugging
-    });
-  } catch (error) {
-    console.error('Debug settings error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
 // Get all settings
-router.get('/settings', SettingsController.getAllSettings);
+router.get('/settings', protectWithAdminFallback, SettingsController.getAllSettings);
 
 // Get single setting
-router.get('/settings/:key', SettingsController.getSetting);
+router.get('/settings/:key', protectWithAdminFallback, SettingsController.getSetting);
 
 // Update single setting
-router.post('/settings', SettingsController.updateSetting);
+router.post('/settings', protectWithAdminFallback, SettingsController.updateSetting);
 
 // Update multiple settings at once
-router.post('/settings/batch/update', SettingsController.updateMultipleSettings);
+router.post('/settings/batch/update', protectWithAdminFallback, SettingsController.updateMultipleSettings);
 
 // Delete setting
-router.delete('/settings/:key', SettingsController.deleteSetting);
+router.delete('/settings/:key', protectWithAdminFallback, SettingsController.deleteSetting);
 
 // Get recent activities for dashboard
-router.get('/activities', async (req, res) => {
+router.get('/activities', protectWithAdminFallback, async (req, res) => {
   try {
     const pool = require('../config/database');
     const { limit = 10 } = req.query;
@@ -108,7 +78,7 @@ router.get('/activities', async (req, res) => {
 });
 
 // Analytics summary — user metrics + all social media platform stats
-router.get('/analytics/summary', async (req, res) => {
+router.get('/analytics/summary', protectWithAdminFallback, async (req, res) => {
   try {
     const pool = require('../config/database');
 
@@ -237,34 +207,6 @@ router.get('/config/stripe-key', async (req, res) => {
       success: false,
       stripepublishableKey: null,
       error: 'Failed to retrieve Stripe key: ' + error.message
-    });
-  }
-});
-
-// Public endpoint to get SendGrid key
-router.get('/config/sendgrid-key', async (req, res) => {
-  try {
-    const result = await require('../config/database').query(
-      'SELECT value FROM settings WHERE key = $1',
-      ['sendgrid_api_key']
-    );
-
-    if (result.rows.length === 0 || !result.rows[0].value) {
-      return res.status(404).json({
-        success: false,
-        error: 'SendGrid key not configured'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      sendgridApiKey: result.rows[0].value
-    });
-  } catch (error) {
-    console.error('Get SendGrid key error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve SendGrid configuration'
     });
   }
 });

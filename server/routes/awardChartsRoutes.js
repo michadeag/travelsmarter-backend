@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const { protect } = require('../middleware/auth');
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 // ⚠️ IMPORTANT: Specific routes MUST come BEFORE wildcard /:id route!
 
@@ -225,21 +225,8 @@ router.get('/:id', async (req, res) => {
 });
 
 // Admin: Add/Update award chart
-router.post('/admin/upsert', protect, async (req, res) => {
+router.post('/admin/upsert', protectWithAdminFallback, async (req, res) => {
   try {
-    // Check if user is admin (can expand this check)
-    const userResult = await pool.query(
-      'SELECT subscription_tier FROM users WHERE id = $1',
-      [req.user.id]
-    );
-
-    if (userResult.rows[0].subscription_tier !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Only admins can update award charts'
-      });
-    }
-
     const {
       airline_name,
       origin_airport,
@@ -300,20 +287,8 @@ router.post('/admin/upsert', protect, async (req, res) => {
 });
 
 // Admin: Bulk update award charts
-router.post('/admin/bulk-upsert', protect, async (req, res) => {
+router.post('/admin/bulk-upsert', protectWithAdminFallback, async (req, res) => {
   try {
-    const userResult = await pool.query(
-      'SELECT subscription_tier FROM users WHERE id = $1',
-      [req.user.id]
-    );
-
-    if (userResult.rows[0].subscription_tier !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Only admins can update award charts'
-      });
-    }
-
     const charts = req.body.charts; // Array of chart objects
 
     if (!Array.isArray(charts) || charts.length === 0) {

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const redditService = require('../services/redditService');
 const pool = require('../config/database');
+const { protectWithAdminFallback } = require('../middleware/auth');
 
 // GET /api/reddit/topics
 router.get('/topics', async (req, res) => {
@@ -22,7 +23,7 @@ router.get('/topics', async (req, res) => {
 });
 
 // POST /api/reddit/generate — generate post text only, no posting
-router.post('/generate', async (req, res) => {
+router.post('/generate', protectWithAdminFallback, async (req, res) => {
   try {
     await redditService.loadSettings();
     const { topicIndex } = req.body;
@@ -54,7 +55,7 @@ router.post('/generate', async (req, res) => {
 });
 
 // POST /api/reddit/log-manual — mark as manually posted
-router.post('/log-manual', async (req, res) => {
+router.post('/log-manual', protectWithAdminFallback, async (req, res) => {
   try {
     const { dbId, title, body, subreddit, category, redditUrl, includeCTA } = req.body;
     if (dbId) {
@@ -90,7 +91,7 @@ router.get('/status', async (req, res) => {
 });
 
 // POST /api/reddit/reload-settings — call after saving credentials
-router.post('/reload-settings', async (req, res) => {
+router.post('/reload-settings', protectWithAdminFallback, async (req, res) => {
   try {
     redditService.accessToken = null; // force token refresh
     const configured = await redditService.loadSettings();
@@ -101,7 +102,7 @@ router.post('/reload-settings', async (req, res) => {
 });
 
 // POST /api/reddit/post-article — generate + post immediately
-router.post('/post-article', async (req, res) => {
+router.post('/post-article', protectWithAdminFallback, async (req, res) => {
   try {
     const { subreddit } = req.body; // optional override
     const result = await redditService.createAndPost(subreddit || null);
@@ -122,7 +123,7 @@ router.get('/recent-posts', async (req, res) => {
 });
 
 // POST /api/reddit/scheduler/start
-router.post('/scheduler/start', async (req, res) => {
+router.post('/scheduler/start', protectWithAdminFallback, async (req, res) => {
   try {
     await redditService.loadSettings();
     const result = redditService.startScheduler();
@@ -133,7 +134,7 @@ router.post('/scheduler/start', async (req, res) => {
 });
 
 // POST /api/reddit/scheduler/stop
-router.post('/scheduler/stop', async (req, res) => {
+router.post('/scheduler/stop', protectWithAdminFallback, async (req, res) => {
   try {
     const result = redditService.stopScheduler();
     res.json({ success: true, ...result });

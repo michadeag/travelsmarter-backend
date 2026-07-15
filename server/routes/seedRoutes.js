@@ -8,6 +8,9 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const { protectWithAdminFallback } = require('../middleware/auth');
+
+router.use(protectWithAdminFallback);
 
 /**
  * Reset community discussions (delete all posts and replies)

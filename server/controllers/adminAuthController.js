@@ -2,7 +2,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-12345';
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required — refusing to sign admin tokens with a hardcoded fallback');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRY = '24h'; // Admin tokens expire in 24 hours
 
 /**
