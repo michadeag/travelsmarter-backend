@@ -38,6 +38,7 @@ const webhookRoutes = require('./routes/webhookRoutes');
 const affiliateRoutes = require('./routes/affiliateRoutes');
 const affiliateController = require('./controllers/affiliateController');
 const referralRoutes = require('./routes/referralRoutes');
+const outreachRoutes = require('./routes/outreachRoutes');
 const hiddenGemRoutes = require('./routes/hiddenGemRoutes');
 const flightAlertRoutes = require('./routes/flightAlertRoutes');
 const { runDailyPriceCheck } = require('./services/flightPriceService');
@@ -175,6 +176,7 @@ app.use('/api/broadcast', broadcastRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/affiliate', affiliateRoutes);
 app.use('/api/referrals', referralRoutes);
+app.use('/api/outreach', outreachRoutes);
 app.use('/api/hidden-gem', hiddenGemRoutes);
 app.use('/api/flight-alerts', flightAlertRoutes);
 app.use('/api/travel-ai', require('./routes/travelAiRoutes'));
@@ -1228,6 +1230,47 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_referral_conversions_status ON referral_conversions(status);
 
       ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by_code VARCHAR(50);
+
+      -- Outreach prospecting: candidates for the referral partner program,
+      -- found manually or via the YouTube Data API search, before they've
+      -- agreed to anything. A prospect becomes a referral_partners row once
+      -- they reply positively and an admin converts them.
+      CREATE TABLE IF NOT EXISTS outreach_prospects (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        channel_type VARCHAR(50) DEFAULT 'other',
+        url TEXT,
+        contact_email VARCHAR(255),
+        audience_size VARCHAR(100),
+        source VARCHAR(50) DEFAULT 'manual',
+        status VARCHAR(20) DEFAULT 'new',
+        notes TEXT,
+        referral_partner_id UUID REFERENCES referral_partners(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_outreach_prospects_status ON outreach_prospects(status);
+      CREATE INDEX IF NOT EXISTS idx_outreach_prospects_channel_type ON outreach_prospects(channel_type);
+
+      CREATE TABLE IF NOT EXISTS outreach_campaigns (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        subject TEXT NOT NULL,
+        body_html TEXT NOT NULL,
+        sent_count INTEGER DEFAULT 0,
+        failed_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS outreach_sends (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        campaign_id UUID NOT NULL REFERENCES outreach_campaigns(id) ON DELETE CASCADE,
+        prospect_id UUID NOT NULL REFERENCES outreach_prospects(id) ON DELETE CASCADE,
+        status VARCHAR(20) NOT NULL,
+        error_message TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(campaign_id, prospect_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_outreach_sends_campaign ON outreach_sends(campaign_id);
     `;
 
     try {
