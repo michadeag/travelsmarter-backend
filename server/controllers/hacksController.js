@@ -213,7 +213,7 @@ exports.getHacksByModule = async (req, res) => {
 
     // Fetch hacks from database
     const result = await pool.query(
-      'SELECT id, module_id, title, description, category, difficulty, is_active, created_at FROM hacks WHERE module_id = $1 AND is_active = true ORDER BY created_at DESC',
+      'SELECT id, module_id, title, description, category, difficulty, is_active, usage_count, avg_savings_euros, success_rate, created_at FROM hacks WHERE module_id = $1 AND is_active = true ORDER BY created_at DESC',
       [moduleIdNum]
     );
 
