@@ -11,6 +11,8 @@ const { verifyAdminToken, requireAdminRole } = require('../middleware/adminAuth'
 router.post('/login', adminAuthController.login);
 router.post('/verify-token', verifyAdminToken, adminAuthController.verifyToken);
 router.post('/logout', adminAuthController.logout);
+router.post('/forgot-password', adminAuthController.forgotPassword);
+router.post('/reset-password', adminAuthController.resetPassword);
 
 // Initialize first admin (only works if no admins exist)
 router.post('/init', async (req, res) => {
@@ -28,6 +30,8 @@ router.post('/init', async (req, res) => {
         role VARCHAR(50) DEFAULT 'moderator',
         is_active BOOLEAN DEFAULT true,
         last_login TIMESTAMP,
+        password_reset_token VARCHAR(255),
+        password_reset_expires TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

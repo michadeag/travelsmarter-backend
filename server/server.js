@@ -1125,6 +1125,17 @@ async function initializeApp() {
       ALTER TABLE outreach_prospects ADD COLUMN IF NOT EXISTS sequence_step INTEGER DEFAULT 0;
       ALTER TABLE outreach_prospects ADD COLUMN IF NOT EXISTS enrolled_at TIMESTAMP;
       ALTER TABLE outreach_prospects ADD COLUMN IF NOT EXISTS last_step_sent_at TIMESTAMP;
+
+      -- Admin password reset support (admin_users is created separately by
+      -- /api/admin-auth/init, so this table may not exist yet on a fresh DB —
+      -- guard the ALTERs so initializeApp() doesn't fail before /init has run).
+      DO $$
+      BEGIN
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'admin_users') THEN
+          ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255);
+          ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP;
+        END IF;
+      END $$;
     `;
 
     try {
