@@ -342,12 +342,15 @@ async function handleSubscriptionUpdated(subscription) {
     [status, userId]
   );
 
-  // Update subscription with billing dates
+  // Update subscription with billing dates (cancel_at_period_end kept in sync
+  // with Stripe here too, since this fires whenever it changes on Stripe's
+  // side — not just from our own /cancel endpoint)
   await pool.query(
     `UPDATE subscriptions
-     SET status = $1, current_period_start = $2, current_period_end = $3, updated_at = CURRENT_TIMESTAMP
-     WHERE stripe_subscription_id = $4`,
-    [status, currentPeriodStart, currentPeriodEnd, subscription.id]
+     SET status = $1, current_period_start = $2, current_period_end = $3,
+         cancel_at_period_end = $4, updated_at = CURRENT_TIMESTAMP
+     WHERE stripe_subscription_id = $5`,
+    [status, currentPeriodStart, currentPeriodEnd, subscription.cancel_at_period_end, subscription.id]
   );
 
   console.log(`📝 Subscription updated for user ${userId} - status ${status}, next billing: ${currentPeriodEnd}`);
@@ -468,7 +471,7 @@ exports.getCurrentSubscription = async (req, res) => {
     const userId = req.user.id;
 
     const subscriptionResult = await pool.query(
-      `SELECT id, user_id, tier, status, price_monthly, current_period_start, current_period_end
+      `SELECT id, user_id, tier, status, price_monthly, current_period_start, current_period_end, cancel_at_period_end
        FROM subscriptions
        WHERE user_id = $1
        ORDER BY created_at DESC
@@ -489,6 +492,7 @@ exports.getCurrentSubscription = async (req, res) => {
           priceMonthly: subscription.price_monthly,
           currentPeriodStart: subscription.current_period_start,
           currentPeriodEnd: subscription.current_period_end,
+          cancelAtPeriodEnd: subscription.cancel_at_period_end,
         },
       });
     }
@@ -554,6 +558,12 @@ exports.cancelSubscription = async (req, res) => {
     await stripe.subscriptions.update(subscriptionId, {
       cancel_at_period_end: true,
     });
+
+    await pool.query(
+      `UPDATE subscriptions SET cancel_at_period_end = true, updated_at = CURRENT_TIMESTAMP
+       WHERE stripe_subscription_id = $1`,
+      [subscriptionId]
+    );
 
     res.status(200).json({
       success: true,
