@@ -8,7 +8,6 @@ if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required — refusing to sign admin tokens with a hardcoded fallback');
 }
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRY = '24h'; // Admin tokens expire in 24 hours
 const APP_URL = process.env.FRONTEND_URL || 'https://travelsmarterapp.com';
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com';
 
@@ -17,7 +16,7 @@ const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com';
  */
 async function login(req, res) {
   try {
-    const { email, password } = req.body;
+    const { email, password, remember } = req.body;
 
     // Validate input
     if (!email || !password) {
@@ -66,7 +65,8 @@ async function login(req, res) {
       });
     }
 
-    // Generate JWT token
+    // Generate JWT token — "remember me" gets a long-lived token, otherwise
+    // a short one so the admin is naturally signed out again soon
     const token = jwt.sign(
       {
         id: admin.id,
@@ -75,7 +75,7 @@ async function login(req, res) {
         type: 'admin'
       },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRY }
+      { expiresIn: remember ? '30d' : '12h' }
     );
 
     // Update last login
