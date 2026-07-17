@@ -145,8 +145,8 @@ exports.createCheckoutSession = async (req, res) => {
       ],
       mode: 'subscription',
       ...(stripeCouponId ? { discounts: [{ coupon: stripeCouponId }] } : {}),
-      success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/checkout?tier=${tier}`,
+      success_url: `${process.env.FRONTEND_URL}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/checkout.html?tier=${tier}`,
       metadata: {
         userId: userId,
         tier: tier,
