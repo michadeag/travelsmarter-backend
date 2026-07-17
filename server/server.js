@@ -666,6 +666,15 @@ async function initializeApp() {
       -- Create index for payment history lookups
       CREATE INDEX IF NOT EXISTS idx_payment_history_user_id ON payment_history(user_id);
 
+      -- Idempotency guard for Stripe webhook processing — Stripe delivers
+      -- "at least once", so a stripe_event_id already in here means we've
+      -- already processed it and should skip reprocessing.
+      CREATE TABLE IF NOT EXISTS processed_webhook_events (
+        stripe_event_id VARCHAR(255) PRIMARY KEY,
+        event_type VARCHAR(100),
+        processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- Email sequences table (e.g., "10-day welcome sequence")
       CREATE TABLE IF NOT EXISTS email_sequences (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

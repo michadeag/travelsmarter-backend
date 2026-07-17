@@ -192,29 +192,46 @@ exports.handleWebhook = async (req, res) => {
   }
 
   try {
-    switch (event.type) {
-      case 'checkout.session.completed':
-        await handleCheckoutSessionCompleted(event.data.object);
-        break;
+    // Idempotency guard: Stripe delivers "at least once" and can send the
+    // same event twice (e.g. if our response was slow). Claim the event id
+    // first — if it's already claimed, this is a redelivery of something we
+    // already processed, so skip straight to a 200 without redoing anything.
+    const claimed = await claimWebhookEvent(event.id, event.type);
+    if (!claimed) {
+      console.log(`Skipping duplicate webhook event ${event.id} (${event.type}) — already processed`);
+      return res.status(200).json({ received: true, duplicate: true });
+    }
 
-      case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event.data.object);
-        break;
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed':
+          await handleCheckoutSessionCompleted(event.data.object);
+          break;
 
-      case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(event.data.object);
-        break;
+        case 'customer.subscription.updated':
+          await handleSubscriptionUpdated(event.data.object);
+          break;
 
-      case 'invoice.payment_succeeded':
-        await handlePaymentSucceeded(event.data.object);
-        break;
+        case 'customer.subscription.deleted':
+          await handleSubscriptionDeleted(event.data.object);
+          break;
 
-      case 'invoice.payment_failed':
-        await handlePaymentFailed(event.data.object);
-        break;
+        case 'invoice.payment_succeeded':
+          await handlePaymentSucceeded(event.data.object);
+          break;
 
-      default:
-        console.log(`Unhandled event type: ${event.type}`);
+        case 'invoice.payment_failed':
+          await handlePaymentFailed(event.data.object);
+          break;
+
+        default:
+          console.log(`Unhandled event type: ${event.type}`);
+      }
+    } catch (handlerError) {
+      // Processing failed — release the claim so a Stripe retry actually
+      // reprocesses this event instead of being skipped as "already done".
+      await releaseWebhookEventClaim(event.id);
+      throw handlerError;
     }
 
     res.status(200).json({ received: true });
@@ -226,6 +243,26 @@ exports.handleWebhook = async (req, res) => {
     });
   }
 };
+
+// Atomically marks a Stripe event id as being processed. Returns true if
+// this is the first time we've seen it (caller should proceed), or false
+// if it was already claimed (caller should skip — it's a redelivery).
+async function claimWebhookEvent(eventId, eventType) {
+  const result = await pool.query(
+    `INSERT INTO processed_webhook_events (stripe_event_id, event_type)
+     VALUES ($1, $2)
+     ON CONFLICT (stripe_event_id) DO NOTHING
+     RETURNING stripe_event_id`,
+    [eventId, eventType]
+  );
+  return result.rows.length > 0;
+}
+
+// Undoes claimWebhookEvent after a failed processing attempt, so the event
+// is no longer considered "done" and a Stripe retry will reprocess it.
+async function releaseWebhookEventClaim(eventId) {
+  await pool.query(`DELETE FROM processed_webhook_events WHERE stripe_event_id = $1`, [eventId]);
+}
 
 // Runs fn inside a single DB transaction, committing on success or rolling
 // back on any error — so a partial failure never leaves half-applied writes
