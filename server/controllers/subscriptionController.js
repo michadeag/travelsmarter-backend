@@ -227,97 +227,110 @@ exports.handleWebhook = async (req, res) => {
   }
 };
 
+// Runs fn inside a single DB transaction, committing on success or rolling
+// back on any error — so a partial failure never leaves half-applied writes
+// (e.g. a user marked active with no matching subscription row). Re-throws
+// after rollback so callers (the webhook handler) see the failure and can
+// respond non-2xx, which makes Stripe retry delivery automatically.
+async function withTransaction(fn) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function handleCheckoutSessionCompleted(session) {
   const userId = session.metadata.userId;
   const tier = session.metadata.tier;
   const subscriptionId = session.subscription;
 
-  try {
-    // Get user details for email
-    const userResult = await pool.query(
-      'SELECT id, email, first_name, referred_by_code FROM users WHERE id = $1',
-      [userId]
-    );
+  const userResult = await pool.query(
+    'SELECT id, email, first_name, referred_by_code FROM users WHERE id = $1',
+    [userId]
+  );
 
-    if (userResult.rows.length === 0) {
-      console.error(`User not found: ${userId}`);
-      return;
-    }
+  if (userResult.rows.length === 0) {
+    console.error(`User not found: ${userId}`);
+    return;
+  }
 
-    const user = userResult.rows[0];
+  const user = userResult.rows[0];
 
-    // Get subscription details from Stripe to get billing dates
-    const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
-    const currentPeriodStart = new Date(stripeSubscription.current_period_start * 1000);
-    const currentPeriodEnd = new Date(stripeSubscription.current_period_end * 1000);
+  // Get subscription details from Stripe to get billing dates
+  const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const currentPeriodStart = new Date(stripeSubscription.current_period_start * 1000);
+  const currentPeriodEnd = new Date(stripeSubscription.current_period_end * 1000);
 
-    // Update user subscription
-    await pool.query(
+  // Use the session's actual charged total (session.amount_total, in cents),
+  // not the flat tier price, since a promo coupon may have discounted this
+  // specific first invoice.
+  const firstChargeAmount = typeof session.amount_total === 'number'
+    ? session.amount_total / 100
+    : PRICING[tier].priceMonthly;
+
+  // Activating the user, creating their subscription record, logging the
+  // payment, and counting the promo code use must all succeed together —
+  // otherwise a genuine failure mid-way could leave a user marked active
+  // with no subscription row. If this throws, the webhook responds non-2xx
+  // and Stripe retries; nothing partial is left behind to retry against.
+  await withTransaction(async (client) => {
+    await client.query(
       `UPDATE users
        SET subscription_tier = $1, subscription_status = 'active', stripe_subscription_id = $2
        WHERE id = $3`,
       [tier, subscriptionId, userId]
     );
 
-    // Create subscription record with billing dates
-    const subscriptionResult = await pool.query(
+    await client.query(
       `INSERT INTO subscriptions (user_id, tier, status, price_monthly, stripe_subscription_id, current_period_start, current_period_end)
-       VALUES ($1, $2, 'active', $3, $4, $5, $6)
-       RETURNING current_period_end`,
+       VALUES ($1, $2, 'active', $3, $4, $5, $6)`,
       [userId, tier, PRICING[tier].priceMonthly, subscriptionId, currentPeriodStart, currentPeriodEnd]
     );
 
-    const nextBillingDate = subscriptionResult.rows[0].current_period_end;
-
-    // Log payment — use the session's actual charged total (session.amount_total,
-    // in cents), not the flat tier price, since a promo coupon may have
-    // discounted this specific first invoice.
-    const firstChargeAmount = typeof session.amount_total === 'number'
-      ? session.amount_total / 100
-      : PRICING[tier].priceMonthly;
-
-    await pool.query(
+    await client.query(
       `INSERT INTO payment_history (user_id, stripe_payment_intent_id, amount, status, subscription_tier)
        VALUES ($1, $2, $3, 'completed', $4)`,
       [userId, session.payment_intent, firstChargeAmount, tier]
     );
 
-    // Attribute a one-time referral commission (100% of this first charge) if
-    // this user signed up through an approved partner's link. Only fires here,
-    // on the first checkout — not on renewal invoices — since the commission
-    // is one-time, not recurring.
-    referralService.recordConversion({
-      userId,
-      userEmail: user.email,
-      referralCode: user.referred_by_code,
-      tier,
-      chargeAmount: firstChargeAmount,
-      paymentIntentId: session.payment_intent,
-    }).catch(err => console.error('Referral conversion attribution failed:', err.message));
-
-    // Update promo code usage if applicable
     if (session.metadata.promoCode) {
-      await pool.query(
+      await client.query(
         `UPDATE promo_codes SET current_uses = current_uses + 1
          WHERE code = $1`,
         [session.metadata.promoCode.toUpperCase()]
       );
     }
+  });
 
-    // Send subscription confirmation email
-    await emailService.sendSubscriptionConfirmation(
-      {
-        email: user.email,
-        firstName: user.first_name
-      },
-      tier,
-      nextBillingDate
-    );
+  console.log(`✅ Subscription activated for user ${userId} - tier ${tier}`);
 
-    console.log(`✅ Subscription activated for user ${userId} - tier ${tier}`);
-  } catch (error) {
-    console.error(`Error in handleCheckoutSessionCompleted for user ${userId}:`, error);
-  }
+  // Best-effort side effects — must not block or retry the whole webhook
+  // event if they fail, since the billing state above already committed.
+  referralService.recordConversion({
+    userId,
+    userEmail: user.email,
+    referralCode: user.referred_by_code,
+    tier,
+    chargeAmount: firstChargeAmount,
+    paymentIntentId: session.payment_intent,
+  }).catch(err => console.error('Referral conversion attribution failed:', err.message));
+
+  emailService.sendSubscriptionConfirmation(
+    {
+      email: user.email,
+      firstName: user.first_name
+    },
+    tier,
+    currentPeriodEnd
+  ).catch(err => console.error('Subscription confirmation email failed:', err.message));
 }
 
 async function handleSubscriptionUpdated(subscription) {
@@ -336,22 +349,25 @@ async function handleSubscriptionUpdated(subscription) {
   const currentPeriodStart = new Date(subscription.current_period_start * 1000);
   const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
 
-  // Update user status
-  await pool.query(
-    `UPDATE users SET subscription_status = $1 WHERE id = $2`,
-    [status, userId]
-  );
+  // Both updates must land together — a mismatch between users.subscription_status
+  // and subscriptions.status would confuse tier-gating and the account page.
+  await withTransaction(async (client) => {
+    await client.query(
+      `UPDATE users SET subscription_status = $1 WHERE id = $2`,
+      [status, userId]
+    );
 
-  // Update subscription with billing dates (cancel_at_period_end kept in sync
-  // with Stripe here too, since this fires whenever it changes on Stripe's
-  // side — not just from our own /cancel endpoint)
-  await pool.query(
-    `UPDATE subscriptions
-     SET status = $1, current_period_start = $2, current_period_end = $3,
-         cancel_at_period_end = $4, updated_at = CURRENT_TIMESTAMP
-     WHERE stripe_subscription_id = $5`,
-    [status, currentPeriodStart, currentPeriodEnd, subscription.cancel_at_period_end, subscription.id]
-  );
+    // cancel_at_period_end kept in sync with Stripe here too, since this
+    // fires whenever it changes on Stripe's side — not just from our own
+    // /cancel endpoint.
+    await client.query(
+      `UPDATE subscriptions
+       SET status = $1, current_period_start = $2, current_period_end = $3,
+           cancel_at_period_end = $4, updated_at = CURRENT_TIMESTAMP
+       WHERE stripe_subscription_id = $5`,
+      [status, currentPeriodStart, currentPeriodEnd, subscription.cancel_at_period_end, subscription.id]
+    );
+  });
 
   console.log(`📝 Subscription updated for user ${userId} - status ${status}, next billing: ${currentPeriodEnd}`);
 }
@@ -359,108 +375,96 @@ async function handleSubscriptionUpdated(subscription) {
 async function handleSubscriptionDeleted(subscription) {
   const customerId = subscription.customer;
 
-  try {
-    // Find user by Stripe customer ID
-    const userResult = await pool.query(
-      'SELECT id, email, first_name FROM users WHERE stripe_customer_id = $1',
-      [customerId]
-    );
+  // Find user by Stripe customer ID
+  const userResult = await pool.query(
+    'SELECT id, email, first_name FROM users WHERE stripe_customer_id = $1',
+    [customerId]
+  );
 
-    if (userResult.rows.length === 0) return;
+  if (userResult.rows.length === 0) return;
 
-    const user = userResult.rows[0];
-    const userId = user.id;
+  const user = userResult.rows[0];
+  const userId = user.id;
 
-    // Downgrade to free tier
-    await pool.query(
-      `UPDATE users SET subscription_tier = 'free', subscription_status = 'inactive' WHERE id = $1`,
-      [userId]
-    );
+  // Downgrade to free tier
+  await pool.query(
+    `UPDATE users SET subscription_tier = 'free', subscription_status = 'inactive' WHERE id = $1`,
+    [userId]
+  );
 
-    // Send subscription cancellation email
-    await emailService.sendSubscriptionCancelled({
-      email: user.email,
-      firstName: user.first_name
-    });
+  console.log(`❌ Subscription cancelled for user ${userId}`);
 
-    console.log(`❌ Subscription cancelled for user ${userId}`);
-  } catch (error) {
-    console.error(`Error in handleSubscriptionDeleted:`, error);
-  }
+  // Best-effort — must not retry the whole event just because the email failed.
+  emailService.sendSubscriptionCancelled({
+    email: user.email,
+    firstName: user.first_name
+  }).catch(err => console.error('Subscription cancelled email failed:', err.message));
 }
 
 async function handlePaymentSucceeded(invoice) {
   const customerId = invoice.customer;
 
-  try {
-    const userResult = await pool.query(
-      'SELECT id, email, first_name, subscription_tier FROM users WHERE stripe_customer_id = $1',
-      [customerId]
-    );
+  const userResult = await pool.query(
+    'SELECT id, email, first_name, subscription_tier FROM users WHERE stripe_customer_id = $1',
+    [customerId]
+  );
 
-    if (userResult.rows.length === 0) return;
+  if (userResult.rows.length === 0) return;
 
-    const user = userResult.rows[0];
-    const userId = user.id;
+  const user = userResult.rows[0];
+  const userId = user.id;
 
-    // Log payment
-    await pool.query(
-      `INSERT INTO payment_history (user_id, stripe_payment_intent_id, amount, status, subscription_tier)
-       VALUES ($1, $2, $3, 'completed', $4)`,
-      [userId, invoice.payment_intent, invoice.amount_paid / 100, user.subscription_tier]
-    );
+  // Log payment
+  await pool.query(
+    `INSERT INTO payment_history (user_id, stripe_payment_intent_id, amount, status, subscription_tier)
+     VALUES ($1, $2, $3, 'completed', $4)`,
+    [userId, invoice.payment_intent, invoice.amount_paid / 100, user.subscription_tier]
+  );
 
-    // Send payment success email
-    await emailService.sendPaymentSuccessful(
-      {
-        email: user.email,
-        firstName: user.first_name
-      },
-      invoice.amount_paid,
-      user.subscription_tier
-    );
+  console.log(`💰 Payment succeeded for user ${userId}`);
 
-    console.log(`💰 Payment succeeded for user ${userId}`);
-  } catch (error) {
-    console.error(`Error in handlePaymentSucceeded:`, error);
-  }
+  // Best-effort — must not retry the whole event just because the email failed.
+  emailService.sendPaymentSuccessful(
+    {
+      email: user.email,
+      firstName: user.first_name
+    },
+    invoice.amount_paid,
+    user.subscription_tier
+  ).catch(err => console.error('Payment successful email failed:', err.message));
 }
 
 async function handlePaymentFailed(invoice) {
   const customerId = invoice.customer;
 
-  try {
-    const userResult = await pool.query(
-      'SELECT id, email, first_name, subscription_tier FROM users WHERE stripe_customer_id = $1',
-      [customerId]
-    );
+  const userResult = await pool.query(
+    'SELECT id, email, first_name, subscription_tier FROM users WHERE stripe_customer_id = $1',
+    [customerId]
+  );
 
-    if (userResult.rows.length === 0) return;
+  if (userResult.rows.length === 0) return;
 
-    const user = userResult.rows[0];
-    const userId = user.id;
+  const user = userResult.rows[0];
+  const userId = user.id;
 
-    // Log failed payment
-    await pool.query(
-      `INSERT INTO payment_history (user_id, stripe_payment_intent_id, amount, status, subscription_tier)
-       VALUES ($1, $2, $3, 'failed', $4)`,
-      [userId, invoice.payment_intent, invoice.amount_paid / 100, user.subscription_tier]
-    );
+  // Log failed payment
+  await pool.query(
+    `INSERT INTO payment_history (user_id, stripe_payment_intent_id, amount, status, subscription_tier)
+     VALUES ($1, $2, $3, 'failed', $4)`,
+    [userId, invoice.payment_intent, invoice.amount_paid / 100, user.subscription_tier]
+  );
 
-    // Send payment failed email
-    await emailService.sendPaymentFailed(
-      {
-        email: user.email,
-        firstName: user.first_name
-      },
-      invoice.amount_paid,
-      user.subscription_tier
-    );
+  console.log(`⚠️ Payment failed for user ${userId}`);
 
-    console.log(`⚠️ Payment failed for user ${userId}`);
-  } catch (error) {
-    console.error(`Error in handlePaymentFailed:`, error);
-  }
+  // Best-effort — must not retry the whole event just because the email failed.
+  emailService.sendPaymentFailed(
+    {
+      email: user.email,
+      firstName: user.first_name
+    },
+    invoice.amount_paid,
+    user.subscription_tier
+  ).catch(err => console.error('Payment failed email failed:', err.message));
 }
 
 // @desc Get user subscription
