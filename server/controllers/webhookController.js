@@ -1,11 +1,54 @@
 const pool = require('../config/database');
+const { EventWebhook } = require('@sendgrid/eventwebhook');
+
+const eventWebhook = new EventWebhook();
 
 // @desc Receive SendGrid Event Webhook events (delivered, open, click, bounce, etc.)
 // @route POST /api/webhooks/sendgrid
-// @access Public (SendGrid POSTs here directly; no auth header available)
+// @access Public (SendGrid POSTs here directly; no auth header available) —
+// verified via SendGrid's Signed Event Webhook signature when configured
+// (enable "Signed Event Webhook Requests" in SendGrid's Event Webhook
+// settings and set SENDGRID_WEBHOOK_VERIFICATION_KEY to the verification
+// key it gives you). Without that env var set, requests are still accepted
+// unverified so this doesn't break email tracking before that's set up.
 exports.handleSendGridEvent = async (req, res) => {
   try {
-    const events = Array.isArray(req.body) ? req.body : [];
+    // req.body is the raw Buffer here (see server.js's express.raw() for
+    // this route) — signature verification needs the exact bytes SendGrid
+    // signed, before any JSON parsing.
+    const rawBody = req.body;
+
+    if (process.env.SENDGRID_WEBHOOK_VERIFICATION_KEY) {
+      const signature = req.get('X-Twilio-Email-Event-Webhook-Signature');
+      const timestamp = req.get('X-Twilio-Email-Event-Webhook-Timestamp');
+
+      // A malformed signature/timestamp makes verifySignature throw rather
+      // than return false — treat that the same as "invalid" instead of
+      // letting it fall through to the generic error handler below.
+      let isValid = false;
+      try {
+        const publicKey = eventWebhook.convertPublicKeyToECDSA(process.env.SENDGRID_WEBHOOK_VERIFICATION_KEY);
+        isValid = Boolean(signature) && Boolean(timestamp) &&
+          eventWebhook.verifySignature(publicKey, rawBody, signature, timestamp);
+      } catch (verifyErr) {
+        console.warn('❌ SendGrid webhook signature verification threw:', verifyErr.message);
+      }
+
+      if (!isValid) {
+        console.warn('❌ Rejected SendGrid webhook: invalid or missing signature');
+        return res.status(401).json({ success: false, error: 'Invalid signature' });
+      }
+    } else {
+      console.warn('⚠️ SENDGRID_WEBHOOK_VERIFICATION_KEY not set — accepting SendGrid webhook without signature verification');
+    }
+
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(rawBody);
+    } catch {
+      return res.status(400).json({ success: false, error: 'Invalid JSON payload' });
+    }
+    const events = Array.isArray(parsedBody) ? parsedBody : [];
 
     for (const event of events) {
       // SendGrid merges customArgs directly into each event object at the

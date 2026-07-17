@@ -74,8 +74,11 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Middleware - Webhook raw body (MUST be before JSON parser)
+// Middleware - Webhook raw body (MUST be before JSON parser) — needed so the
+// signature verification in each webhook handler can check the exact bytes
+// that were signed, not a re-serialized copy of the parsed JSON.
 app.use('/api/subscriptions/webhook', express.raw({type: 'application/json'}));
+app.use('/api/webhooks/sendgrid', express.raw({type: 'application/json'}));
 
 // Middleware - Body parser for all other routes
 app.use(express.json());
