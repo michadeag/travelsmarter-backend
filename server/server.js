@@ -734,6 +734,16 @@ async function initializeApp() {
 
       CREATE INDEX IF NOT EXISTS idx_hack_update_logs_started ON hack_update_logs(started_at);
 
+      -- Hack digest logs table (for the durable weekly digest scheduler —
+      -- lets it survive redeploys without resending the same week's digest)
+      CREATE TABLE IF NOT EXISTS hack_digest_logs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        hacks_count INTEGER DEFAULT 0,
+        users_targeted INTEGER DEFAULT 0,
+        emails_scheduled INTEGER DEFAULT 0,
+        sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- User deal filters table (Elite tier feature for custom alert filtering)
       CREATE TABLE IF NOT EXISTS user_deal_filters (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1525,6 +1535,45 @@ app.listen(PORT, () => {
   }
   maybeRunHackUpdate();
   setInterval(maybeRunHackUpdate, 6 * 60 * 60 * 1000); // re-check every 6h
+
+  // Weekly hack digest — same durable pattern as the hack update scheduler
+  // above: check on boot and every 6h whether 7 days have passed since the
+  // last logged run (per hack_digest_logs), and run if so. Previously this
+  // only ever ran when an admin manually clicked a dashboard button, despite
+  // being intended as a weekly automation — the send_daily_digest setting
+  // existed but nothing ever read it. With no prior log row, dueAt is 0, so
+  // this fires immediately on the very first boot after this deploys.
+  console.log('✨ Hack digest scheduler started (durable, checks every 6h, runs weekly)');
+  const digestService = require('./services/digestService');
+  const HACK_DIGEST_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+  async function maybeRunHackDigest() {
+    try {
+      const result = await pool.query(
+        `SELECT sent_at FROM hack_digest_logs ORDER BY sent_at DESC LIMIT 1`
+      );
+      const lastRun = result.rows[0]?.sent_at;
+      const dueAt = lastRun ? new Date(lastRun).getTime() + HACK_DIGEST_INTERVAL_MS : 0;
+      if (Date.now() >= dueAt) {
+        console.log('✨ Hack digest is due — running now...');
+        const digestResult = await digestService.triggerHackDigest();
+        if (digestResult.success) {
+          await pool.query(
+            `INSERT INTO hack_digest_logs (hacks_count, users_targeted, emails_scheduled) VALUES ($1, $2, $3)`,
+            [digestResult.hacks.length, digestResult.usersTargeted, digestResult.emailsScheduled]
+          );
+          console.log(`✨ Hack digest sent: ${digestResult.hacks.length} hacks to ${digestResult.usersTargeted} users (${digestResult.emailsScheduled} emails scheduled)`);
+        } else {
+          console.warn('✨ Hack digest run did not succeed:', digestResult.error);
+        }
+      } else {
+        console.log(`✨ Hack digest not due yet. Next run: ${new Date(dueAt).toISOString()}`);
+      }
+    } catch (error) {
+      console.error('❌ Error in hack digest scheduler:', error);
+    }
+  }
+  maybeRunHackDigest();
+  setInterval(maybeRunHackDigest, 6 * 60 * 60 * 1000); // re-check every 6h
 
   // Referral commission eligibility — flips 'pending' conversions to
   // 'eligible' once their 14-day refund/chargeback hold has passed, so the
