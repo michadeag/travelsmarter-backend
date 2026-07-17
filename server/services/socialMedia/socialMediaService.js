@@ -68,32 +68,41 @@ class SocialMediaService {
   }
 
   /**
-   * Post to a single platform
+   * Validates and actually posts content to a platform, updating the
+   * post_platforms row with the resulting platform post id. Throws on
+   * failure — callers decide how to log that (insert a new row for an
+   * immediate post, or update an existing scheduled_posts row).
+   */
+  async executePost(post, platform) {
+    const adapter = this.getAdapter(platform);
+
+    const validation = await adapter.validateContent(post);
+    if (!validation.valid) {
+      throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+    }
+
+    const result = await adapter.postContent(post);
+
+    await pool.query(
+      `UPDATE post_platforms SET media_ids = $1 WHERE post_id = $2 AND platform = $3`,
+      [JSON.stringify({ [platform]: result.platform_post_id }), post.id, platform]
+    );
+
+    return result;
+  }
+
+  /**
+   * Post to a single platform right now, logging a new scheduled_posts row
+   * with the outcome ('posted' or 'failed').
    */
   async postToSinglePlatform(post, platform, accountId) {
     try {
-      const adapter = this.getAdapter(platform);
+      const result = await this.executePost(post, platform);
 
-      // Validate content
-      const validation = await adapter.validateContent(post);
-      if (!validation.valid) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
-      }
-
-      // Post content
-      const result = await adapter.postContent(post);
-
-      // Save to database
       await pool.query(
         `INSERT INTO scheduled_posts (post_id, account_id, platform, scheduled_at, posted_at, status)
          VALUES ($1, $2, $3, $4, $5, $6)`,
         [post.id, accountId, platform, new Date(), new Date(), 'posted']
-      );
-
-      // Save platform post ID for analytics
-      await pool.query(
-        `UPDATE post_platforms SET media_ids = $1 WHERE post_id = $2 AND platform = $3`,
-        [JSON.stringify({ [platform]: result.platform_post_id }), post.id, platform]
       );
 
       return {
@@ -105,7 +114,6 @@ class SocialMediaService {
     } catch (error) {
       console.error(`❌ Failed to post to ${platform}:`, error.message);
 
-      // Log error to database
       await pool.query(
         `INSERT INTO scheduled_posts (post_id, account_id, platform, scheduled_at, status, error_message)
          VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -121,11 +129,38 @@ class SocialMediaService {
   }
 
   /**
-   * Post to multiple platforms simultaneously
+   * Queues a post for a future time instead of posting immediately —
+   * inserted as 'pending', picked up later by processDueScheduledPosts().
    */
-  async postToMultiplePlatforms(post, platforms, accountIds = {}) {
+  async scheduleSinglePlatform(post, platform, accountId, scheduledAt) {
+    await pool.query(
+      `INSERT INTO scheduled_posts (post_id, account_id, platform, scheduled_at, status)
+       VALUES ($1, $2, $3, $4, 'pending')`,
+      [post.id, accountId, platform, scheduledAt]
+    );
+    return { success: true, platform, scheduled: true, scheduledAt };
+  }
+
+  /**
+   * Post to multiple platforms — immediately, or queued for scheduledAt if
+   * it's a future timestamp.
+   */
+  async postToMultiplePlatforms(post, platforms, accountIds = {}, scheduledAt = null) {
     try {
       const results = [];
+      const isFutureSchedule = scheduledAt && new Date(scheduledAt).getTime() > Date.now();
+
+      // Each platform posts its own tailored text (from post_platforms),
+      // not the shared base content — otherwise the AI-generated,
+      // per-platform versions would never actually get used.
+      const platformContentResult = await pool.query(
+        `SELECT platform, platform_content FROM post_platforms WHERE post_id = $1`,
+        [post.id]
+      );
+      const platformContentMap = {};
+      for (const row of platformContentResult.rows) {
+        platformContentMap[row.platform] = row.platform_content;
+      }
 
       for (const platform of platforms) {
         // Get account for this platform
@@ -141,8 +176,11 @@ class SocialMediaService {
           continue;
         }
 
-        // Post to platform
-        const result = await this.postToSinglePlatform(post, platform, accountId);
+        const platformPost = { ...post, platform_content: platformContentMap[platform] || post.content };
+
+        const result = isFutureSchedule
+          ? await this.scheduleSinglePlatform(platformPost, platform, accountId, scheduledAt)
+          : await this.postToSinglePlatform(platformPost, platform, accountId);
         results.push(result);
       }
 
@@ -151,6 +189,56 @@ class SocialMediaService {
       console.error('❌ Multi-platform posting failed:', error.message);
       throw error;
     }
+  }
+
+  /**
+   * Posts everything that's due (status='pending' and scheduled_at has
+   * passed), updating each row's own status rather than inserting a new
+   * one. Safe to call anytime — durable against redeploys since it's
+   * gated on each row's own scheduled_at, not an in-memory timer.
+   */
+  async processDueScheduledPosts() {
+    const dueResult = await pool.query(
+      `SELECT sp.id AS scheduled_post_id, sp.platform, sp.post_id,
+              p.title, p.content, p.image_url, p.post_type,
+              pp.platform_content
+       FROM scheduled_posts sp
+       JOIN social_media_posts p ON p.id = sp.post_id
+       LEFT JOIN post_platforms pp ON pp.post_id = sp.post_id AND pp.platform = sp.platform
+       WHERE sp.status = 'pending' AND sp.scheduled_at <= NOW()`
+    );
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const row of dueResult.rows) {
+      const post = {
+        id: row.post_id,
+        title: row.title,
+        content: row.content,
+        image_url: row.image_url,
+        post_type: row.post_type,
+        platform_content: row.platform_content,
+      };
+
+      try {
+        await this.executePost(post, row.platform);
+        await pool.query(
+          `UPDATE scheduled_posts SET status = 'posted', posted_at = NOW() WHERE id = $1`,
+          [row.scheduled_post_id]
+        );
+        sent++;
+      } catch (error) {
+        console.error(`❌ Scheduled post failed (${row.platform}):`, error.message);
+        await pool.query(
+          `UPDATE scheduled_posts SET status = 'failed', error_message = $1 WHERE id = $2`,
+          [error.message, row.scheduled_post_id]
+        );
+        failed++;
+      }
+    }
+
+    return { sent, failed };
   }
 
   /**

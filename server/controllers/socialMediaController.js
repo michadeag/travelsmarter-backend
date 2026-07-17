@@ -4,6 +4,7 @@
  */
 
 const socialMediaService = require('../services/socialMedia/socialMediaService');
+const contentGenerationService = require('../services/socialMedia/contentGenerationService');
 const pool = require('../config/database');
 
 class SocialMediaController {
@@ -55,13 +56,18 @@ class SocialMediaController {
 
       const postId = postResult.rows[0].id;
 
-      // Create platform-specific versions
+      // Create platform-specific versions — one Claude call rewrites the
+      // base content into a tailored version per platform (length, tone,
+      // hashtag conventions); falls back to the original text unchanged
+      // for any platform generation didn't cover.
+      let platformVersions = {};
       if (platforms && platforms.length > 0) {
+        platformVersions = await contentGenerationService.generatePlatformVersions({ title, content }, platforms);
         for (const platform of platforms) {
           await pool.query(
             `INSERT INTO post_platforms (post_id, platform, platform_content)
              VALUES ($1, $2, $3)`,
-            [postId, platform, content]
+            [postId, platform, platformVersions[platform] || content]
           );
         }
       }
@@ -69,6 +75,7 @@ class SocialMediaController {
       res.status(201).json({
         success: true,
         postId,
+        platformVersions,
         message: 'Post created successfully'
       });
     } catch (error) {
@@ -87,7 +94,7 @@ class SocialMediaController {
   static async publishPost(req, res) {
     try {
       const { postId } = req.params;
-      const { platforms, accountIds } = req.body;
+      const { platforms, accountIds, scheduledAt } = req.body;
 
       // Get post details
       const postResult = await pool.query(
@@ -104,11 +111,12 @@ class SocialMediaController {
 
       const post = postResult.rows[0];
 
-      // Publish to platforms
+      // Publish now, or queue for scheduledAt if it's in the future
       const results = await socialMediaService.postToMultiplePlatforms(
         post,
         platforms,
-        accountIds
+        accountIds,
+        scheduledAt
       );
 
       const successful = results.filter(r => r.success);
@@ -237,6 +245,38 @@ class SocialMediaController {
       res.status(500).json({
         success: false,
         message: 'Error removing account',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/social/scheduled
+   * List recent scheduled/posted/failed posts across all platforms, for
+   * the admin dashboard's history view.
+   */
+  static async listScheduledPosts(req, res) {
+    try {
+      const { limit = 50 } = req.query;
+
+      const result = await pool.query(
+        `SELECT sp.id, sp.platform, sp.status, sp.scheduled_at, sp.posted_at, sp.error_message,
+                p.title, p.content
+         FROM scheduled_posts sp
+         JOIN social_media_posts p ON p.id = sp.post_id
+         ORDER BY sp.scheduled_at DESC
+         LIMIT $1`,
+        [limit]
+      );
+
+      res.json({
+        success: true,
+        scheduledPosts: result.rows
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching scheduled posts',
         error: error.message
       });
     }

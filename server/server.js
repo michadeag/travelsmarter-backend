@@ -744,6 +744,104 @@ async function initializeApp() {
         sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      -- Social media automation tables — previously lived in a standalone
+      -- migrations/ script that server.js never ran, and that used
+      -- MySQL-only inline INDEX(...) syntax that isn't valid in Postgres
+      -- (would have failed even if it had been run). Consolidated here to
+      -- match every other table's boot-time creation pattern.
+      CREATE TABLE IF NOT EXISTS social_media_accounts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        platform VARCHAR(50) NOT NULL,
+        account_name VARCHAR(255) NOT NULL,
+        access_token TEXT NOT NULL,
+        refresh_token TEXT,
+        token_expires_at TIMESTAMP,
+        account_data JSONB DEFAULT '{}',
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(platform, account_name)
+      );
+      CREATE INDEX IF NOT EXISTS idx_social_accounts_platform ON social_media_accounts(platform);
+      CREATE INDEX IF NOT EXISTS idx_social_accounts_active ON social_media_accounts(is_active);
+
+      CREATE TABLE IF NOT EXISTS social_media_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(500),
+        content TEXT NOT NULL,
+        post_type VARCHAR(50) DEFAULT 'travel_tip',
+        source_hack_id UUID REFERENCES hacks(id),
+        source_deal_id UUID REFERENCES deals(id),
+        image_url VARCHAR(500),
+        image_filename VARCHAR(255),
+        created_by UUID REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_social_posts_type ON social_media_posts(post_type);
+      CREATE INDEX IF NOT EXISTS idx_social_posts_created ON social_media_posts(created_at);
+
+      CREATE TABLE IF NOT EXISTS post_platforms (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        post_id UUID NOT NULL REFERENCES social_media_posts(id) ON DELETE CASCADE,
+        platform VARCHAR(50) NOT NULL,
+        platform_content TEXT NOT NULL,
+        hashtags TEXT[],
+        media_ids JSONB DEFAULT '{}',
+        character_count INTEGER,
+        estimated_engagement_score DECIMAL(5,2),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(post_id, platform)
+      );
+      CREATE INDEX IF NOT EXISTS idx_post_platforms_post ON post_platforms(post_id);
+      CREATE INDEX IF NOT EXISTS idx_post_platforms_platform ON post_platforms(platform);
+
+      CREATE TABLE IF NOT EXISTS scheduled_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        post_id UUID NOT NULL REFERENCES social_media_posts(id) ON DELETE CASCADE,
+        account_id UUID NOT NULL REFERENCES social_media_accounts(id),
+        platform VARCHAR(50) NOT NULL,
+        scheduled_at TIMESTAMP NOT NULL,
+        posted_at TIMESTAMP,
+        status VARCHAR(50) DEFAULT 'pending',
+        error_message TEXT,
+        retry_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_scheduled_posts_account ON scheduled_posts(account_id);
+      CREATE INDEX IF NOT EXISTS idx_scheduled_posts_due ON scheduled_posts(status, scheduled_at);
+      CREATE INDEX IF NOT EXISTS idx_scheduled_posts_platform_status ON scheduled_posts(platform, status);
+
+      CREATE TABLE IF NOT EXISTS post_analytics (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        scheduled_post_id UUID REFERENCES scheduled_posts(id),
+        platform_post_id VARCHAR(255),
+        platform VARCHAR(50),
+        likes INTEGER DEFAULT 0,
+        shares INTEGER DEFAULT 0,
+        comments INTEGER DEFAULT 0,
+        impressions INTEGER DEFAULT 0,
+        engagement_rate DECIMAL(5,2),
+        click_through_rate DECIMAL(5,2),
+        last_updated TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_post_analytics_platform_post ON post_analytics(platform, platform_post_id);
+
+      CREATE TABLE IF NOT EXISTS social_media_config (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        platform VARCHAR(50) NOT NULL UNIQUE,
+        posting_frequency VARCHAR(50) DEFAULT 'daily',
+        posting_hours INT[] DEFAULT '{9,14,19}',
+        timezone VARCHAR(50) DEFAULT 'UTC',
+        max_daily_posts INTEGER DEFAULT 3,
+        content_mix JSONB DEFAULT '{"tips":40,"deals":35,"engagement":25}',
+        hashtag_strategy JSONB DEFAULT '{}',
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- User deal filters table (Elite tier feature for custom alert filtering)
       CREATE TABLE IF NOT EXISTS user_deal_filters (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1462,6 +1560,26 @@ async function initializeApp() {
       console.warn('⚠️ Partner deals seed failed:', err.message);
     }
 
+    // Seed default social media platform configs if table is empty
+    try {
+      const socialConfigCount = await pool.query(`SELECT COUNT(*) FROM social_media_config`);
+      if (parseInt(socialConfigCount.rows[0].count) === 0) {
+        await pool.query(`
+          INSERT INTO social_media_config (platform, posting_frequency, posting_hours, is_active)
+          VALUES
+            ('twitter', 'multiple_daily', '{9,14,19}', true),
+            ('reddit', 'daily', '{18}', false),
+            ('pinterest', 'daily', '{20}', false),
+            ('instagram', 'daily', '{11,18}', false),
+            ('linkedin', 'daily', '{9}', false)
+          ON CONFLICT (platform) DO NOTHING;
+        `);
+        console.log('✅ Social media platform configs seeded');
+      }
+    } catch (err) {
+      console.warn('⚠️ Social media config seed failed:', err.message);
+    }
+
     console.log('✅ App initialization complete');
   } catch (error) {
     console.error('❌ Error during app initialization:', error);
@@ -1611,6 +1729,26 @@ app.listen(PORT, () => {
   }
   runOutreachSequenceCheck();
   setInterval(runOutreachSequenceCheck, 6 * 60 * 60 * 1000);
+
+  // Scheduled social media posts — publishes anything whose scheduled_at has
+  // passed. Checked every 5 minutes rather than the 6h cadence used above,
+  // since a post scheduled for a specific time (e.g. "2pm") should actually
+  // go out close to that time. Durable per-row (each row gated on its own
+  // scheduled_at), not an in-memory schedule, so it survives redeploys.
+  console.log('📱 Social media post scheduler started (runs every 5min)');
+  const socialMediaService = require('./services/socialMedia/socialMediaService');
+  async function runSocialMediaScheduleCheck() {
+    try {
+      const result = await socialMediaService.processDueScheduledPosts();
+      if (result.sent > 0 || result.failed > 0) {
+        console.log(`📱 Social media scheduler: ${result.sent} posted, ${result.failed} failed`);
+      }
+    } catch (error) {
+      console.error('❌ Error in social media post scheduler:', error);
+    }
+  }
+  runSocialMediaScheduleCheck();
+  setInterval(runSocialMediaScheduleCheck, 5 * 60 * 1000);
 });
 
 // Initialize app in background (non-blocking)

@@ -23,6 +23,7 @@ router.delete('/accounts/:id', verifyAdminToken, requireAdminRole(['admin']), So
 
 // Analytics
 router.get('/analytics', verifyAdminToken, requireAdminRole(['admin']), SocialMediaController.getAnalytics);
+router.get('/scheduled', verifyAdminToken, requireAdminRole(['admin']), SocialMediaController.listScheduledPosts);
 
 // Configuration
 router.get('/config/:platform', verifyAdminToken, requireAdminRole(['admin']), SocialMediaController.getConfig);
