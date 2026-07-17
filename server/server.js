@@ -1528,17 +1528,22 @@ app.listen(PORT, () => {
 
   // Referral commission eligibility — flips 'pending' conversions to
   // 'eligible' once their 14-day refund/chargeback hold has passed, so the
-  // admin dashboard can see what's actually payable.
+  // admin dashboard can see what's actually payable. Runs on boot too (like
+  // the other durable schedulers below) — without that, a redeploy could
+  // leave already-overdue conversions invisible for up to 6h for no reason,
+  // since this is gated on a durable DB timestamp, not an in-memory clock.
   console.log('💸 Referral eligibility scheduler started (runs every 6h)');
   const referralService = require('./services/referralService');
-  setInterval(async () => {
+  async function runReferralEligibilityCheck() {
     try {
       const count = await referralService.processEligibility();
       if (count > 0) console.log(`💸 ${count} referral conversion(s) marked eligible for payout`);
     } catch (error) {
       console.error('❌ Error in referral eligibility scheduler:', error);
     }
-  }, 6 * 60 * 60 * 1000);
+  }
+  runReferralEligibilityCheck();
+  setInterval(runReferralEligibilityCheck, 6 * 60 * 60 * 1000);
 
   // Outreach sequence follow-ups — sends the day-2/day-4 steps automatically
   // to prospects still in status='contacted' (anyone who replied, declined,

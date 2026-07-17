@@ -95,14 +95,23 @@ async function enrollProspects(prospectIds) {
   let failed = 0;
   for (const prospect of prospectsResult.rows) {
     const ok = await sendStepToProspect(prospect, step1, campaignId);
-    if (ok) sent++; else failed++;
-    await pool.query(
-      `UPDATE outreach_prospects
-       SET sequence_step = 1, enrolled_at = CURRENT_TIMESTAMP, last_step_sent_at = CURRENT_TIMESTAMP,
-           status = CASE WHEN status = 'new' THEN 'contacted' ELSE status END, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $1`,
-      [prospect.id]
-    );
+    if (ok) {
+      sent++;
+      // Only mark as enrolled if step 1 actually sent — otherwise this
+      // prospect would silently skip straight to waiting for step 2 without
+      // ever having received step 1, with no retry. Leaving sequence_step
+      // at 0 keeps them eligible to be re-enrolled (the query above only
+      // matches sequence_step = 0).
+      await pool.query(
+        `UPDATE outreach_prospects
+         SET sequence_step = 1, enrolled_at = CURRENT_TIMESTAMP, last_step_sent_at = CURRENT_TIMESTAMP,
+             status = CASE WHEN status = 'new' THEN 'contacted' ELSE status END, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $1`,
+        [prospect.id]
+      );
+    } else {
+      failed++;
+    }
   }
   await pool.query(
     `UPDATE outreach_campaigns SET sent_count = $1, failed_count = $2 WHERE id = $3`,
@@ -147,13 +156,22 @@ async function processSequenceFollowUps() {
     let failed = 0;
     for (const prospect of dueResult.rows) {
       const ok = await sendStepToProspect(prospect, step, campaignId);
-      if (ok) sent++; else failed++;
-      await pool.query(
-        `UPDATE outreach_prospects
-         SET sequence_step = $1, last_step_sent_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-         WHERE id = $2`,
-        [step.step, prospect.id]
-      );
+      if (ok) {
+        sent++;
+        // Only advance on a successful send — otherwise a transient failure
+        // (e.g. SendGrid hiccup) would silently skip this step forever, since
+        // sequence_step would move on as if it sent. Leaving last_step_sent_at
+        // untouched keeps this prospect "due" so the next scheduler pass
+        // (every 6h) retries it automatically.
+        await pool.query(
+          `UPDATE outreach_prospects
+           SET sequence_step = $1, last_step_sent_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+           WHERE id = $2`,
+          [step.step, prospect.id]
+        );
+      } else {
+        failed++;
+      }
     }
     await pool.query(
       `UPDATE outreach_campaigns SET sent_count = $1, failed_count = $2 WHERE id = $3`,
