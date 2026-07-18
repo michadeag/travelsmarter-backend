@@ -4,6 +4,7 @@
  */
 
 const Anthropic = require('@anthropic-ai/sdk');
+const { extractText } = require('./anthropicUtils');
 
 const client = new Anthropic();
 
@@ -51,7 +52,7 @@ IMPORTANT:
     });
 
     // Extract JSON from response
-    const responseText = message.content[0].text.trim();
+    const responseText = extractText(message);
 
     // Try to parse JSON
     try {

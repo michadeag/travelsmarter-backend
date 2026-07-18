@@ -10,6 +10,7 @@
 
 const Anthropic = require('@anthropic-ai/sdk');
 const pool = require('../config/database');
+const { extractText } = require('./anthropicUtils');
 
 const client = new Anthropic();
 const MODEL = 'claude-sonnet-5';
@@ -49,7 +50,7 @@ Return ONLY a JSON array (no markdown, no explanation), each item shaped as:
     messages: [{ role: 'user', content: prompt }],
   });
 
-  const responseText = message.content[0].text.trim();
+  const responseText = extractText(message);
   const parsed = JSON.parse(responseText);
   if (!Array.isArray(parsed)) throw new Error('Expected a JSON array of candidates');
   return parsed;
@@ -94,7 +95,7 @@ Return ONLY a JSON object (no markdown, no explanation):
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const parsed = JSON.parse(message.content[0].text.trim());
+    const parsed = JSON.parse(extractText(message));
     if (
       typeof parsed.search_volume_estimate !== 'number' ||
       typeof parsed.lead_price_estimate !== 'number' ||
@@ -162,7 +163,7 @@ Return ONLY a JSON object (no markdown, no explanation):
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const parsed = JSON.parse(message.content[0].text.trim());
+    const parsed = JSON.parse(extractText(message));
     if (!parsed.youtube_script || !parsed.youtube_description) {
       throw new Error('Missing expected fields in generated content');
     }

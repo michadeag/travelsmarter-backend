@@ -7,6 +7,7 @@
  */
 
 const Anthropic = require('@anthropic-ai/sdk');
+const { extractText } = require('../anthropicUtils');
 
 const client = new Anthropic();
 
@@ -63,7 +64,7 @@ async function generatePlatformVersions(basePost, platforms) {
       messages: [{ role: 'user', content: buildPrompt(basePost, validPlatforms) }],
     });
 
-    const responseText = message.content[0].text.trim();
+    const responseText = extractText(message);
     const parsed = JSON.parse(responseText);
 
     // Merge over the fallback so any platform the model skipped still gets
