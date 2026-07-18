@@ -867,12 +867,48 @@ async function initializeApp() {
         youtube_description TEXT,
         youtube_tags TEXT[],
         scripted_at TIMESTAMP,
+        twilio_phone_number VARCHAR(20),
+        twilio_phone_sid VARCHAR(64),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(market, city, niche)
       );
       CREATE INDEX IF NOT EXISTS idx_local_seo_status ON local_seo_combinations(status);
       CREATE INDEX IF NOT EXISTS idx_local_seo_combined_score ON local_seo_combinations(combined_score DESC);
+      -- Added after the table's initial deploy — guarded for installs that already have it
+      ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS twilio_phone_number VARCHAR(20);
+      ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS twilio_phone_sid VARCHAR(64);
+
+      -- Lead recipients (up to 3 per combination) that inbound calls to the
+      -- combination's Twilio number get simul-ring forwarded to.
+      CREATE TABLE IF NOT EXISTS local_seo_lead_recipients (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        combination_id UUID NOT NULL REFERENCES local_seo_combinations(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        company_name VARCHAR(255),
+        phone VARCHAR(30) NOT NULL,
+        email VARCHAR(255),
+        notes TEXT,
+        is_main_recipient BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_local_seo_recipients_combination ON local_seo_lead_recipients(combination_id);
+
+      -- Tracks each inbound call to a combination's number and who (if
+      -- anyone) answered it, for the call-tracking requirement.
+      CREATE TABLE IF NOT EXISTS local_seo_call_events (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        combination_id UUID NOT NULL REFERENCES local_seo_combinations(id) ON DELETE CASCADE,
+        call_sid VARCHAR(64),
+        caller_number VARCHAR(30),
+        status VARCHAR(30) DEFAULT 'ringing',
+        answered_by_recipient_id UUID REFERENCES local_seo_lead_recipients(id),
+        duration_seconds INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_local_seo_call_events_combination ON local_seo_call_events(combination_id);
 
       -- User deal filters table (Elite tier feature for custom alert filtering)
       CREATE TABLE IF NOT EXISTS user_deal_filters (
