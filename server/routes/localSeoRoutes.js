@@ -59,12 +59,14 @@ router.post('/admin/candidates', protectWithAdminFallback, async (req, res) => {
       try {
         const scores = await localSeoService.estimateScores(combo);
         const combined_score = localSeoService.computeCombinedScore(scores);
+        const monthly_value_estimate = localSeoService.computeMonthlyValueEstimate(scores);
 
         const result = await pool.query(
           `INSERT INTO local_seo_combinations
              (market, city, niche, keyword_phrase, search_volume_estimate, lead_price_estimate,
-              ranking_potential_score, combined_score, data_source, estimate_notes, status)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ai_estimate', $9, 'confirmed')
+              ranking_potential_score, page1_ctr_estimate, monthly_value_estimate, combined_score,
+              data_source, estimate_notes, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'ai_estimate', $11, 'confirmed')
            ON CONFLICT (market, city, niche) DO NOTHING
            RETURNING *`,
           [
@@ -75,6 +77,8 @@ router.post('/admin/candidates', protectWithAdminFallback, async (req, res) => {
             scores.search_volume_estimate,
             scores.lead_price_estimate,
             scores.ranking_potential_score,
+            scores.page1_ctr_estimate,
+            monthly_value_estimate,
             combined_score,
             scores.estimate_notes || null,
           ]
@@ -143,8 +147,8 @@ router.get('/admin/candidates/:id', protectWithAdminFallback, async (req, res) =
 // @route PATCH /api/local-seo/admin/candidates/:id
 router.patch('/admin/candidates/:id', protectWithAdminFallback, async (req, res) => {
   try {
-    const { search_volume_estimate, lead_price_estimate, ranking_potential_score, status } = req.body;
-    const scoreFieldsProvided = [search_volume_estimate, lead_price_estimate, ranking_potential_score].some(
+    const { search_volume_estimate, lead_price_estimate, ranking_potential_score, page1_ctr_estimate, status } = req.body;
+    const scoreFieldsProvided = [search_volume_estimate, lead_price_estimate, ranking_potential_score, page1_ctr_estimate].some(
       (v) => v !== undefined
     );
 
@@ -158,23 +162,30 @@ router.patch('/admin/candidates/:id', protectWithAdminFallback, async (req, res)
       search_volume_estimate: search_volume_estimate ?? existing.search_volume_estimate,
       lead_price_estimate: lead_price_estimate ?? existing.lead_price_estimate,
       ranking_potential_score: ranking_potential_score ?? existing.ranking_potential_score,
+      page1_ctr_estimate: page1_ctr_estimate ?? existing.page1_ctr_estimate,
     };
     const combined_score = scoreFieldsProvided
       ? localSeoService.computeCombinedScore(nextScores)
       : existing.combined_score;
+    const monthly_value_estimate = scoreFieldsProvided
+      ? localSeoService.computeMonthlyValueEstimate(nextScores)
+      : existing.monthly_value_estimate;
 
     const result = await pool.query(
       `UPDATE local_seo_combinations
        SET search_volume_estimate = $1, lead_price_estimate = $2, ranking_potential_score = $3,
-           combined_score = $4, status = COALESCE($5, status),
-           data_source = CASE WHEN $6 THEN 'manual' ELSE data_source END,
+           page1_ctr_estimate = $4, monthly_value_estimate = $5, combined_score = $6,
+           status = COALESCE($7, status),
+           data_source = CASE WHEN $8 THEN 'manual' ELSE data_source END,
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $7
+       WHERE id = $9
        RETURNING *`,
       [
         nextScores.search_volume_estimate,
         nextScores.lead_price_estimate,
         nextScores.ranking_potential_score,
+        nextScores.page1_ctr_estimate,
+        monthly_value_estimate,
         combined_score,
         status || null,
         scoreFieldsProvided,

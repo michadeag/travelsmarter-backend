@@ -857,6 +857,8 @@ async function initializeApp() {
         search_volume_estimate INTEGER,
         lead_price_estimate DECIMAL(10, 2),
         ranking_potential_score DECIMAL(5, 2),
+        page1_ctr_estimate DECIMAL(5, 2),
+        monthly_value_estimate DECIMAL(10, 2),
         combined_score DECIMAL(6, 2),
         data_source VARCHAR(20) DEFAULT 'ai_estimate',
         estimate_notes TEXT,
@@ -878,6 +880,8 @@ async function initializeApp() {
       -- Added after the table's initial deploy — guarded for installs that already have it
       ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS twilio_phone_number VARCHAR(20);
       ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS twilio_phone_sid VARCHAR(64);
+      ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS page1_ctr_estimate DECIMAL(5, 2);
+      ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS monthly_value_estimate DECIMAL(10, 2);
 
       -- Lead recipients (up to 3 per combination) that inbound calls to the
       -- combination's Twilio number get simul-ring forwarded to.

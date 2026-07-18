@@ -70,6 +70,7 @@ async function estimateScores({ city, niche, keyword_phrase }) {
     search_volume_estimate: 100,
     lead_price_estimate: 30,
     ranking_potential_score: 50,
+    page1_ctr_estimate: 5,
     estimate_notes: 'Fallback estimate — AI estimation failed, treat as placeholder and correct manually.',
   };
 
@@ -84,10 +85,11 @@ Estimate:
 - search_volume_estimate: rough monthly search volume (integer, realistic for a specific city+trade long-tail term — usually tens to low thousands, not more)
 - lead_price_estimate: plausible price in BRL a business would pay for one qualified lead of this type in this city (number, typically R$10–150 for trades)
 - ranking_potential_score: 0-100, how easy this would be to rank a new YouTube channel for (100 = very easy/low competition, 0 = very hard/saturated)
+- page1_ctr_estimate: percentage (0-100) of the monthly searches that would realistically turn into an actual lead/call if this video holds a page-1 YouTube ranking for the keyphrase (typically 2-15% for local trade searches — factor in search intent and how much of the traffic is likely just browsing vs. ready to call)
 - estimate_notes: one or two sentences explaining your reasoning and key assumptions
 
 Return ONLY a JSON object (no markdown, no explanation):
-{"search_volume_estimate": 0, "lead_price_estimate": 0, "ranking_potential_score": 0, "estimate_notes": "..."}`;
+{"search_volume_estimate": 0, "lead_price_estimate": 0, "ranking_potential_score": 0, "page1_ctr_estimate": 0, "estimate_notes": "..."}`;
 
     const message = await client.messages.create({
       model: MODEL,
@@ -99,7 +101,8 @@ Return ONLY a JSON object (no markdown, no explanation):
     if (
       typeof parsed.search_volume_estimate !== 'number' ||
       typeof parsed.lead_price_estimate !== 'number' ||
-      typeof parsed.ranking_potential_score !== 'number'
+      typeof parsed.ranking_potential_score !== 'number' ||
+      typeof parsed.page1_ctr_estimate !== 'number'
     ) {
       throw new Error('Missing expected numeric fields in estimate response');
     }
@@ -108,6 +111,18 @@ Return ONLY a JSON object (no markdown, no explanation):
     console.error(`❌ Score estimation failed for ${city}/${niche}, using fallback:`, error.message);
     return fallback;
   }
+}
+
+// @desc Rough monthly revenue-potential indicator: how many of the
+// estimated monthly searches would realistically convert to a paid lead
+// at a page-1 ranking, times what that lead is worth. Not weighted into
+// combined_score — shown as a separate, more concrete "what could this be
+// worth" number alongside the abstract 0-100 ranking score.
+function computeMonthlyValueEstimate({ search_volume_estimate, lead_price_estimate, page1_ctr_estimate }) {
+  const volume = search_volume_estimate || 0;
+  const price = lead_price_estimate || 0;
+  const ctr = Math.min(100, Math.max(0, page1_ctr_estimate || 0));
+  return Math.round(volume * price * (ctr / 100) * 100) / 100;
 }
 
 /**
@@ -221,6 +236,7 @@ module.exports = {
   generateCandidateCombinations,
   estimateScores,
   computeCombinedScore,
+  computeMonthlyValueEstimate,
   generateYoutubeContent,
   processNextBatch,
 };
