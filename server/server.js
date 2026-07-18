@@ -39,6 +39,7 @@ const affiliateRoutes = require('./routes/affiliateRoutes');
 const affiliateController = require('./controllers/affiliateController');
 const referralRoutes = require('./routes/referralRoutes');
 const outreachRoutes = require('./routes/outreachRoutes');
+const localSeoRoutes = require('./routes/localSeoRoutes');
 const hiddenGemRoutes = require('./routes/hiddenGemRoutes');
 const flightAlertRoutes = require('./routes/flightAlertRoutes');
 const { runDailyPriceCheck } = require('./services/flightPriceService');
@@ -180,6 +181,7 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/affiliate', affiliateRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/outreach', outreachRoutes);
+app.use('/api/local-seo', localSeoRoutes);
 app.use('/api/hidden-gem', hiddenGemRoutes);
 app.use('/api/flight-alerts', flightAlertRoutes);
 app.use('/api/travel-ai', require('./routes/travelAiRoutes'));
@@ -841,6 +843,36 @@ async function initializeApp() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+
+      -- Local SEO combinations table — candidate (city, niche) pairs for the
+      -- video-ranking + local-lead-gen pipeline. Scores are AI-estimated
+      -- starting points (data_source='ai_estimate') until manually
+      -- corrected once real data is available (data_source='manual').
+      CREATE TABLE IF NOT EXISTS local_seo_combinations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        market VARCHAR(10) NOT NULL DEFAULT 'pt-BR',
+        city VARCHAR(255) NOT NULL,
+        niche VARCHAR(255) NOT NULL,
+        keyword_phrase VARCHAR(500) NOT NULL,
+        search_volume_estimate INTEGER,
+        lead_price_estimate DECIMAL(10, 2),
+        ranking_potential_score DECIMAL(5, 2),
+        combined_score DECIMAL(6, 2),
+        data_source VARCHAR(20) DEFAULT 'ai_estimate',
+        estimate_notes TEXT,
+        status VARCHAR(20) DEFAULT 'candidate',
+        batch_number INTEGER,
+        youtube_title VARCHAR(500),
+        youtube_script TEXT,
+        youtube_description TEXT,
+        youtube_tags TEXT[],
+        scripted_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(market, city, niche)
+      );
+      CREATE INDEX IF NOT EXISTS idx_local_seo_status ON local_seo_combinations(status);
+      CREATE INDEX IF NOT EXISTS idx_local_seo_combined_score ON local_seo_combinations(combined_score DESC);
 
       -- User deal filters table (Elite tier feature for custom alert filtering)
       CREATE TABLE IF NOT EXISTS user_deal_filters (
