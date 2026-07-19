@@ -870,6 +870,8 @@ async function initializeApp() {
         youtube_description TEXT,
         youtube_tags TEXT[],
         scripted_at TIMESTAMP,
+        youtube_video_url VARCHAR(500),
+        youtube_video_id VARCHAR(50),
         twilio_phone_number VARCHAR(20),
         twilio_phone_sid VARCHAR(64),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -884,6 +886,19 @@ async function initializeApp() {
       ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS page1_ctr_estimate DECIMAL(5, 2);
       ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS monthly_value_estimate DECIMAL(10, 2);
       ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS target_keywords TEXT[];
+      ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS youtube_video_url VARCHAR(500);
+      ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS youtube_video_id VARCHAR(50);
+
+      -- Ranking check history — one row per (keyword, check), so position
+      -- over time can be tracked, not just the latest snapshot.
+      CREATE TABLE IF NOT EXISTS local_seo_ranking_checks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        combination_id UUID NOT NULL REFERENCES local_seo_combinations(id) ON DELETE CASCADE,
+        keyword VARCHAR(500) NOT NULL,
+        position INTEGER,
+        checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_local_seo_ranking_checks_combination ON local_seo_ranking_checks(combination_id, checked_at DESC);
 
       -- Lead recipients (up to 3 per combination) that inbound calls to the
       -- combination's Twilio number get simul-ring forwarded to.

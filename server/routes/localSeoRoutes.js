@@ -4,6 +4,7 @@ const { protectWithAdminFallback } = require('../middleware/auth');
 const pool = require('../config/database');
 const localSeoService = require('../services/localSeoService');
 const twilioService = require('../services/twilioService');
+const youtubeRankingService = require('../services/youtubeRankingService');
 
 const API_BASE_URL = process.env.API_BASE_URL || 'https://api.travelsmarterapp.com';
 
@@ -363,6 +364,88 @@ router.get('/admin/candidates/:id/calls', protectWithAdminFallback, async (req, 
     res.status(200).json({ success: true, calls: result.rows });
   } catch (error) {
     console.error('List local SEO call events error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ── YouTube ranking tracking ──
+
+// @desc Saves the published video's URL for this combination (parses out
+// the video ID needed for ranking checks).
+// @route POST /api/local-seo/admin/candidates/:id/video
+router.post('/admin/candidates/:id/video', protectWithAdminFallback, async (req, res) => {
+  try {
+    const { videoUrl } = req.body;
+    if (!videoUrl) {
+      return res.status(400).json({ success: false, error: 'videoUrl is required' });
+    }
+    const videoId = youtubeRankingService.extractVideoId(videoUrl);
+    if (!videoId) {
+      return res.status(400).json({ success: false, error: 'Could not extract a video ID from that URL' });
+    }
+    const result = await pool.query(
+      `UPDATE local_seo_combinations SET youtube_video_url = $1, youtube_video_id = $2, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $3 RETURNING *`,
+      [videoUrl, videoId, req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Combination not found' });
+    }
+    res.status(200).json({ success: true, combination: result.rows[0] });
+  } catch (error) {
+    console.error('Save local SEO video error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// @desc Checks the video's current ranking for the given keywords (defaults
+// to just the primary keyword_phrase if none specified — checking the full
+// cluster costs ~100 quota units per keyword, so the caller chooses).
+// @route POST /api/local-seo/admin/candidates/:id/check-ranking
+router.post('/admin/candidates/:id/check-ranking', protectWithAdminFallback, async (req, res) => {
+  try {
+    const { keywords } = req.body;
+
+    const comboResult = await pool.query(
+      `SELECT youtube_video_id, keyword_phrase, target_keywords FROM local_seo_combinations WHERE id = $1`,
+      [req.params.id]
+    );
+    if (comboResult.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Combination not found' });
+    }
+    const combo = comboResult.rows[0];
+    if (!combo.youtube_video_id) {
+      return res.status(400).json({ success: false, error: 'No video linked yet for this combination' });
+    }
+
+    const keywordsToCheck = Array.isArray(keywords) && keywords.length > 0
+      ? keywords
+      : [combo.keyword_phrase];
+
+    const results = await youtubeRankingService.checkRankingForCombination({
+      combinationId: req.params.id,
+      videoId: combo.youtube_video_id,
+      keywords: keywordsToCheck,
+    });
+
+    res.status(200).json({ success: true, results });
+  } catch (error) {
+    console.error('Check local SEO ranking error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// @desc Ranking check history for one combination (most recent first)
+// @route GET /api/local-seo/admin/candidates/:id/ranking-history
+router.get('/admin/candidates/:id/ranking-history', protectWithAdminFallback, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM local_seo_ranking_checks WHERE combination_id = $1 ORDER BY checked_at DESC LIMIT 200`,
+      [req.params.id]
+    );
+    res.status(200).json({ success: true, checks: result.rows });
+  } catch (error) {
+    console.error('List local SEO ranking history error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
