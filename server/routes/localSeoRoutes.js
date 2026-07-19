@@ -63,10 +63,10 @@ router.post('/admin/candidates', protectWithAdminFallback, async (req, res) => {
 
         const result = await pool.query(
           `INSERT INTO local_seo_combinations
-             (market, city, niche, keyword_phrase, search_volume_estimate, lead_price_estimate,
+             (market, city, niche, keyword_phrase, target_keywords, search_volume_estimate, lead_price_estimate,
               ranking_potential_score, page1_ctr_estimate, monthly_value_estimate, combined_score,
               data_source, estimate_notes, status)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'ai_estimate', $11, 'confirmed')
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'ai_estimate', $12, 'confirmed')
            ON CONFLICT (market, city, niche) DO NOTHING
            RETURNING *`,
           [
@@ -74,6 +74,7 @@ router.post('/admin/candidates', protectWithAdminFallback, async (req, res) => {
             combo.city,
             combo.niche,
             combo.keyword_phrase,
+            combo.target_keywords && combo.target_keywords.length > 0 ? combo.target_keywords : [combo.keyword_phrase],
             scores.search_volume_estimate,
             scores.lead_price_estimate,
             scores.ranking_potential_score,

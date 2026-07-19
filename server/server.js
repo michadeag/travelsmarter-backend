@@ -854,6 +854,7 @@ async function initializeApp() {
         city VARCHAR(255) NOT NULL,
         niche VARCHAR(255) NOT NULL,
         keyword_phrase VARCHAR(500) NOT NULL,
+        target_keywords TEXT[],
         search_volume_estimate INTEGER,
         lead_price_estimate DECIMAL(10, 2),
         ranking_potential_score DECIMAL(5, 2),
@@ -882,6 +883,7 @@ async function initializeApp() {
       ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS twilio_phone_sid VARCHAR(64);
       ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS page1_ctr_estimate DECIMAL(5, 2);
       ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS monthly_value_estimate DECIMAL(10, 2);
+      ALTER TABLE local_seo_combinations ADD COLUMN IF NOT EXISTS target_keywords TEXT[];
 
       -- Lead recipients (up to 3 per combination) that inbound calls to the
       -- combination's Twilio number get simul-ring forwarded to.

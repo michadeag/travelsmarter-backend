@@ -18,9 +18,17 @@ const MODEL = 'claude-sonnet-5';
 // ── Candidate brainstorming ──
 
 /**
- * Brainstorms (city, niche, keyword_phrase) candidates for the given
+ * Brainstorms (city, niche, target_keywords) candidates for the given
  * market, avoiding pairs already in the DB. Returns a plain array —
  * nothing is saved here, this is a preview the admin reviews first.
+ *
+ * Each candidate carries a whole cluster of related money keywords
+ * (target_keywords), not just one exact phrase — a single YouTube video
+ * per (city, niche) is realistically optimized to rank for several
+ * related long-tail searches at once (e.g. "marceneiro Curitiba",
+ * "móveis planejados Curitiba", "armário embutido Curitiba" all point at
+ * the same video). keyword_phrase stays as the primary/headline term
+ * for display, target_keywords holds the full cluster including it.
  */
 async function generateCandidateCombinations({ market = 'pt-BR', count = 20 } = {}) {
   const existingResult = await pool.query(
@@ -39,10 +47,10 @@ Favor a mix of:
 
 Already have these combinations — do NOT repeat them: ${existingPairs}
 
-For each, give a realistic Portuguese search keyphrase a local customer would actually type or say when looking for that tradesperson in that city (natural phrasing, not just "niche + city" concatenated).
+For each combination, a SINGLE YouTube video will target a whole cluster of related money keywords, not just one exact phrase — e.g. for "marceneiro" in a city, related searches include the trade name + city, related service terms (e.g. "móveis planejados", "armário embutido"), price-intent terms ("orçamento marceneiro"), and quality-intent terms ("melhor marceneiro", "marceneiro perto de mim"). Give 5-10 realistic Portuguese search phrases a local customer would actually type or say — natural phrasing, not just "niche + city" concatenated each time.
 
 Return ONLY a JSON array (no markdown, no explanation), each item shaped as:
-{"city": "...", "niche": "...", "keyword_phrase": "..."}`;
+{"city": "...", "niche": "...", "keyword_phrase": "the single most representative phrase, used as the headline keyword", "target_keywords": ["5 to 10 related phrases including the keyword_phrase itself"]}`;
 
   const message = await client.messages.create({
     model: MODEL,
@@ -65,7 +73,7 @@ Return ONLY a JSON array (no markdown, no explanation), each item shaped as:
  * to conservative mid-range defaults, clearly flagged, if the model call
  * fails or returns something unparseable.
  */
-async function estimateScores({ city, niche, keyword_phrase }) {
+async function estimateScores({ city, niche, keyword_phrase, target_keywords }) {
   const fallback = {
     search_volume_estimate: 100,
     lead_price_estimate: 30,
@@ -74,15 +82,17 @@ async function estimateScores({ city, niche, keyword_phrase }) {
     estimate_notes: 'Fallback estimate — AI estimation failed, treat as placeholder and correct manually.',
   };
 
+  const keywordCluster = target_keywords && target_keywords.length > 0 ? target_keywords : [keyword_phrase];
+
   try {
-    const prompt = `You are a local-SEO analyst estimating rough, directional numbers for a Brazilian local-service search term. You do NOT have access to real keyword tools — give your best-reasoned heuristic estimate based on general knowledge (city population/economic level, typical competition for local trade services, how saturated local YouTube content is for this kind of niche).
+    const prompt = `You are a local-SEO analyst estimating rough, directional numbers for a Brazilian local-service search opportunity. You do NOT have access to real keyword tools — give your best-reasoned heuristic estimate based on general knowledge (city population/economic level, typical competition for local trade services, how saturated local YouTube content is for this kind of niche).
 
 City: ${city}
 Niche/trade: ${niche}
-Target keyphrase: "${keyword_phrase}"
+Target keyword cluster (ONE video will target all of these together): ${keywordCluster.map((k) => `"${k}"`).join(', ')}
 
 Estimate:
-- search_volume_estimate: rough monthly search volume (integer, realistic for a specific city+trade long-tail term — usually tens to low thousands, not more)
+- search_volume_estimate: rough COMBINED monthly search volume across the WHOLE keyword cluster together (integer — sum the realistic volume of each variant, not just the primary phrase; usually hundreds to a few thousand for a full cluster, not more)
 - lead_price_estimate: plausible price in BRL a business would pay for one qualified lead of this type in this city (number, typically R$10–150 for trades)
 - ranking_potential_score: 0-100, how easy this would be to rank a new YouTube channel for (100 = very easy/low competition, 0 = very hard/saturated)
 - page1_ctr_estimate: percentage (0-100) of the monthly searches that would realistically turn into an actual lead/call if this video holds a page-1 YouTube ranking for the keyphrase (typically 2-15% for local trade searches — factor in search intent and how much of the traffic is likely just browsing vs. ready to call)
@@ -154,22 +164,24 @@ function computeCombinedScore({ search_volume_estimate, lead_price_estimate, ran
  * failure on one combination doesn't abort the whole batch — the caller
  * leaves that combination un-scripted for the next batch run to retry.
  */
-async function generateYoutubeContent({ city, niche, keyword_phrase }) {
+async function generateYoutubeContent({ city, niche, keyword_phrase, target_keywords }) {
+  const keywordCluster = target_keywords && target_keywords.length > 0 ? target_keywords : [keyword_phrase];
+
   try {
     const prompt = `You are a scriptwriter for short, helpful local-service YouTube videos in Brazilian Portuguese, for a lead-generation business.
 
 City: ${city}
 Trade/niche: ${niche}
-Target keyphrase: "${keyword_phrase}"
+Target keyword cluster — weave ALL of these naturally across the script/description/tags so this ONE video can rank for each of them, not just the first one: ${keywordCluster.map((k) => `"${k}"`).join(', ')}
 
-Write content for a 3-5 minute YouTube video that helps a local resident evaluate/choose a ${niche} in ${city} (practical tips, red flags to avoid, what fair pricing looks like) — genuinely useful, not a thinly-veiled ad. It should naturally rank for the target keyphrase.
+Write content for a 3-5 minute YouTube video that helps a local resident evaluate/choose a ${niche} in ${city} (practical tips, red flags to avoid, what fair pricing looks like) — genuinely useful, not a thinly-veiled ad. It should naturally rank for every phrase in the keyword cluster above, not just the primary one.
 
 Return ONLY a JSON object (no markdown, no explanation):
 {
   "youtube_title": "under 100 chars, includes the city and niche naturally",
-  "youtube_script": "full spoken script, 3-5 minutes reading length, conversational Brazilian Portuguese",
-  "youtube_description": "SEO-optimized description, 150-300 words, includes the keyphrase naturally in the first two lines, ends with a call to action",
-  "youtube_tags": ["8 to 15 relevant tags as an array of strings"]
+  "youtube_script": "full spoken script, 3-5 minutes reading length, conversational Brazilian Portuguese, naturally touching on multiple keyword-cluster phrases/topics (e.g. pricing, related services) so the content genuinely covers them",
+  "youtube_description": "SEO-optimized description, 150-300 words, works in several of the cluster keywords naturally (not just the primary one), ends with a call to action",
+  "youtube_tags": ["10 to 15 tags covering the primary phrase AND the other cluster keywords"]
 }`;
 
     const message = await client.messages.create({
@@ -202,7 +214,7 @@ async function processNextBatch(batchSize = 10) {
   const batchNumber = batchNumberResult.rows[0].next_batch;
 
   const candidatesResult = await pool.query(
-    `SELECT id, city, niche, keyword_phrase
+    `SELECT id, city, niche, keyword_phrase, target_keywords
      FROM local_seo_combinations
      WHERE status = 'confirmed' AND youtube_script IS NULL
      ORDER BY combined_score DESC NULLS LAST
