@@ -52,14 +52,24 @@ For each combination, a SINGLE YouTube video will target a whole cluster of rela
 Return ONLY a JSON array (no markdown, no explanation), each item shaped as:
 {"city": "...", "niche": "...", "keyword_phrase": "the single most representative phrase, used as the headline keyword", "target_keywords": ["5 to 10 related phrases including the keyword_phrase itself"]}`;
 
+  // Each candidate now carries a 5-10 item keyword cluster, not just three
+  // short fields — scale the budget with count instead of a fixed value,
+  // or a large count truncates mid-response and JSON.parse fails.
   const message = await client.messages.create({
     model: MODEL,
-    max_tokens: 3000,
+    max_tokens: Math.min(8000, 400 + count * 350),
     messages: [{ role: 'user', content: prompt }],
   });
 
   const responseText = extractText(message);
-  const parsed = JSON.parse(responseText);
+  let parsed;
+  try {
+    parsed = JSON.parse(responseText);
+  } catch (err) {
+    throw new Error(
+      `Claude's response was cut off before valid JSON completed (stop_reason: ${message.stop_reason}) — try requesting fewer candidates at once.`
+    );
+  }
   if (!Array.isArray(parsed)) throw new Error('Expected a JSON array of candidates');
   return parsed;
 }
@@ -186,7 +196,7 @@ Return ONLY a JSON object (no markdown, no explanation):
 
     const message = await client.messages.create({
       model: MODEL,
-      max_tokens: 3000,
+      max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }],
     });
 
