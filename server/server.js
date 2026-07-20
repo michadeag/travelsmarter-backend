@@ -931,6 +931,28 @@ async function initializeApp() {
       );
       CREATE INDEX IF NOT EXISTS idx_local_seo_call_events_combination ON local_seo_call_events(combination_id);
 
+      -- Ranking-boost distribution: one row per (combination, platform) publish
+      -- attempt, tracking content generated for that combination's own
+      -- Blogger/WordPress/Pinterest/Google Sites presence. Deliberately
+      -- separate from wordpress_posts/blogger_posts/pinterest_posts, which
+      -- are the TravelSmarter travel-hacks content engine's own tables —
+      -- local_seo content (Handwerker/Brazil niche, phone-number CTA) must
+      -- never mix with that pipeline's topics or CTAs.
+      CREATE TABLE IF NOT EXISTS local_seo_distribution_posts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        combination_id UUID NOT NULL REFERENCES local_seo_combinations(id) ON DELETE CASCADE,
+        platform VARCHAR(30) NOT NULL,
+        title VARCHAR(500),
+        body TEXT,
+        external_post_id VARCHAR(255),
+        external_url TEXT,
+        status VARCHAR(20) NOT NULL DEFAULT 'draft',
+        error_message TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        posted_at TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_local_seo_distribution_combination ON local_seo_distribution_posts(combination_id, created_at DESC);
+
       -- User deal filters table (Elite tier feature for custom alert filtering)
       CREATE TABLE IF NOT EXISTS user_deal_filters (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

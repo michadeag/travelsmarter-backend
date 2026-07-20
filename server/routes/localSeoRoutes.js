@@ -5,8 +5,18 @@ const pool = require('../config/database');
 const localSeoService = require('../services/localSeoService');
 const twilioService = require('../services/twilioService');
 const youtubeRankingService = require('../services/youtubeRankingService');
+const localSeoDistributionService = require('../services/localSeoDistributionService');
+const localSeoWordpressPublisher = require('../services/localSeoWordpressPublisher');
+const localSeoBloggerPublisher = require('../services/localSeoBloggerPublisher');
 
 const API_BASE_URL = process.env.API_BASE_URL || 'https://api.travelsmarterapp.com';
+
+// Distinct from bloggerService.js's redirect URI — this is Local SEO's own
+// callback, potentially for a different Google account/blog. Must be added
+// to the existing Google OAuth client's Authorized redirect URIs once
+// (Google Cloud Console → Credentials → the client already used for
+// google_client_id/google_client_secret — a client can have several).
+const LOCAL_SEO_BLOGGER_REDIRECT_URI = `${API_BASE_URL}/api/local-seo/blogger/callback`;
 
 // Verifies the request actually came from Twilio (X-Twilio-Signature),
 // using our own known public base URL rather than req.protocol/req.get('host')
@@ -450,6 +460,40 @@ router.get('/admin/candidates/:id/ranking-history', protectWithAdminFallback, as
   }
 });
 
+// @desc Generates ranking-boost distribution content for this combination
+// (blog article embedding its video + phone CTA) and publishes it to the
+// requested platforms — live for wordpress/blogger, saved as a draft for
+// pinterest/google_sites (copy-paste workflow, no automated publish API
+// for either). A failure on one platform doesn't abort the others.
+// @route POST /api/local-seo/admin/candidates/:id/distribute
+router.post('/admin/candidates/:id/distribute', protectWithAdminFallback, async (req, res) => {
+  try {
+    const { platforms } = req.body;
+    if (!Array.isArray(platforms) || platforms.length === 0) {
+      return res.status(400).json({ success: false, error: 'platforms must be a non-empty array' });
+    }
+
+    const results = await localSeoDistributionService.distributeCombination(req.params.id, platforms);
+    res.status(200).json({ success: true, results });
+  } catch (error) {
+    console.error('Local SEO distribute error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// @desc Distribution history (all platforms) for one combination, most
+// recent first.
+// @route GET /api/local-seo/admin/candidates/:id/distribution
+router.get('/admin/candidates/:id/distribution', protectWithAdminFallback, async (req, res) => {
+  try {
+    const history = await localSeoDistributionService.getDistributionHistory(req.params.id);
+    res.status(200).json({ success: true, history });
+  } catch (error) {
+    console.error('List local SEO distribution history error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // ── Voice webhooks (public — called by Twilio directly, verified via
 // X-Twilio-Signature instead of admin auth) ──
 
@@ -544,6 +588,140 @@ router.post('/voice/leg-status', verifyTwilioWebhook, async (req, res) => {
   } catch (error) {
     console.error('Voice leg-status webhook error:', error);
     res.status(500).send('Internal error');
+  }
+});
+
+// ── Local SEO's own WordPress site (separate credentials from
+// wordpressService.js — see settings keys local_seo_wordpress_*) ──
+
+// @desc Tests the local_seo_wordpress_* credentials currently saved in
+// Settings against that site's REST API.
+// @route POST /api/local-seo/admin/wordpress/test-connection
+router.post('/admin/wordpress/test-connection', protectWithAdminFallback, async (req, res) => {
+  try {
+    const settingsResult = await pool.query(
+      `SELECT key, value FROM settings WHERE key = ANY($1)`,
+      [['local_seo_wordpress_site_url', 'local_seo_wordpress_username', 'local_seo_wordpress_app_password']]
+    );
+    const settings = {};
+    settingsResult.rows.forEach((r) => { settings[r.key] = r.value; });
+
+    if (!settings.local_seo_wordpress_site_url || !settings.local_seo_wordpress_username || !settings.local_seo_wordpress_app_password) {
+      return res.status(400).json({ success: false, error: 'local_seo_wordpress_site_url/username/app_password not configured in Settings' });
+    }
+
+    const result = await localSeoWordpressPublisher.testConnection({
+      siteUrl: settings.local_seo_wordpress_site_url,
+      username: settings.local_seo_wordpress_username,
+      appPassword: settings.local_seo_wordpress_app_password,
+    });
+    res.status(200).json({ success: true, ...result });
+  } catch (error) {
+    const detail = error.response?.data?.message || error.message;
+    res.status(500).json({ success: false, error: detail });
+  }
+});
+
+// ── Local SEO's own Blogger blog (separate OAuth connection from
+// bloggerService.js — see settings keys local_seo_blogger_*) ──
+
+// @desc Step 1 of connecting Local SEO's own Google account for Blogger —
+// returns the consent-screen URL to visit.
+// @route GET /api/local-seo/admin/blogger/auth-url
+router.get('/admin/blogger/auth-url', protectWithAdminFallback, async (req, res) => {
+  try {
+    const settingsResult = await pool.query(
+      `SELECT value FROM settings WHERE key = 'google_client_id'`
+    );
+    const clientId = settingsResult.rows[0]?.value;
+    if (!clientId) return res.status(400).json({ success: false, error: 'google_client_id not configured in Settings' });
+
+    const authUrl = localSeoBloggerPublisher.getAuthUrl({ clientId, redirectUri: LOCAL_SEO_BLOGGER_REDIRECT_URI });
+    res.status(200).json({ success: true, authUrl });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// @desc OAuth callback Google redirects to after consent — exchanges the
+// code for a refresh token and saves it as local_seo_blogger_refresh_token
+// (kept separate from bloggerService.js's google_refresh_token so the two
+// can point at different Google accounts).
+// @route GET /api/local-seo/blogger/callback
+router.get('/blogger/callback', async (req, res) => {
+  try {
+    const { code, error } = req.query;
+    if (error) return res.send(`<h2>❌ Google Auth Error: ${error}</h2>`);
+    if (!code) return res.send('<h2>No code received</h2>');
+
+    const settingsResult = await pool.query(
+      `SELECT key, value FROM settings WHERE key = ANY($1)`,
+      [['google_client_id', 'google_client_secret']]
+    );
+    const settings = {};
+    settingsResult.rows.forEach((r) => { settings[r.key] = r.value; });
+
+    const { refresh_token } = await localSeoBloggerPublisher.exchangeCodeForToken({
+      clientId: settings.google_client_id,
+      clientSecret: settings.google_client_secret,
+      redirectUri: LOCAL_SEO_BLOGGER_REDIRECT_URI,
+      code,
+    });
+
+    await pool.query(
+      `INSERT INTO settings (key, value, type) VALUES ('local_seo_blogger_refresh_token', $1, 'text')
+       ON CONFLICT (key) DO UPDATE SET value = $1`,
+      [refresh_token]
+    );
+
+    res.send(`<h2>✅ Google account connected for Local SEO Blogger!</h2><p>Refresh Token saved. You can close this window.</p><script>setTimeout(()=>window.close(),3000)</script>`);
+  } catch (error) {
+    res.send(`<h2>❌ Error: ${error.message}</h2>`);
+  }
+});
+
+// @desc Lists Blogger blogs for the connected Local SEO Google account, so
+// the admin can pick which one to publish to.
+// @route GET /api/local-seo/admin/blogger/blogs
+router.get('/admin/blogger/blogs', protectWithAdminFallback, async (req, res) => {
+  try {
+    const settingsResult = await pool.query(
+      `SELECT key, value FROM settings WHERE key = ANY($1)`,
+      [['google_client_id', 'google_client_secret', 'local_seo_blogger_refresh_token']]
+    );
+    const settings = {};
+    settingsResult.rows.forEach((r) => { settings[r.key] = r.value; });
+
+    if (!settings.local_seo_blogger_refresh_token) {
+      return res.status(400).json({ success: false, error: 'Google account not connected — authorize via /admin/blogger/auth-url first' });
+    }
+
+    const accessToken = await localSeoBloggerPublisher.getAccessToken({
+      clientId: settings.google_client_id,
+      clientSecret: settings.google_client_secret,
+      refreshToken: settings.local_seo_blogger_refresh_token,
+    });
+    const blogs = await localSeoBloggerPublisher.fetchBlogs(accessToken);
+    res.status(200).json({ success: true, blogs });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// @desc Saves which Blogger blog Local SEO content should publish to.
+// @route POST /api/local-seo/admin/blogger/select-blog
+router.post('/admin/blogger/select-blog', protectWithAdminFallback, async (req, res) => {
+  try {
+    const { blogId } = req.body;
+    if (!blogId) return res.status(400).json({ success: false, error: 'blogId required' });
+    await pool.query(
+      `INSERT INTO settings (key, value, type) VALUES ('local_seo_blogger_blog_id', $1, 'text')
+       ON CONFLICT (key) DO UPDATE SET value = $1`,
+      [String(blogId)]
+    );
+    res.status(200).json({ success: true, blogId });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
