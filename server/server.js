@@ -36,6 +36,7 @@ const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 const broadcastRoutes = require('./routes/broadcastRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
 const affiliateRoutes = require('./routes/affiliateRoutes');
+const toolsRoutes = require('./routes/toolsRoutes');
 const affiliateController = require('./controllers/affiliateController');
 const referralRoutes = require('./routes/referralRoutes');
 const outreachRoutes = require('./routes/outreachRoutes');
@@ -179,6 +180,7 @@ app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/broadcast', broadcastRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/affiliate', affiliateRoutes);
+app.use('/api/tools', toolsRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/outreach', outreachRoutes);
 app.use('/api/local-seo', localSeoRoutes);
@@ -1612,6 +1614,26 @@ async function initializeApp() {
         UNIQUE(user_id, template_id)
       );
       CREATE INDEX IF NOT EXISTS idx_broadcast_sends_template ON broadcast_sends(template_id);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    // Leads captured by free SEO tools (calculators etc.) in exchange for a
+    // PDF report — separate from real user accounts, since these are
+    // top-of-funnel visitors who haven't signed up yet. tool_slug identifies
+    // which tool generated the lead, shared across all future tools.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tool_leads (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email VARCHAR(255) NOT NULL,
+        first_name VARCHAR(255),
+        tool_slug VARCHAR(100) NOT NULL,
+        input_data JSONB,
+        result_data JSONB,
+        pdf_generated_at TIMESTAMPTZ,
+        converted_to_user_id UUID,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_tool_leads_email ON tool_leads(email);
+      CREATE INDEX IF NOT EXISTS idx_tool_leads_tool_slug ON tool_leads(tool_slug);
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
 
     // Seed default email sequence (first run), then sync templates from code
