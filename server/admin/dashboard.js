@@ -72,6 +72,7 @@ function initDashboard() {
     loadEmailTemplates();
     loadAnalytics();
     loadPageviews();
+    loadFreeToolsAnalytics();
     loadRecentActivities();
     loadSettings();
 
@@ -129,6 +130,7 @@ function switchTab(tabName) {
         affiliates: 'Affiliate Links',
         'email-templates': 'Email Templates',
         analytics: 'Analytics',
+        'free-tools-analytics': 'Free Tools Analytics',
         settings: 'Settings'
     };
 
@@ -1523,6 +1525,89 @@ async function loadPageviews() {
         }
     } catch (error) {
         console.error('Error loading pageviews:', error);
+    }
+}
+
+// FREE TOOLS ANALYTICS
+function prettifySlug(slug) {
+    if (!slug) return '—';
+    return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+async function loadFreeToolsAnalytics() {
+    try {
+        const res = await fetch(`${API_URL}/api/analytics/free-tools/summary`, {
+            headers: getAuthHeaders()
+        });
+        if (res.ok) {
+            const { summary } = await res.json();
+            document.getElementById('ft-today').innerHTML = `<h3>Today</h3><div class="number">${summary.today}</div>`;
+            document.getElementById('ft-yesterday').innerHTML = `<h3>Yesterday</h3><div class="number">${summary.yesterday}</div>`;
+            document.getElementById('ft-7d').innerHTML = `<h3>Last 7 Days</h3><div class="number">${summary.last_7_days}</div>`;
+            document.getElementById('ft-30d').innerHTML = `<h3>Last 30 Days</h3><div class="number">${summary.last_30_days}</div>`;
+            document.getElementById('ft-all-time').innerHTML = `<h3>All Time</h3><div class="number">${summary.all_time}</div>`;
+        }
+    } catch (error) {
+        console.error('Error loading free tools summary:', error);
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/analytics/free-tools/daily?days=30`, {
+            headers: getAuthHeaders()
+        });
+        const dailyEl = document.getElementById('ft-daily-table');
+        if (res.ok && dailyEl) {
+            const { data } = await res.json();
+            if (!data || data.length === 0) {
+                dailyEl.innerHTML = '<tr><td colspan="2" style="color:#9ca3af;">No pageviews recorded yet.</td></tr>';
+            } else {
+                dailyEl.innerHTML = [...data].reverse().map(r =>
+                    `<tr><td>${r.date}</td><td>${r.views}</td></tr>`
+                ).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading free tools daily breakdown:', error);
+    }
+
+    loadFreeToolsTop();
+}
+
+async function loadFreeToolsTop() {
+    const tbody = document.getElementById('ft-top-table');
+    if (!tbody) return;
+    const period = document.getElementById('ft-top-period')?.value || 'today';
+    const groupBy = document.getElementById('ft-top-groupby')?.value || 'page';
+    const isTool = groupBy === 'tool';
+    document.getElementById('ft-top-col-header').textContent = isTool ? 'Tool' : 'Page';
+    const toolHeaderEl = document.getElementById('ft-top-col-tool-header');
+    if (toolHeaderEl) toolHeaderEl.style.display = isTool ? 'none' : '';
+    const colspan = isTool ? 3 : 4;
+
+    try {
+        const res = await fetch(`${API_URL}/api/analytics/free-tools/top?period=${period}&groupBy=${groupBy}&limit=10`, {
+            headers: getAuthHeaders()
+        });
+        if (!res.ok) {
+            tbody.innerHTML = `<tr><td colspan="${colspan}" style="color:#ef4444;">Failed to load top pages</td></tr>`;
+            return;
+        }
+        const { data } = await res.json();
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${colspan}" style="color:#9ca3af;">No pageviews recorded for this period.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = data.map((row, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${isTool ? prettifySlug(row.tool_slug) : row.page_path}</td>
+                ${isTool ? '' : `<td>${prettifySlug(row.tool_slug)}</td>`}
+                <td>${row.views}</td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading free tools top pages:', error);
+        tbody.innerHTML = `<tr><td colspan="${colspan}" style="color:#ef4444;">Error loading top pages</td></tr>`;
     }
 }
 

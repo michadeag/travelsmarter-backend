@@ -597,6 +597,7 @@
                 <a class="nav-link" data-tab="affiliates">🔗 Affiliate Links</a>
                 <a class="nav-link" data-tab="email-templates">📧 Email Templates</a>
                 <a class="nav-link" data-tab="analytics">📈 Analytics</a>
+                <a class="nav-link" data-tab="free-tools-analytics">🧰 Free Tools</a>
                 <a class="nav-link" data-tab="twitter">🐦 Twitter</a>
                 <a class="nav-link" data-tab="medium">✍️ Medium</a>
                 <a class="nav-link" data-tab="social-media">📱 Social Media</a>
@@ -1064,6 +1065,79 @@
                         </thead>
                         <tbody id="email-engagement-table">
                             <tr><td colspan="7" style="color:#9ca3af;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- FREE TOOLS ANALYTICS TAB -->
+            <div id="free-tools-analytics" class="tab-content">
+                <h3>Free Tools Pageviews</h3>
+                <p style="color:#6b7280; margin-top:4px;">Tracks visits across all free-tool pages (generic + country/airline/airport/destination variants).</p>
+
+                <div class="cards-grid" style="margin-top: 20px;">
+                    <div class="card" id="ft-today">
+                        <h3>Today</h3>
+                        <div class="number" style="opacity: 0.5;">Loading...</div>
+                    </div>
+                    <div class="card" id="ft-yesterday">
+                        <h3>Yesterday</h3>
+                        <div class="number" style="opacity: 0.5;">Loading...</div>
+                    </div>
+                    <div class="card" id="ft-7d">
+                        <h3>Last 7 Days</h3>
+                        <div class="number" style="opacity: 0.5;">Loading...</div>
+                    </div>
+                    <div class="card" id="ft-30d">
+                        <h3>Last 30 Days</h3>
+                        <div class="number" style="opacity: 0.5;">Loading...</div>
+                    </div>
+                    <div class="card" id="ft-all-time">
+                        <h3>All Time</h3>
+                        <div class="number" style="opacity: 0.5;">Loading...</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px; margin-bottom: 20px;">Top 10</h3>
+                <div style="display:flex; gap:12px; margin-bottom:16px;">
+                    <select id="ft-top-period" onchange="loadFreeToolsTop()" style="padding:8px 12px; border-radius:6px; border:1px solid #e5e7eb;">
+                        <option value="today">Today</option>
+                        <option value="7days">Last 7 Days</option>
+                        <option value="30days">Last 30 Days</option>
+                        <option value="all">All Time</option>
+                    </select>
+                    <select id="ft-top-groupby" onchange="loadFreeToolsTop()" style="padding:8px 12px; border-radius:6px; border:1px solid #e5e7eb;">
+                        <option value="page">By Page</option>
+                        <option value="tool">By Tool</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th id="ft-top-col-header">Page</th>
+                                <th id="ft-top-col-tool-header">Tool</th>
+                                <th>Views</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ft-top-table">
+                            <tr><td colspan="4" style="color:#9ca3af;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 style="margin-top: 30px; margin-bottom: 20px;">Daily Breakdown (Last 30 Days)</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Views</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ft-daily-table">
+                            <tr><td colspan="2" style="color:#9ca3af;">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
