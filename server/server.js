@@ -1694,6 +1694,22 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_tool_leads_tool_slug ON tool_leads(tool_slug);
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
 
+    // Pageview beacon fired by every free SEO tool page (generic + all
+    // country/airline/airport/destination variants). tool_slug buckets a
+    // variant page's raw path under its parent tool for aggregate reporting
+    // in the admin "Free Tools" analytics tab.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS free_tool_page_views (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        page_path VARCHAR(300) NOT NULL,
+        tool_slug VARCHAR(100) NOT NULL,
+        viewed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_free_tool_page_views_viewed_at ON free_tool_page_views(viewed_at);
+      CREATE INDEX IF NOT EXISTS idx_free_tool_page_views_tool_slug ON free_tool_page_views(tool_slug);
+      CREATE INDEX IF NOT EXISTS idx_free_tool_page_views_page_path ON free_tool_page_views(page_path);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
     // Seed default email sequence (first run), then sync templates from code
     await emailSequenceService.seedEmailSequence().catch(err => {
       console.warn('⚠️ Error seeding email templates:', err.message);
