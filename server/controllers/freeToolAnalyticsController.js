@@ -196,5 +196,37 @@ exports.getToolPromoBloggerStats = async (req, res) => {
   }
 };
 
+// @desc Counts + recent list of WordPress articles that promoted a
+//   free-tool page (posted by toolPromoWordpressService's 1x/day
+//   scheduler), for the "Free Tools" admin tab's post counter.
+// @route GET /api/analytics/free-tools/wordpress-posts
+// @access Admin
+exports.getToolPromoWordpressStats = async (req, res) => {
+  try {
+    const { rows: summaryRows } = await pool.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE posted_at >= date_trunc('day', NOW()))::int AS today,
+        COUNT(*) FILTER (WHERE posted_at >= NOW() - interval '7 days')::int AS last_7_days,
+        COUNT(*) FILTER (WHERE posted_at >= NOW() - interval '30 days')::int AS last_30_days,
+        COUNT(*)::int AS all_time
+      FROM wordpress_posts
+      WHERE tool_slug IS NOT NULL
+    `);
+
+    const { rows: recent } = await pool.query(`
+      SELECT tool_slug, tool_url, title, wp_url, posted_at
+      FROM wordpress_posts
+      WHERE tool_slug IS NOT NULL
+      ORDER BY posted_at DESC
+      LIMIT 10
+    `);
+
+    res.json({ success: true, summary: summaryRows[0], recent });
+  } catch (error) {
+    console.error('getToolPromoWordpressStats error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 exports.deriveToolSlug = deriveToolSlug;
 exports.TOOL_BASE_SLUGS = TOOL_BASE_SLUGS;

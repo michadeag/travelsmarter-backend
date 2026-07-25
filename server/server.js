@@ -1328,6 +1328,11 @@ async function initializeApp() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_wordpress_posts_posted_at ON wordpress_posts(posted_at DESC);
+      -- Which free-tool page (if any) an article promoted, for the tool-promo
+      -- WordPress scheduler's post counter in the admin "Free Tools" tab.
+      ALTER TABLE wordpress_posts ADD COLUMN IF NOT EXISTS tool_slug VARCHAR(100);
+      ALTER TABLE wordpress_posts ADD COLUMN IF NOT EXISTS tool_url TEXT;
+      CREATE INDEX IF NOT EXISTS idx_wordpress_posts_tool_slug ON wordpress_posts(tool_slug);
 
       -- Referral partners (bloggers/YouTubers recruited to promote TravelSmarter —
       -- distinct from affiliate_partners, which are outbound links TO other companies)
@@ -1524,6 +1529,24 @@ async function initializeApp() {
       }
     } catch (bloggerErr) {
       console.warn('⚠️ Blogger service init failed (non-blocking):', bloggerErr.message);
+    }
+
+    // Initialize WordPress service from DB credentials, and always start the
+    // free-tool-page promo scheduler once configured — same shape as the
+    // Blogger block above (generic-topics scheduler stays manual/admin-
+    // triggered; only the new tool-promo scheduler auto-starts).
+    try {
+      const wordpressService = require('./services/wordpressService');
+      const wpConfigured = await wordpressService.loadSettings();
+      if (wpConfigured) {
+        console.log('✅ WordPress service initialized from DB');
+        const toolPromoWordpressService = require('./services/toolPromoWordpressService');
+        toolPromoWordpressService.startToolPromoScheduler();
+      } else {
+        console.log('ℹ️ WordPress not configured — add site URL/username/app password in the WordPress tab');
+      }
+    } catch (wpErr) {
+      console.warn('⚠️ WordPress service init failed (non-blocking):', wpErr.message);
     }
 
     // Initialize Quora service (content generator — no scheduler)

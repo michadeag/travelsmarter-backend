@@ -16,7 +16,8 @@ const {
   getFreeToolsSummary,
   getTopFreeToolPages,
   getToolPromoTwitterStats,
-  getToolPromoBloggerStats
+  getToolPromoBloggerStats,
+  getToolPromoWordpressStats
 } = require('../controllers/freeToolAnalyticsController');
 
 // All analytics routes require admin authentication
@@ -37,5 +38,6 @@ router.get('/free-tools/summary', verifyAdminToken, getFreeToolsSummary);
 router.get('/free-tools/top', verifyAdminToken, getTopFreeToolPages);
 router.get('/free-tools/twitter-posts', verifyAdminToken, getToolPromoTwitterStats);
 router.get('/free-tools/blogger-posts', verifyAdminToken, getToolPromoBloggerStats);
+router.get('/free-tools/wordpress-posts', verifyAdminToken, getToolPromoWordpressStats);
 
 module.exports = router;
