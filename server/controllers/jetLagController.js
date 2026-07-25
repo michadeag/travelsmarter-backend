@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const toolLeadEmailSequence = require('../services/toolLeadEmailSequence');
 
 // Standard-time UTC offsets (hours). Actual offset may shift by about 1 hour
 // depending on the time of year due to daylight saving time at either end.
@@ -100,18 +101,23 @@ exports.calculateJetLag = (req, res) => {
 // @access Public
 exports.generateJetLagPdf = async (req, res) => {
   try {
-    const { email, firstName, origin, destination } = req.body;
+    const { email, firstName, sourcePage, origin, destination } = req.body;
     if (!email || !origin || !destination) {
       return res.status(400).json({ success: false, error: 'email, origin, and destination are required' });
     }
 
     const result = computeResult({ origin, destination });
 
-    await pool.query(
-      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+    const leadResult = await pool.query(
+      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at, source_page)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id`,
       [email, firstName || null, 'jet-lag-calculator',
-        JSON.stringify({ origin, destination }), JSON.stringify(result)]
+        JSON.stringify({ origin, destination }), JSON.stringify(result), sourcePage || null]
+    );
+
+    toolLeadEmailSequence.initializeToolLeadSequence(leadResult.rows[0].id, email, firstName).catch(err =>
+      console.error('Failed to initialize lead email sequence:', err.message)
     );
 
     const doc = pdfService.createBrandedDoc(`Jet Lag Recovery Plan — ${result.originLabel} to ${result.destinationName}`);

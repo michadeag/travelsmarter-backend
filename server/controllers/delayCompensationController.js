@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const toolLeadEmailSequence = require('../services/toolLeadEmailSequence');
 
 // Flight delay/cancellation compensation rules per airline, reused from
 // Tool #2's airline list. Every airline is mapped to a regulatory regime
@@ -80,18 +81,23 @@ exports.calculateDelayCompensation = (req, res) => {
 // @access Public
 exports.generateDelayCompensationPdf = async (req, res) => {
   try {
-    const { email, firstName, airline, situation } = req.body;
+    const { email, firstName, sourcePage, airline, situation } = req.body;
     if (!email || !airline || !situation) {
       return res.status(400).json({ success: false, error: 'email, airline, and situation are required' });
     }
 
     const result = computeResult({ airline, situation });
 
-    await pool.query(
-      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+    const leadResult = await pool.query(
+      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at, source_page)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id`,
       [email, firstName || null, 'delay-compensation-checker',
-        JSON.stringify({ airline, situation }), JSON.stringify(result)]
+        JSON.stringify({ airline, situation }), JSON.stringify(result), sourcePage || null]
+    );
+
+    toolLeadEmailSequence.initializeToolLeadSequence(leadResult.rows[0].id, email, firstName).catch(err =>
+      console.error('Failed to initialize lead email sequence:', err.message)
     );
 
     const doc = pdfService.createBrandedDoc(`${result.airlineName} Delay & Cancellation Compensation Guide`);

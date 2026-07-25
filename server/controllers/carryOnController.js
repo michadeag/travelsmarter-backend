@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const toolLeadEmailSequence = require('../services/toolLeadEmailSequence');
 
 // Carry-on and personal-item limits per airline, in inches (rounded from official cm specs).
 // weightLimitLb applies to the carry-on bag only, where the airline enforces one (mainly
@@ -165,18 +166,23 @@ exports.calculateCarryOnFit = (req, res) => {
 // @access Public
 exports.generateCarryOnPdf = async (req, res) => {
   try {
-    const { email, firstName, airline, length, width, height, weight } = req.body;
+    const { email, firstName, sourcePage, airline, length, width, height, weight } = req.body;
     if (!email || !airline) {
       return res.status(400).json({ success: false, error: 'email and airline are required' });
     }
 
     const result = computeResult({ airline, length, width, height, weight });
 
-    await pool.query(
-      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+    const leadResult = await pool.query(
+      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at, source_page)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id`,
       [email, firstName || null, 'carry-on-size-checker',
-        JSON.stringify({ airline, length, width, height, weight }), JSON.stringify(result)]
+        JSON.stringify({ airline, length, width, height, weight }), JSON.stringify(result), sourcePage || null]
+    );
+
+    toolLeadEmailSequence.initializeToolLeadSequence(leadResult.rows[0].id, email, firstName).catch(err =>
+      console.error('Failed to initialize lead email sequence:', err.message)
     );
 
     const doc = pdfService.createBrandedDoc(`${result.airlineName} Carry-On Size Report`);

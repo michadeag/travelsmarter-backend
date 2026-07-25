@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const pool = require('./config/database');
 const emailSequenceService = require('./services/emailSequenceService');
+const toolLeadEmailSequence = require('./services/toolLeadEmailSequence');
 const hackUpdateService = require('./services/hackUpdateService');
 const redditService = require('./services/redditService');
 const linkedinService = require('./services/linkedinService');
@@ -1710,6 +1711,33 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_free_tool_page_views_page_path ON free_tool_page_views(page_path);
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
 
+    // Which page a tool_leads row came from (e.g. a specific country/airline
+    // variant page, not just the tool as a whole), plus a per-lead
+    // unsubscribe token/opt-out for the 30-day drip sequence below — leads
+    // have no `users` row, so they can't reuse users.unsubscribe_token.
+    await pool.query(`
+      ALTER TABLE tool_leads ADD COLUMN IF NOT EXISTS source_page VARCHAR(300);
+      ALTER TABLE tool_leads ADD COLUMN IF NOT EXISTS unsubscribe_token UUID DEFAULT gen_random_uuid();
+      ALTER TABLE tool_leads ADD COLUMN IF NOT EXISTS email_opt_out BOOLEAN DEFAULT false;
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    // Scheduling table for the free-tool-leads drip sequence — mirrors
+    // scheduled_emails but FK's to tool_leads instead of users, since leads
+    // are anonymous downloads with no account.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tool_lead_scheduled_emails (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        lead_id UUID NOT NULL REFERENCES tool_leads(id) ON DELETE CASCADE,
+        template_id UUID NOT NULL REFERENCES email_templates(id),
+        scheduled_at TIMESTAMPTZ,
+        sent_at TIMESTAMPTZ,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_tool_lead_emails_status ON tool_lead_scheduled_emails(status);
+      CREATE INDEX IF NOT EXISTS idx_tool_lead_emails_lead ON tool_lead_scheduled_emails(lead_id);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
     // Seed default email sequence (first run), then sync templates from code
     await emailSequenceService.seedEmailSequence().catch(err => {
       console.warn('⚠️ Error seeding email templates:', err.message);
@@ -1724,6 +1752,14 @@ async function initializeApp() {
     });
     await emailSequenceService.updateFeatureSpotlightTemplates().catch(err => {
       console.warn('⚠️ Error updating Feature Spotlight templates:', err.message);
+    });
+
+    // Seed the free-tool-leads 30-day drip sequence, then sync from code
+    await toolLeadEmailSequence.seedToolLeadSequence().catch(err => {
+      console.warn('⚠️ Error seeding Free Tool Leads templates:', err.message);
+    });
+    await toolLeadEmailSequence.updateToolLeadTemplates().catch(err => {
+      console.warn('⚠️ Error updating Free Tool Leads templates:', err.message);
     });
 
     // Seed travel hacks if database is empty (skip in production for faster startup)
@@ -1831,6 +1867,11 @@ app.listen(PORT, () => {
       await emailSequenceService.sendPendingEmails();
     } catch (error) {
       console.error('❌ Error in email sequence scheduler:', error);
+    }
+    try {
+      await toolLeadEmailSequence.sendPendingLeadEmails();
+    } catch (error) {
+      console.error('❌ Error in Free Tool Leads email scheduler:', error);
     }
   }, 60 * 60 * 1000);
 

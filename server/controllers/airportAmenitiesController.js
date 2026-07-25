@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const toolLeadEmailSequence = require('../services/toolLeadEmailSequence');
 
 // WiFi and amenity info per airport, reused from Tool #9's 31-airport
 // list. loungeQuality: 'excellent' | 'good' | 'limited'.
@@ -72,18 +73,23 @@ exports.calculateAirportAmenities = (req, res) => {
 // @access Public
 exports.generateAirportAmenitiesPdf = async (req, res) => {
   try {
-    const { email, firstName, airport } = req.body;
+    const { email, firstName, sourcePage, airport } = req.body;
     if (!email || !airport) {
       return res.status(400).json({ success: false, error: 'email and airport are required' });
     }
 
     const result = computeResult({ airport });
 
-    await pool.query(
-      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+    const leadResult = await pool.query(
+      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at, source_page)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id`,
       [email, firstName || null, 'airport-amenities-checker',
-        JSON.stringify({ airport }), JSON.stringify(result)]
+        JSON.stringify({ airport }), JSON.stringify(result), sourcePage || null]
+    );
+
+    toolLeadEmailSequence.initializeToolLeadSequence(leadResult.rows[0].id, email, firstName).catch(err =>
+      console.error('Failed to initialize lead email sequence:', err.message)
     );
 
     const doc = pdfService.createBrandedDoc(`${result.airportName} WiFi & Amenities Guide`);

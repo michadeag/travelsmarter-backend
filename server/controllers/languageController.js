@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const toolLeadEmailSequence = require('../services/toolLeadEmailSequence');
 
 // English proficiency and local language per country, reused from Tool
 // #3's country list. englishLevel: 'very_high' | 'high' | 'moderate' | 'low'.
@@ -109,18 +110,23 @@ exports.calculateLanguage = (req, res) => {
 // @access Public
 exports.generateLanguagePdf = async (req, res) => {
   try {
-    const { email, firstName, country } = req.body;
+    const { email, firstName, sourcePage, country } = req.body;
     if (!email || !country) {
       return res.status(400).json({ success: false, error: 'email and country are required' });
     }
 
     const result = computeResult({ country });
 
-    await pool.query(
-      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+    const leadResult = await pool.query(
+      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at, source_page)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id`,
       [email, firstName || null, 'language-checker',
-        JSON.stringify({ country }), JSON.stringify(result)]
+        JSON.stringify({ country }), JSON.stringify(result), sourcePage || null]
+    );
+
+    toolLeadEmailSequence.initializeToolLeadSequence(leadResult.rows[0].id, email, firstName).catch(err =>
+      console.error('Failed to initialize lead email sequence:', err.message)
     );
 
     const doc = pdfService.createBrandedDoc(`${result.countryName} Language & English Guide`);

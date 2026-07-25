@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const toolLeadEmailSequence = require('../services/toolLeadEmailSequence');
 
 // Dominant climate per destination, reused from the Tool #1 city list.
 // One of: tropical, desert, mediterranean, temperate, cold.
@@ -131,18 +132,23 @@ exports.calculatePackingList = (req, res) => {
 // @access Public
 exports.generatePackingListPdf = async (req, res) => {
   try {
-    const { email, firstName, destination, days, tripType } = req.body;
+    const { email, firstName, sourcePage, destination, days, tripType } = req.body;
     if (!email || !destination || !days) {
       return res.status(400).json({ success: false, error: 'email, destination, and days are required' });
     }
 
     const result = computeResult({ destination, days, tripType });
 
-    await pool.query(
-      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+    const leadResult = await pool.query(
+      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at, source_page)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id`,
       [email, firstName || null, 'packing-list-generator',
-        JSON.stringify({ destination, days, tripType }), JSON.stringify(result)]
+        JSON.stringify({ destination, days, tripType }), JSON.stringify(result), sourcePage || null]
+    );
+
+    toolLeadEmailSequence.initializeToolLeadSequence(leadResult.rows[0].id, email, firstName).catch(err =>
+      console.error('Failed to initialize lead email sequence:', err.message)
     );
 
     const doc = pdfService.createBrandedDoc(`${result.destinationName} Packing List — ${result.days} Days`);

@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const toolLeadEmailSequence = require('../services/toolLeadEmailSequence');
 
 // Estimated mid-range daily budget per person in USD (accommodation, food,
 // local transport, and some activities — excludes international flights).
@@ -100,18 +101,23 @@ exports.calculateBudget = (req, res) => {
 // @access Public
 exports.generateBudgetPdf = async (req, res) => {
   try {
-    const { email, firstName, destination, days, style } = req.body;
+    const { email, firstName, sourcePage, destination, days, style } = req.body;
     if (!email || !destination || !days) {
       return res.status(400).json({ success: false, error: 'email, destination, and days are required' });
     }
 
     const result = computeResult({ destination, days, style });
 
-    await pool.query(
-      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+    const leadResult = await pool.query(
+      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at, source_page)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id`,
       [email, firstName || null, 'travel-budget-calculator',
-        JSON.stringify({ destination, days, style }), JSON.stringify(result)]
+        JSON.stringify({ destination, days, style }), JSON.stringify(result), sourcePage || null]
+    );
+
+    toolLeadEmailSequence.initializeToolLeadSequence(leadResult.rows[0].id, email, firstName).catch(err =>
+      console.error('Failed to initialize lead email sequence:', err.message)
     );
 
     const doc = pdfService.createBrandedDoc(`${result.destinationName} Travel Budget — ${result.days} Days`);

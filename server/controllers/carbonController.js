@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const toolLeadEmailSequence = require('../services/toolLeadEmailSequence');
 
 // Destination -> approximate one-way distance in miles from a major US
 // gateway, derived from the same tripType categories used in Tool #1.
@@ -104,18 +105,23 @@ exports.calculateCarbon = (req, res) => {
 // @access Public
 exports.generateCarbonPdf = async (req, res) => {
   try {
-    const { email, firstName, destination, cabinClass, roundTrip } = req.body;
+    const { email, firstName, sourcePage, destination, cabinClass, roundTrip } = req.body;
     if (!email || !destination) {
       return res.status(400).json({ success: false, error: 'email and destination are required' });
     }
 
     const result = computeResult({ destination, cabinClass, roundTrip });
 
-    await pool.query(
-      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+    const leadResult = await pool.query(
+      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at, source_page)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id`,
       [email, firstName || null, 'flight-carbon-calculator',
-        JSON.stringify({ destination, cabinClass, roundTrip }), JSON.stringify(result)]
+        JSON.stringify({ destination, cabinClass, roundTrip }), JSON.stringify(result), sourcePage || null]
+    );
+
+    toolLeadEmailSequence.initializeToolLeadSequence(leadResult.rows[0].id, email, firstName).catch(err =>
+      console.error('Failed to initialize lead email sequence:', err.message)
     );
 
     const doc = pdfService.createBrandedDoc(`${result.destinationName} Flight Carbon Estimate`);

@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const toolLeadEmailSequence = require('../services/toolLeadEmailSequence');
 
 // Booking-window matrix (days before departure), derived from the same
 // route-type data already taught in the Timing Intelligence module.
@@ -97,18 +98,23 @@ exports.calculateBestTimeToBook = (req, res) => {
 // @access Public
 exports.generateBestTimeToBookPdf = async (req, res) => {
   try {
-    const { email, firstName, tripType, airlineType, departureDate } = req.body;
+    const { email, firstName, sourcePage, tripType, airlineType, departureDate } = req.body;
     if (!email || !tripType || !airlineType || !departureDate) {
       return res.status(400).json({ success: false, error: 'email, tripType, airlineType, and departureDate are required' });
     }
 
     const result = computeResult({ tripType, airlineType, departureDate });
 
-    await pool.query(
-      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+    const leadResult = await pool.query(
+      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at, source_page)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id`,
       [email, firstName || null, 'best-time-to-book-flights',
-        JSON.stringify({ tripType, airlineType, departureDate }), JSON.stringify(result)]
+        JSON.stringify({ tripType, airlineType, departureDate }), JSON.stringify(result), sourcePage || null]
+    );
+
+    toolLeadEmailSequence.initializeToolLeadSequence(leadResult.rows[0].id, email, firstName).catch(err =>
+      console.error('Failed to initialize lead email sequence:', err.message)
     );
 
     // Build the PDF

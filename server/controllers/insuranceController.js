@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const toolLeadEmailSequence = require('../services/toolLeadEmailSequence');
 
 // Estimated travel insurance cost as a percentage of prepaid, non-refundable
 // trip cost — based on typical industry rules of thumb (rate rises with
@@ -91,18 +92,23 @@ exports.calculateInsurance = (req, res) => {
 // @access Public
 exports.generateInsurancePdf = async (req, res) => {
   try {
-    const { email, firstName, tripCostUSD, ageBand, tripLengthDays, destinationType } = req.body;
+    const { email, firstName, sourcePage, tripCostUSD, ageBand, tripLengthDays, destinationType } = req.body;
     if (!email) {
       return res.status(400).json({ success: false, error: 'email is required' });
     }
 
     const result = computeResult({ tripCostUSD, ageBand, tripLengthDays, destinationType });
 
-    await pool.query(
-      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+    const leadResult = await pool.query(
+      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at, source_page)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id`,
       [email, firstName || null, 'insurance-cost-estimator',
-        JSON.stringify({ tripCostUSD, ageBand, tripLengthDays, destinationType }), JSON.stringify(result)]
+        JSON.stringify({ tripCostUSD, ageBand, tripLengthDays, destinationType }), JSON.stringify(result), sourcePage || null]
+    );
+
+    toolLeadEmailSequence.initializeToolLeadSequence(leadResult.rows[0].id, email, firstName).catch(err =>
+      console.error('Failed to initialize lead email sequence:', err.message)
     );
 
     const doc = pdfService.createBrandedDoc('Your Travel Insurance Cost Estimate');

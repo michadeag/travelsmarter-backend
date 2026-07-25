@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const toolLeadEmailSequence = require('../services/toolLeadEmailSequence');
 
 // Public transit card/pass per destination, reused from Tool #1's 80-city
 // list. hasSystem is false for destinations with no dedicated visitor-
@@ -122,18 +123,23 @@ exports.calculateTransit = (req, res) => {
 // @access Public
 exports.generateTransitPdf = async (req, res) => {
   try {
-    const { email, firstName, destination } = req.body;
+    const { email, firstName, sourcePage, destination } = req.body;
     if (!email || !destination) {
       return res.status(400).json({ success: false, error: 'email and destination are required' });
     }
 
     const result = computeResult({ destination });
 
-    await pool.query(
-      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+    const leadResult = await pool.query(
+      `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at, source_page)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id`,
       [email, firstName || null, 'transit-checker',
-        JSON.stringify({ destination }), JSON.stringify(result)]
+        JSON.stringify({ destination }), JSON.stringify(result), sourcePage || null]
+    );
+
+    toolLeadEmailSequence.initializeToolLeadSequence(leadResult.rows[0].id, email, firstName).catch(err =>
+      console.error('Failed to initialize lead email sequence:', err.message)
     );
 
     const doc = pdfService.createBrandedDoc(`${result.destinationName} Public Transit Guide`);
