@@ -185,7 +185,7 @@ async function postRandomToolTweet() {
   const result = await twitterService.postTweet(tweet.text);
   if (!result.success) {
     console.error('❌ Tool-promo tweet failed to post:', result.error);
-    return result;
+    return { success: false, message: result.error || 'Failed to post tweet' };
   }
 
   const toolSlug = urlMatchesToolSlug(new URL(url).pathname);
