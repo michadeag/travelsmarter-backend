@@ -250,6 +250,7 @@ function stopToolPromoScheduler() {
 
 module.exports = {
   TOOL_BASE_SLUGS,
+  urlMatchesToolSlug,
   fetchToolPageUrls,
   pickUnpostedUrl,
   buildTweetFromPage,

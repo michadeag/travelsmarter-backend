@@ -136,4 +136,20 @@ router.get('/recent-posts', async (req, res) => {
   }
 });
 
+// Publish a full article promoting a random free-tool page right now (the
+// same content/logic the 1x/day scheduler uses) — for manual testing/triggering.
+router.post('/post-tool-promo', protectWithAdminFallback, async (req, res) => {
+  try {
+    const toolPromoBloggerService = require('../services/toolPromoBloggerService');
+    const result = await toolPromoBloggerService.postRandomToolBlogArticle();
+    if (result.success) {
+      res.json({ success: true, message: 'Tool-promo blog post published', url: result.bloggerUrl, toolUrl: result.url, title: result.title });
+    } else {
+      res.status(400).json({ success: false, message: result.message || 'Failed to publish tool-promo blog post' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error publishing tool-promo blog post', error: err.message });
+  }
+});
+
 module.exports = router;

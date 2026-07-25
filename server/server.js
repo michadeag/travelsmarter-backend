@@ -1308,6 +1308,11 @@ async function initializeApp() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_blogger_posts_posted_at ON blogger_posts(posted_at DESC);
+      -- Which free-tool page (if any) an article promoted, for the tool-promo
+      -- Blogger scheduler's post counter in the admin "Free Tools" tab.
+      ALTER TABLE blogger_posts ADD COLUMN IF NOT EXISTS tool_slug VARCHAR(100);
+      ALTER TABLE blogger_posts ADD COLUMN IF NOT EXISTS tool_url TEXT;
+      CREATE INDEX IF NOT EXISTS idx_blogger_posts_tool_slug ON blogger_posts(tool_slug);
 
       -- WordPress.com published posts
       CREATE TABLE IF NOT EXISTS wordpress_posts (
@@ -1498,6 +1503,27 @@ async function initializeApp() {
       }
     } catch (twErr) {
       console.warn('⚠️ Twitter service init failed (non-blocking):', twErr.message);
+    }
+
+    // Initialize Blogger service from DB credentials, and always start the
+    // free-tool-page promo scheduler once configured — independent of the
+    // generic-topics scheduler (which stays manual/admin-triggered): 1
+    // random article/day, one per free-tool page, cycling through the live
+    // sitemap (so future tools are included automatically with no code
+    // change here).
+    try {
+      const bloggerService = require('./services/bloggerService');
+      await bloggerService.loadSettings();
+      const bloggerStatus = bloggerService.getStatus();
+      if (bloggerStatus.configured) {
+        console.log('✅ Blogger service initialized from DB');
+        const toolPromoBloggerService = require('./services/toolPromoBloggerService');
+        toolPromoBloggerService.startToolPromoScheduler();
+      } else {
+        console.log('ℹ️ Blogger not configured — connect Google account + select a blog in the Blogger tab');
+      }
+    } catch (bloggerErr) {
+      console.warn('⚠️ Blogger service init failed (non-blocking):', bloggerErr.message);
     }
 
     // Initialize Quora service (content generator — no scheduler)

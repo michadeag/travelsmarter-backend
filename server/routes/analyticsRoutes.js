@@ -15,7 +15,8 @@ const {
   getDailyPageviews,
   getFreeToolsSummary,
   getTopFreeToolPages,
-  getToolPromoTwitterStats
+  getToolPromoTwitterStats,
+  getToolPromoBloggerStats
 } = require('../controllers/freeToolAnalyticsController');
 
 // All analytics routes require admin authentication
@@ -35,5 +36,6 @@ router.get('/free-tools/daily', verifyAdminToken, getDailyPageviews);
 router.get('/free-tools/summary', verifyAdminToken, getFreeToolsSummary);
 router.get('/free-tools/top', verifyAdminToken, getTopFreeToolPages);
 router.get('/free-tools/twitter-posts', verifyAdminToken, getToolPromoTwitterStats);
+router.get('/free-tools/blogger-posts', verifyAdminToken, getToolPromoBloggerStats);
 
 module.exports = router;
