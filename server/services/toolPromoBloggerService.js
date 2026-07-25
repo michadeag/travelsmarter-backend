@@ -89,6 +89,15 @@ async function pickUnpostedToolUrl() {
 
 // ─── PAGE SCRAPE (title/description + FAQ JSON-LD when present) ──────────
 
+function describeError(error) {
+  if (error.response?.data) {
+    const d = error.response.data;
+    if (typeof d === 'string') return d.slice(0, 300);
+    return (d.error_description || d.error?.message || JSON.stringify(d)).slice(0, 300);
+  }
+  return error.message;
+}
+
 function decodeHtmlEntities(str) {
   return str
     .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
@@ -195,16 +204,18 @@ async function postRandomToolBlogArticle() {
   try {
     page = await scrapeToolPage(url);
   } catch (error) {
-    console.error(`❌ Failed to scrape tool page ${url}:`, error.message);
-    return { success: false, message: error.message };
+    const detail = describeError(error);
+    console.error(`❌ Failed to scrape tool page ${url}:`, detail);
+    return { success: false, message: detail };
   }
 
   let article;
   try {
     article = await generateToolArticle(page);
   } catch (error) {
-    console.error('❌ Failed to generate tool-promo article:', error.message);
-    return { success: false, message: error.message };
+    const detail = describeError(error);
+    console.error('❌ Failed to generate tool-promo article:', detail);
+    return { success: false, message: detail };
   }
 
   const toolSlug = urlMatchesToolSlug(new URL(url).pathname);
@@ -214,8 +225,9 @@ async function postRandomToolBlogArticle() {
     const accessToken = await bloggerService.getAccessToken();
     published = await bloggerService.publishPost(accessToken, article.title, article.body, [toolSlug || 'travel-tools', 'travel tools']);
   } catch (error) {
-    console.error('❌ Failed to publish tool-promo blog post:', error.message);
-    return { success: false, message: error.message };
+    const detail = describeError(error);
+    console.error('❌ Failed to publish tool-promo blog post:', detail);
+    return { success: false, message: `Google/Blogger connection error: ${detail}. Try reconnecting your Google account in the Blogger tab.` };
   }
 
   try {
