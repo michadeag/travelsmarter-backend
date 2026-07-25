@@ -1130,6 +1130,11 @@ async function initializeApp() {
       ALTER TABLE twitter_posts ADD COLUMN IF NOT EXISTS included_cta BOOLEAN DEFAULT false;
       ALTER TABLE twitter_posts ADD COLUMN IF NOT EXISTS tweet_id VARCHAR(100);
       ALTER TABLE twitter_posts ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'posted';
+      -- Which free-tool page (if any) a tweet promoted, for the tool-promo
+      -- Twitter scheduler's post counter in the admin "Free Tools" tab.
+      ALTER TABLE twitter_posts ADD COLUMN IF NOT EXISTS url TEXT;
+      ALTER TABLE twitter_posts ADD COLUMN IF NOT EXISTS tool_slug VARCHAR(100);
+      CREATE INDEX IF NOT EXISTS idx_twitter_posts_tool_slug ON twitter_posts(tool_slug);
 
       -- Reddit posts log
       CREATE TABLE IF NOT EXISTS reddit_posts (
@@ -1479,6 +1484,14 @@ async function initializeApp() {
             twitterScheduler.startMultipleDailyPostings(times);
             console.log(`✅ Twitter scheduler auto-restarted (${times.join(', ')})`);
           }
+
+          // Free-tool-page promo scheduler — independent of the tip
+          // scheduler above, always runs once Twitter is configured: 3
+          // random posts/day in US peak windows, one per free-tool page,
+          // cycling through the live sitemap (so future tools are included
+          // automatically with no code change here).
+          const toolPromoTwitterService = require('./services/toolPromoTwitterService');
+          toolPromoTwitterService.startToolPromoScheduler();
         } else console.log('ℹ️ Twitter credentials in DB but init failed');
       } else {
         console.log('ℹ️ Twitter not configured — add credentials in Settings');

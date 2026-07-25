@@ -131,6 +131,26 @@ router.post('/post-random', verifyAdminToken, requireAdminRole(['admin']), async
 });
 
 /**
+ * POST /api/twitter/post-tool-promo
+ * Post a tweet promoting a random free-tool page right now (the same
+ * content/logic the 3x/day scheduler uses) — for manual testing/triggering.
+ * Admin only
+ */
+router.post('/post-tool-promo', verifyAdminToken, requireAdminRole(['admin']), async (req, res) => {
+  try {
+    const toolPromoTwitterService = require('../services/toolPromoTwitterService');
+    const result = await toolPromoTwitterService.postRandomToolTweet();
+    if (result.success) {
+      res.json({ success: true, message: 'Tool-promo tweet posted', url: result.url, tweetId: result.tweetId });
+    } else {
+      res.status(400).json({ success: false, message: result.message || 'Failed to post tool-promo tweet' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error posting tool-promo tweet', error: error.message });
+  }
+});
+
+/**
  * POST /api/twitter/post-category
  * Post tip from specific category
  * Admin only
