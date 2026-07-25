@@ -131,7 +131,7 @@ exports.generateHealthPdf = async (req, res) => {
     await pool.query(
       `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
        VALUES ($1, $2, $3, $4, $5, NOW())`,
-      ['travel-health-checker', firstName || null, 'travel-health-checker',
+      [email, firstName || null, 'travel-health-checker',
         JSON.stringify({ country }), JSON.stringify(result)]
     );
 

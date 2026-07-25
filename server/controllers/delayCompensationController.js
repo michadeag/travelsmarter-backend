@@ -90,7 +90,7 @@ exports.generateDelayCompensationPdf = async (req, res) => {
     await pool.query(
       `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
        VALUES ($1, $2, $3, $4, $5, NOW())`,
-      ['delay-compensation-checker', firstName || null, 'delay-compensation-checker',
+      [email, firstName || null, 'delay-compensation-checker',
         JSON.stringify({ airline, situation }), JSON.stringify(result)]
     );
 

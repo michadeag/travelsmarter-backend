@@ -110,7 +110,7 @@ exports.generateBudgetPdf = async (req, res) => {
     await pool.query(
       `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
        VALUES ($1, $2, $3, $4, $5, NOW())`,
-      ['travel-budget-calculator', firstName || null, 'travel-budget-calculator',
+      [email, firstName || null, 'travel-budget-calculator',
         JSON.stringify({ destination, days, style }), JSON.stringify(result)]
     );
 

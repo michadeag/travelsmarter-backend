@@ -107,7 +107,7 @@ exports.generateBestTimeToBookPdf = async (req, res) => {
     await pool.query(
       `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
        VALUES ($1, $2, $3, $4, $5, NOW())`,
-      ['best-time-to-book-flights', firstName || null, 'best-time-to-book-flights',
+      [email, firstName || null, 'best-time-to-book-flights',
         JSON.stringify({ tripType, airlineType, departureDate }), JSON.stringify(result)]
     );
 

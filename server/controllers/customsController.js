@@ -127,7 +127,7 @@ exports.generateCustomsPdf = async (req, res) => {
     await pool.query(
       `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
        VALUES ($1, $2, $3, $4, $5, NOW())`,
-      ['customs-checker', firstName || null, 'customs-checker',
+      [email, firstName || null, 'customs-checker',
         JSON.stringify({ country }), JSON.stringify(result)]
     );
 

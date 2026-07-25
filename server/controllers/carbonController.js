@@ -114,7 +114,7 @@ exports.generateCarbonPdf = async (req, res) => {
     await pool.query(
       `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
        VALUES ($1, $2, $3, $4, $5, NOW())`,
-      ['flight-carbon-calculator', firstName || null, 'flight-carbon-calculator',
+      [email, firstName || null, 'flight-carbon-calculator',
         JSON.stringify({ destination, cabinClass, roundTrip }), JSON.stringify(result)]
     );
 

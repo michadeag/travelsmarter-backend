@@ -116,7 +116,7 @@ exports.generateEmergencyPdf = async (req, res) => {
     await pool.query(
       `INSERT INTO tool_leads (email, first_name, tool_slug, input_data, result_data, pdf_generated_at)
        VALUES ($1, $2, $3, $4, $5, NOW())`,
-      ['emergency-number-checker', firstName || null, 'emergency-number-checker',
+      [email, firstName || null, 'emergency-number-checker',
         JSON.stringify({ country }), JSON.stringify(result)]
     );
 
