@@ -84,6 +84,7 @@ const slideshareRoutes = require('./routes/slideshareRoutes');
 const partnerDealsRoutes = require('./routes/partnerDealsRoutes');
 const quoraRoutes = require('./routes/quoraRoutes');
 const bloggerRoutes = require('./routes/bloggerRoutes');
+const toolImageRoutes = require('./routes/toolImageRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
 
 // Import controllers
@@ -259,6 +260,7 @@ app.use('/api/medium', mediumRoutes);
 app.use('/api/wordpress', wordpressRoutes);
 app.use('/api/quora', quoraRoutes);
 app.use('/api/blogger', bloggerRoutes);
+app.use('/api/tool-images', toolImageRoutes);
 app.use('/api/youtube', youtubeRoutes);
 
 // Health check endpoint
@@ -1333,6 +1335,17 @@ async function initializeApp() {
       ALTER TABLE wordpress_posts ADD COLUMN IF NOT EXISTS tool_slug VARCHAR(100);
       ALTER TABLE wordpress_posts ADD COLUMN IF NOT EXISTS tool_url TEXT;
       CREATE INDEX IF NOT EXISTS idx_wordpress_posts_tool_slug ON wordpress_posts(tool_slug);
+
+      -- One branded thumbnail per free-tool category (Ideogram-generated),
+      -- used as the og:image/twitter:image on every generic + variant page
+      -- for that tool so link previews (Twitter, iMessage, Slack, etc.)
+      -- show a themed image instead of a blank placeholder.
+      CREATE TABLE IF NOT EXISTS tool_og_images (
+        tool_slug VARCHAR(100) PRIMARY KEY,
+        image_url TEXT NOT NULL,
+        prompt TEXT,
+        generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
 
       -- Referral partners (bloggers/YouTubers recruited to promote TravelSmarter —
       -- distinct from affiliate_partners, which are outbound links TO other companies)
