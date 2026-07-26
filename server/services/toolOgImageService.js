@@ -42,6 +42,7 @@ const TOOL_THEMES = [
   { slug: 'seat-pitch-checker', theme: 'an airplane seat with a measuring tape showing legroom' },
   { slug: 'insurance-cost-estimator', theme: 'a protective shield icon with a small airplane' },
   { slug: 'pet-travel-checker', theme: 'a dog in a pet travel carrier next to an airplane' },
+  { slug: 'passport-validity-checker', theme: 'an open passport with a calendar page and a checkmark' },
 ];
 
 async function getIdeogramKey() {

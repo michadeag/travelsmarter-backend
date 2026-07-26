@@ -2,13 +2,13 @@ const pool = require('../config/database');
 const emailService = require('./emailService');
 
 // 30-day drip sequence for leads captured by the free SEO tools (anyone who
-// downloaded a PDF from one of the 30 free-tool pages). Distinct from
+// downloaded a PDF from one of the free-tool pages). Distinct from
 // emailSequenceService.js's user-account sequences: these leads have no
 // `users` row, so scheduling lives in its own tool_lead_scheduled_emails
 // table (FK'd to tool_leads instead of users) rather than reusing
 // scheduled_emails. Content mixes a practical tip, a cross-promoted tool,
 // and — every 5th day — a TravelSmarter Pro pitch, cycling through all 30
-// free tools exactly once over the 30 days.
+// free tools over the 30 days (wrapping once the tool count exceeds 30).
 
 const TOOL_LEAD_SEQUENCE_NAME = 'Free Tool Leads Sequence';
 
@@ -71,6 +71,7 @@ const TOOLS = [
   { url: 'seat-pitch-checker.html', icon: '💺', name: 'Seat Pitch & Legroom Checker', hook: 'Skip the paid seat upgrade — try this', tip: "Exit row and bulkhead seats often beat the paid 'extra legroom' product, sometimes for a lower fee — check the seat map, not just the fare name." },
   { url: 'insurance-cost-estimator.html', icon: '🧳', name: 'Travel Insurance Cost Estimator', hook: 'What travel insurance actually costs', tip: 'Travel insurance typically runs 4-12% of your trip cost — the older you are and the more adventurous the trip, the higher that percentage climbs.' },
   { url: 'pet-travel-checker.html', icon: '🐾', name: 'Pet Travel & Import Requirements Checker', hook: 'The pet-travel prep that takes months', tip: 'Pet import rules for rabies-free destinations (Australia, Iceland, several Caribbean islands) often require blood tests with mandatory waiting periods — this is one prep task that can\'t be rushed.' },
+  { url: 'passport-validity-checker.html', icon: '🛂', name: 'Passport Validity Checker', hook: 'The 6-month passport rule that strands travelers', tip: 'Many countries require your passport to stay valid 6 months beyond your entry date, not just past your return — airlines enforce this at check-in, before you even reach immigration.' },
 ];
 
 // ─── BUILD THE 30-DAY SEQUENCE ────────────────────────────────────────────────
@@ -85,7 +86,7 @@ function buildToolLeadSequence() {
     let html = '';
     if (day === 1) {
       html += h(`Welcome — here's your free travel toolkit`);
-      html += p(`You grabbed a free PDF from one of TravelSmarter's 30 free trip-planning tools. Over the next 30 days you'll get one practical tip and one tool spotlight per email — genuinely useful on their own, no strings attached.`);
+      html += p(`You grabbed a free PDF from one of TravelSmarter's free trip-planning tools. Over the next 30 days you'll get one practical tip and one tool spotlight per email — genuinely useful on their own, no strings attached.`);
     } else if (isFinale) {
       html += h(`Day 30 — you've seen the whole toolkit`);
       html += p(`This is the last email in this series. Over the past month you've gotten a tip and a tool a day, covering everything from flight timing to pet travel paperwork.`);
