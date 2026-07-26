@@ -76,6 +76,7 @@ const TOOLS = [
   { url: 'rental-age-checker.html', icon: '🚗', name: 'Car Rental Age & Young Driver Fee Checker', hook: 'The rental fee that only shows up at the counter', tip: "Under-25 drivers routinely get hit with a young-driver surcharge that never shows up in the online quote — checking your destination's age rules before booking avoids an unpleasant surprise at the counter." },
   { url: 'atm-fee-checker.html', icon: '💳', name: 'ATM & Foreign Transaction Fee Checker', hook: 'The ATM popup you should always decline', tip: "When a foreign ATM or card terminal asks if you'd like to be charged in your home currency, always say no — that's Dynamic Currency Conversion, and it quietly applies a worse exchange rate with a hidden markup." },
   { url: 'dress-code-checker.html', icon: '👗', name: 'Local Dress Code & Etiquette Checker', hook: 'The temple visit that gets you turned away', tip: "Many temples, mosques, and churches enforce a shoulders-and-knees-covered dress code strictly — pack a lightweight scarf or sarong so an unplanned visit never gets you turned away at the door." },
+  { url: 'lost-passport-checker.html', icon: '🛂', name: 'Lost Passport & Embassy Contact Checker', hook: 'The one number worth saving before you fly', tip: "Save your embassy's 24-hour emergency contact number before you travel, not after you need it — a police report plus an embassy visit is the universal first step if your passport is ever lost or stolen." },
 ];
 
 // ─── BUILD THE 30-DAY SEQUENCE ────────────────────────────────────────────────

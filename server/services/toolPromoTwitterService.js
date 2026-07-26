@@ -26,7 +26,7 @@ const TOOL_BASE_SLUGS = [
   'airport-amenities-checker', 'drone-checker', 'alcohol-checker',
   'seat-pitch-checker', 'insurance-cost-estimator', 'pet-travel-checker',
   'passport-validity-checker', 'public-holiday-checker', 'rental-age-checker',
-  'atm-fee-checker', 'dress-code-checker',
+  'atm-fee-checker', 'dress-code-checker', 'lost-passport-checker',
 ].sort((a, b) => b.length - a.length);
 
 const SITEMAP_URL = 'https://travelsmarterapp.com/sitemap.xml';
