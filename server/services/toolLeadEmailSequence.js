@@ -72,6 +72,7 @@ const TOOLS = [
   { url: 'insurance-cost-estimator.html', icon: '🧳', name: 'Travel Insurance Cost Estimator', hook: 'What travel insurance actually costs', tip: 'Travel insurance typically runs 4-12% of your trip cost — the older you are and the more adventurous the trip, the higher that percentage climbs.' },
   { url: 'pet-travel-checker.html', icon: '🐾', name: 'Pet Travel & Import Requirements Checker', hook: 'The pet-travel prep that takes months', tip: 'Pet import rules for rabies-free destinations (Australia, Iceland, several Caribbean islands) often require blood tests with mandatory waiting periods — this is one prep task that can\'t be rushed.' },
   { url: 'passport-validity-checker.html', icon: '🛂', name: 'Passport Validity Checker', hook: 'The 6-month passport rule that strands travelers', tip: 'Many countries require your passport to stay valid 6 months beyond your entry date, not just past your return — airlines enforce this at check-in, before you even reach immigration.' },
+  { url: 'public-holiday-checker.html', icon: '📅', name: 'Public Holiday & Bank Closure Checker', hook: 'The trip-planning mistake nobody checks for', tip: "Landing during a national holiday can mean closed banks, shops, and even attractions — checking your destination's holiday calendar takes two minutes and can save a whole day of your trip." },
 ];
 
 // ─── BUILD THE 30-DAY SEQUENCE ────────────────────────────────────────────────
