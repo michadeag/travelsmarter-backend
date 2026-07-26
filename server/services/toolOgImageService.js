@@ -49,6 +49,7 @@ const TOOL_THEMES = [
   { slug: 'dress-code-checker', theme: 'a folded modest garment like a scarf or shawl next to a small temple or landmark silhouette' },
   { slug: 'lost-passport-checker', theme: 'an open passport with a magnifying glass or a small exclamation mark icon' },
   { slug: 'tourist-tax-checker', theme: 'a small hotel building icon with a coin or receipt icon beside it' },
+  { slug: 'short-term-rental-checker', theme: 'a small house icon with a key and a document or checklist icon' },
 ];
 
 async function getIdeogramKey() {
