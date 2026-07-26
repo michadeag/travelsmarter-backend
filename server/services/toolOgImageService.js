@@ -44,6 +44,7 @@ const TOOL_THEMES = [
   { slug: 'pet-travel-checker', theme: 'a dog in a pet travel carrier next to an airplane' },
   { slug: 'passport-validity-checker', theme: 'an open passport with a calendar page and a checkmark' },
   { slug: 'public-holiday-checker', theme: 'a calendar page with a festive star or flag marking a holiday date' },
+  { slug: 'rental-age-checker', theme: 'a car key next to a drivers license and a small car icon' },
 ];
 
 async function getIdeogramKey() {
