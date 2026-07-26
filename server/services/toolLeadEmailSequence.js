@@ -77,6 +77,7 @@ const TOOLS = [
   { url: 'atm-fee-checker.html', icon: '💳', name: 'ATM & Foreign Transaction Fee Checker', hook: 'The ATM popup you should always decline', tip: "When a foreign ATM or card terminal asks if you'd like to be charged in your home currency, always say no — that's Dynamic Currency Conversion, and it quietly applies a worse exchange rate with a hidden markup." },
   { url: 'dress-code-checker.html', icon: '👗', name: 'Local Dress Code & Etiquette Checker', hook: 'The temple visit that gets you turned away', tip: "Many temples, mosques, and churches enforce a shoulders-and-knees-covered dress code strictly — pack a lightweight scarf or sarong so an unplanned visit never gets you turned away at the door." },
   { url: 'lost-passport-checker.html', icon: '🛂', name: 'Lost Passport & Embassy Contact Checker', hook: 'The one number worth saving before you fly', tip: "Save your embassy's 24-hour emergency contact number before you travel, not after you need it — a police report plus an embassy visit is the universal first step if your passport is ever lost or stolen." },
+  { url: 'tourist-tax-checker.html', icon: '🏨', name: 'Tourist Tax / City Tax Checker', hook: 'The fee that never shows up in the booking price', tip: "Many cities charge a nightly tourist tax that booking sites don't include in the headline price — and it's often cash-only, paid directly at check-in — so budgeting a small buffer avoids an awkward surprise at the front desk." },
 ];
 
 // ─── BUILD THE 30-DAY SEQUENCE ────────────────────────────────────────────────

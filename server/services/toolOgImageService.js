@@ -48,6 +48,7 @@ const TOOL_THEMES = [
   { slug: 'atm-fee-checker', theme: 'an ATM machine with a bank card and a small coin or bill icon' },
   { slug: 'dress-code-checker', theme: 'a folded modest garment like a scarf or shawl next to a small temple or landmark silhouette' },
   { slug: 'lost-passport-checker', theme: 'an open passport with a magnifying glass or a small exclamation mark icon' },
+  { slug: 'tourist-tax-checker', theme: 'a small hotel building icon with a coin or receipt icon beside it' },
 ];
 
 async function getIdeogramKey() {
