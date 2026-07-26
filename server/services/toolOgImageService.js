@@ -45,6 +45,7 @@ const TOOL_THEMES = [
   { slug: 'passport-validity-checker', theme: 'an open passport with a calendar page and a checkmark' },
   { slug: 'public-holiday-checker', theme: 'a calendar page with a festive star or flag marking a holiday date' },
   { slug: 'rental-age-checker', theme: 'a car key next to a drivers license and a small car icon' },
+  { slug: 'atm-fee-checker', theme: 'an ATM machine with a bank card and a small coin or bill icon' },
 ];
 
 async function getIdeogramKey() {
