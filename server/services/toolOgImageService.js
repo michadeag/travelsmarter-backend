@@ -46,6 +46,7 @@ const TOOL_THEMES = [
   { slug: 'public-holiday-checker', theme: 'a calendar page with a festive star or flag marking a holiday date' },
   { slug: 'rental-age-checker', theme: 'a car key next to a drivers license and a small car icon' },
   { slug: 'atm-fee-checker', theme: 'an ATM machine with a bank card and a small coin or bill icon' },
+  { slug: 'dress-code-checker', theme: 'a folded modest garment like a scarf or shawl next to a small temple or landmark silhouette' },
 ];
 
 async function getIdeogramKey() {
