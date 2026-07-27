@@ -6,6 +6,7 @@ require('dotenv').config();
 const pool = require('./config/database');
 const emailSequenceService = require('./services/emailSequenceService');
 const toolLeadEmailSequence = require('./services/toolLeadEmailSequence');
+const videoScriptService = require('./services/videoScriptService');
 const hackUpdateService = require('./services/hackUpdateService');
 const redditService = require('./services/redditService');
 const linkedinService = require('./services/linkedinService');
@@ -97,6 +98,7 @@ const referralRoutes = require('./routes/referralRoutes');
 const outreachRoutes = require('./routes/outreachRoutes');
 const localSeoRoutes = require('./routes/localSeoRoutes');
 const hiddenGemRoutes = require('./routes/hiddenGemRoutes');
+const videoScriptRoutes = require('./routes/videoScriptRoutes');
 const flightAlertRoutes = require('./routes/flightAlertRoutes');
 const { runDailyPriceCheck } = require('./services/flightPriceService');
 const redditRoutes = require('./routes/redditRoutes');
@@ -149,6 +151,7 @@ app.use(express.static(__dirname));
 app.use('/api/auth', authRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/trip-brief', tripBriefRoutes);
+app.use('/api/video-scripts', videoScriptRoutes);
 app.use('/api/deals', dealsRoutes);
 app.use('/api/hacks', hacksRoutes);
 app.use('/api/user/deal-filters', dealFiltersRoutes);
@@ -1903,6 +1906,34 @@ async function initializeApp() {
       );
       CREATE INDEX IF NOT EXISTS idx_trip_brief_lifetime_email ON trip_brief_lifetime_access(email);
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    // Short-form (Shorts/Reels/TikTok) video script ideas for promoting the
+    // free tools — admin dashboard feature under the Free Tools tab. Content
+    // lives in code (videoScriptService.js) and is upserted here on every
+    // boot, same pattern as the tool-lead email sequence below. times_shown/
+    // last_shown_at drive rotation so repeated "give me N ideas" calls
+    // surface fresh ones first.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS video_script_ideas (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        key VARCHAR(100) NOT NULL UNIQUE,
+        tool_slug VARCHAR(100) NOT NULL,
+        tool_name VARCHAR(200) NOT NULL,
+        hook TEXT NOT NULL,
+        voiceover TEXT NOT NULL,
+        cta_youtube TEXT NOT NULL,
+        cta_reels_tiktok TEXT NOT NULL,
+        caption TEXT NOT NULL,
+        hashtags TEXT NOT NULL,
+        times_shown INTEGER NOT NULL DEFAULT 0,
+        last_shown_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_video_script_ideas_rotation ON video_script_ideas(times_shown, last_shown_at);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+    await videoScriptService.syncVideoScriptIdeas().catch(err => {
+      console.warn('⚠️ Error syncing video script ideas:', err.message);
+    });
 
     // Seed default email sequence (first run), then sync templates from code
     await emailSequenceService.seedEmailSequence().catch(err => {
