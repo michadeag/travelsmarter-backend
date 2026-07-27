@@ -54,6 +54,7 @@ const TOOL_THEMES = [
   { slug: 'departure-tax-checker', theme: 'an airplane departing with a small ticket or receipt icon' },
   { slug: 'wildlife-safety-checker', theme: 'a stylized snake or paw print icon with a small warning triangle' },
   { slug: 'time-zone-checker', theme: 'a world clock or two overlapping clock faces showing different times' },
+  { slug: 'drinking-age-checker', theme: 'a wine glass or beer mug next to a small ID card icon' },
 ];
 
 async function getIdeogramKey() {

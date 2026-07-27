@@ -29,6 +29,7 @@ const TOOL_BASE_SLUGS = [
   'atm-fee-checker', 'dress-code-checker', 'lost-passport-checker',
   'tourist-tax-checker', 'short-term-rental-checker', 'uv-index-checker',
   'departure-tax-checker', 'wildlife-safety-checker', 'time-zone-checker',
+  'drinking-age-checker',
 ].sort((a, b) => b.length - a.length);
 
 const SITEMAP_URL = 'https://travelsmarterapp.com/sitemap.xml';
