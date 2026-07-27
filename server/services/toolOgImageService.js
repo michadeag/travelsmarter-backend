@@ -58,6 +58,7 @@ const TOOL_THEMES = [
   { slug: 'vpn-censorship-checker', theme: 'a smartphone or laptop icon with a shield or lock symbol' },
   { slug: 'smoking-vaping-checker', theme: 'a no-smoking style icon paired with a small e-cigarette/vape device silhouette' },
   { slug: 'natural-disaster-checker', theme: 'a weather warning triangle icon with a small storm cloud or seismic wave symbol' },
+  { slug: 'cashless-payment-checker', theme: 'a credit card with a contactless payment wave symbol next to a small coin or banknote' },
 ];
 
 async function getIdeogramKey() {
