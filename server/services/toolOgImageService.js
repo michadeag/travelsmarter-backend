@@ -52,6 +52,7 @@ const TOOL_THEMES = [
   { slug: 'short-term-rental-checker', theme: 'a small house icon with a key and a document or checklist icon' },
   { slug: 'uv-index-checker', theme: 'a sun icon with a sunscreen bottle or a small umbrella' },
   { slug: 'departure-tax-checker', theme: 'an airplane departing with a small ticket or receipt icon' },
+  { slug: 'wildlife-safety-checker', theme: 'a stylized snake or paw print icon with a small warning triangle' },
 ];
 
 async function getIdeogramKey() {
