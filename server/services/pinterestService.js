@@ -11,77 +11,68 @@ async function getAnthropicClient() {
   return new Anthropic({ apiKey: key });
 }
 
+// One entry per free tool (55 total) — title/promptTheme are pulled from the
+// same source material as toolLeadEmailSequence.js's hooks and
+// toolOgImageService.js's TOOL_THEMES, so Pinterest content stays
+// consistent with the rest of the promo stack instead of being generic,
+// unrelated travel-tips topics. toolSlug drives the actual backlink in
+// generatePin() below, so each pin sends traffic to its matching tool page.
 const TOPICS = [
-  {
-    category: 'budget_flights',
-    title: '5 Hacks to Fly for Way Less',
-    promptTheme: 'finding cheap flights and flight deal strategies',
-    boards: ['Travel Tips', 'Budget Travel', 'Travel Hacks'],
-    tags: ['#cheapflights', '#travelhacks', '#budgettravel', '#flightdeals', '#travelsmarter', '#airtravel', '#traveltips'],
-  },
-  {
-    category: 'packing',
-    title: 'The Perfect Carry-On Packing List',
-    promptTheme: 'minimalist carry-on packing for any trip length',
-    boards: ['Packing Tips', 'Travel Tips', 'Minimalist Travel'],
-    tags: ['#packingtips', '#carryon', '#minimalisttravel', '#travelpacking', '#travellight', '#travelhacks', '#packinglist'],
-  },
-  {
-    category: 'points_miles',
-    title: 'Earn Miles Without Flying',
-    promptTheme: 'credit card points and airline miles strategies',
-    boards: ['Travel Rewards', 'Travel Tips', 'Budget Travel'],
-    tags: ['#travelmiles', '#creditcardpoints', '#travelrewards', '#pointsandmiles', '#freeflight', '#businessclass', '#travelhacks'],
-  },
-  {
-    category: 'budget_destinations',
-    title: 'Best Budget Destinations 2025',
-    promptTheme: 'affordable and underrated travel destinations worldwide',
-    boards: ['Travel Destinations', 'Budget Travel', 'Travel Inspiration'],
-    tags: ['#budgettravel', '#traveldestinations', '#cheaptravel', '#travelinspiration', '#wanderlust', '#hiddengemtravel', '#traveltips'],
-  },
-  {
-    category: 'airport_hacks',
-    title: 'Airport Tricks Frequent Flyers Use',
-    promptTheme: 'airport productivity hacks and insider tips',
-    boards: ['Travel Hacks', 'Travel Tips', 'Air Travel'],
-    tags: ['#airporthacks', '#frequentflyer', '#traveltips', '#tsaprecheck', '#airportlounge', '#travelhacks', '#airtravel'],
-  },
-  {
-    category: 'travel_safety',
-    title: 'Stay Safe Anywhere in the World',
-    promptTheme: 'travel safety tips and smart precautions for solo and group travel',
-    boards: ['Travel Safety', 'Travel Tips', 'Solo Travel'],
-    tags: ['#travelsafety', '#solotravel', '#traveltips', '#travelsmarter', '#safetravel', '#travelhacks', '#traveladvice'],
-  },
-  {
-    category: 'hotel_hacks',
-    title: 'Get More from Every Hotel Stay',
-    promptTheme: 'hotel booking strategies and loyalty program hacks',
-    boards: ['Hotel Tips', 'Travel Hacks', 'Travel Tips'],
-    tags: ['#hotelhacks', '#traveltips', '#hotelloyalty', '#freenights', '#travelhacks', '#hotelbooking', '#travelrewards'],
-  },
-  {
-    category: 'digital_nomad',
-    title: 'Work Remotely from Anywhere',
-    promptTheme: 'digital nomad lifestyle, remote work travel, and best destinations',
-    boards: ['Digital Nomad', 'Remote Work', 'Travel Tips'],
-    tags: ['#digitalnomad', '#remotework', '#workfromanywhere', '#nomadlife', '#traveltips', '#locationindependent', '#workandtravel'],
-  },
-  {
-    category: 'europe_budget',
-    title: 'How to Travel Europe on $50/Day',
-    promptTheme: 'budget travel Europe tips, cheap accommodation, free activities',
-    boards: ['Europe Travel', 'Budget Travel', 'Travel Tips'],
-    tags: ['#europetravel', '#budgeteurope', '#backpackingeurope', '#cheaptravel', '#traveleurope', '#budgettravel', '#traveltips'],
-  },
-  {
-    category: 'travel_apps',
-    title: 'Best Travel Apps Every Traveler Needs',
-    promptTheme: 'essential travel apps for booking, navigation, saving money',
-    boards: ['Travel Tips', 'Travel Tools', 'Budget Travel'],
-    tags: ['#travelapps', '#traveltips', '#travelhacks', '#traveltools', '#smarttravel', '#travelsmarter', '#traveltech'],
-  },
+  { category: 'best-time-to-book-flights', toolSlug: 'best-time-to-book-flights', title: 'The 30-60 day flight booking window', promptTheme: 'a calendar with an airplane icon and an upward price trend arrow', boards: ['Travel Planning', 'Travel Hacks', 'Travel Tips'], tags: ['#traveltips', '#travelhacks', '#travelplanning', '#travelsmarter'] },
+  { category: 'carry-on-size-checker', toolSlug: 'carry-on-size-checker', title: 'Gate fees cost more than booking fees', promptTheme: 'a suitcase next to a measuring tape', boards: ['Travel Planning', 'Travel Hacks', 'Travel Tips'], tags: ['#traveltips', '#travelhacks', '#travelplanning', '#travelsmarter'] },
+  { category: 'visa-requirement-checker', toolSlug: 'visa-requirement-checker', title: 'The passport rule most travelers miss', promptTheme: 'an open passport with a visa stamp', boards: ['Passport & Visa Tips', 'Travel Planning', 'Travel Tips'], tags: ['#traveltips', '#passporttips', '#travelplanning', '#travelsmarter', '#traveladvice'] },
+  { category: 'jet-lag-calculator', toolSlug: 'jet-lag-calculator', title: 'Adjust your sleep before you fly', promptTheme: 'a clock face overlaid on a world map with timezone lines', boards: ['Travel Planning', 'Travel Hacks', 'Travel Tips'], tags: ['#traveltips', '#travelhacks', '#travelplanning', '#travelsmarter'] },
+  { category: 'packing-list-generator', toolSlug: 'packing-list-generator', title: 'The #1 travel packing regret', promptTheme: 'an open suitcase with a neat checklist beside it', boards: ['Travel Planning', 'Travel Hacks', 'Travel Tips'], tags: ['#traveltips', '#travelhacks', '#travelplanning', '#travelsmarter'] },
+  { category: 'travel-budget-calculator', toolSlug: 'travel-budget-calculator', title: 'Where your travel budget really goes', promptTheme: 'a wallet, coins, and a small calculator next to an airplane', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'power-plug-checker', toolSlug: 'power-plug-checker', title: 'Voltage matters more than plug shape', promptTheme: 'a travel power plug adapter with a small world map', boards: ['Travel Hacks', 'Travel Tips', 'Travel Tools'], tags: ['#travelhacks', '#traveltips', '#traveltools', '#travelsmarter'] },
+  { category: 'tipping-calculator', toolSlug: 'tipping-calculator', title: 'Tipping norms aren\'t universal', promptTheme: 'a hand placing cash on a restaurant receipt', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'layover-checker', toolSlug: 'layover-checker', title: 'Airport connection times, decoded', promptTheme: 'an airport terminal clock with connecting flight paths', boards: ['Travel Planning', 'Travel Hacks', 'Travel Tips'], tags: ['#traveltips', '#travelhacks', '#travelplanning', '#travelsmarter'] },
+  { category: 'travel-health-checker', toolSlug: 'travel-health-checker', title: 'Some vaccines need weeks of lead time', promptTheme: 'a first aid kit and a vaccine syringe next to an airplane', boards: ['Travel Safety', 'Travel Health Tips', 'Travel Tips'], tags: ['#travelsafety', '#traveltips', '#travelhealth', '#travelsmarter', '#traveladvice'] },
+  { category: 'water-safety-checker', toolSlug: 'water-safety-checker', title: 'The tap water risk everyone forgets', promptTheme: 'a glass of water with a checkmark and a water droplet icon', boards: ['Travel Safety', 'Travel Health Tips', 'Travel Tips'], tags: ['#travelsafety', '#traveltips', '#travelhealth', '#travelsmarter', '#traveladvice'] },
+  { category: 'flight-carbon-calculator', toolSlug: 'flight-carbon-calculator', title: 'One flight, a month\'s worth of CO2', promptTheme: 'an airplane with a green leaf and a faint CO2 cloud', boards: ['Travel Planning', 'Travel Hacks', 'Travel Tips'], tags: ['#traveltips', '#travelhacks', '#travelplanning', '#travelsmarter'] },
+  { category: 'airport-transfer-calculator', toolSlug: 'airport-transfer-calculator', title: 'Pre-booked transfers beat airport taxis', promptTheme: 'an airport shuttle van in front of a terminal', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'baggage-fee-calculator', toolSlug: 'baggage-fee-calculator', title: 'Book your bag online, not at the airport', promptTheme: 'a suitcase with a price tag and a dollar sign', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'emergency-number-checker', toolSlug: 'emergency-number-checker', title: '911 doesn\'t work everywhere', promptTheme: 'a smartphone showing an emergency call screen', boards: ['Travel Safety', 'Travel Health Tips', 'Travel Tips'], tags: ['#travelsafety', '#traveltips', '#travelhealth', '#travelsmarter', '#traveladvice'] },
+  { category: 'rideshare-checker', toolSlug: 'rideshare-checker', title: 'Uber isn\'t everywhere you\'d expect', promptTheme: 'a car with a smartphone showing a ride-hailing app pin', boards: ['Travel Hacks', 'Travel Tips', 'Travel Tools'], tags: ['#travelhacks', '#traveltips', '#traveltools', '#travelsmarter'] },
+  { category: 'driving-checker', toolSlug: 'driving-checker', title: 'Your IDP isn\'t a license by itself', promptTheme: 'a steering wheel over a world map with a drivers license', boards: ['Travel Hacks', 'Travel Tips', 'Travel Tools'], tags: ['#travelhacks', '#traveltips', '#traveltools', '#travelsmarter'] },
+  { category: 'sim-checker', toolSlug: 'sim-checker', title: 'Airport SIM kiosks aren\'t the cheapest', promptTheme: 'a SIM card next to a smartphone with signal bars', boards: ['Travel Hacks', 'Travel Tips', 'Travel Tools'], tags: ['#travelhacks', '#traveltips', '#traveltools', '#travelsmarter'] },
+  { category: 'delay-compensation-checker', toolSlug: 'delay-compensation-checker', title: 'You have to file for EU261 compensation', promptTheme: 'an airplane with a clock and a euro coin', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'customs-checker', toolSlug: 'customs-checker', title: 'Declaring honestly beats under-declaring', promptTheme: 'a suitcase at a customs checkpoint with a stamp', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'best-month-checker', toolSlug: 'best-month-checker', title: 'Best weather ≠ best flight prices', promptTheme: 'a calendar page with sun and weather icons', boards: ['Travel Planning', 'Travel Hacks', 'Travel Tips'], tags: ['#traveltips', '#travelhacks', '#travelplanning', '#travelsmarter'] },
+  { category: 'currency-checker', toolSlug: 'currency-checker', title: 'Even \'modern\' countries can be cash-heavy', promptTheme: 'a small stack of different colorful currency banknotes and coins', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'language-checker', toolSlug: 'language-checker', title: 'Five words that go a long way', promptTheme: 'a speech bubble with a world map and a translate icon', boards: ['Travel Hacks', 'Travel Tips', 'Travel Tools'], tags: ['#travelhacks', '#traveltips', '#traveltools', '#travelsmarter'] },
+  { category: 'transit-checker', toolSlug: 'transit-checker', title: 'Your transit card pays for itself fast', promptTheme: 'a subway train icon over a simplified metro map', boards: ['Travel Hacks', 'Travel Tips', 'Travel Tools'], tags: ['#travelhacks', '#traveltips', '#traveltools', '#travelsmarter'] },
+  { category: 'airport-amenities-checker', toolSlug: 'airport-amenities-checker', title: 'Some airports are worth the layover', promptTheme: 'an airport lounge with a wifi icon and comfortable seating', boards: ['Travel Hacks', 'Travel Tips', 'Travel Tools'], tags: ['#travelhacks', '#traveltips', '#traveltools', '#travelsmarter'] },
+  { category: 'drone-checker', toolSlug: 'drone-checker', title: 'Drone permits can\'t be rushed', promptTheme: 'a camera drone flying with a no-fly-zone circle icon nearby', boards: ['Travel Tips', 'Cultural Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#traveletiquette', '#travelhacks', '#travelsmarter', '#traveladvice'] },
+  { category: 'alcohol-checker', toolSlug: 'alcohol-checker', title: 'Election-day alcohol bans, explained', promptTheme: 'a wine glass and bottle with a checkmark icon', boards: ['Travel Tips', 'Cultural Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#traveletiquette', '#travelhacks', '#travelsmarter', '#traveladvice'] },
+  { category: 'seat-pitch-checker', toolSlug: 'seat-pitch-checker', title: 'Skip the paid seat upgrade — try this', promptTheme: 'an airplane seat with a measuring tape showing legroom', boards: ['Travel Planning', 'Travel Hacks', 'Travel Tips'], tags: ['#traveltips', '#travelhacks', '#travelplanning', '#travelsmarter'] },
+  { category: 'insurance-cost-estimator', toolSlug: 'insurance-cost-estimator', title: 'What travel insurance actually costs', promptTheme: 'a protective shield icon with a small airplane', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'pet-travel-checker', toolSlug: 'pet-travel-checker', title: 'The pet-travel prep that takes months', promptTheme: 'a dog in a pet travel carrier next to an airplane', boards: ['Pet Travel', 'Traveling with Pets', 'Travel Tips'], tags: ['#travelwithpets', '#petsoftiktok', '#traveltips', '#travelsmarter'] },
+  { category: 'passport-validity-checker', toolSlug: 'passport-validity-checker', title: 'The 6-month passport rule that strands travelers', promptTheme: 'an open passport with a calendar page and a checkmark', boards: ['Passport & Visa Tips', 'Travel Planning', 'Travel Tips'], tags: ['#traveltips', '#passporttips', '#travelplanning', '#travelsmarter', '#traveladvice'] },
+  { category: 'public-holiday-checker', toolSlug: 'public-holiday-checker', title: 'The trip-planning mistake nobody checks for', promptTheme: 'a calendar page with a festive star or flag marking a holiday date', boards: ['Travel Planning', 'Travel Hacks', 'Travel Tips'], tags: ['#traveltips', '#travelhacks', '#travelplanning', '#travelsmarter'] },
+  { category: 'rental-age-checker', toolSlug: 'rental-age-checker', title: 'The rental fee that only shows up at the counter', promptTheme: 'a car key next to a drivers license and a small car icon', boards: ['Travel Tips', 'Cultural Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#traveletiquette', '#travelhacks', '#travelsmarter', '#traveladvice'] },
+  { category: 'atm-fee-checker', toolSlug: 'atm-fee-checker', title: 'The ATM popup you should always decline', promptTheme: 'an ATM machine with a bank card and a small coin or bill icon', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'dress-code-checker', toolSlug: 'dress-code-checker', title: 'The temple visit that gets you turned away', promptTheme: 'a folded modest garment like a scarf or shawl next to a small temple or landmark silhouette', boards: ['Travel Tips', 'Cultural Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#traveletiquette', '#travelhacks', '#travelsmarter', '#traveladvice'] },
+  { category: 'lost-passport-checker', toolSlug: 'lost-passport-checker', title: 'The one number worth saving before you fly', promptTheme: 'an open passport with a magnifying glass or a small exclamation mark icon', boards: ['Passport & Visa Tips', 'Travel Planning', 'Travel Tips'], tags: ['#traveltips', '#passporttips', '#travelplanning', '#travelsmarter', '#traveladvice'] },
+  { category: 'tourist-tax-checker', toolSlug: 'tourist-tax-checker', title: 'The fee that never shows up in the booking price', promptTheme: 'a small hotel building icon with a coin or receipt icon beside it', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'short-term-rental-checker', toolSlug: 'short-term-rental-checker', title: 'The Airbnb booking that can get cancelled last-minute', promptTheme: 'a small house icon with a key and a document or checklist icon', boards: ['Travel Tips', 'Cultural Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#traveletiquette', '#travelhacks', '#travelsmarter', '#traveladvice'] },
+  { category: 'uv-index-checker', toolSlug: 'uv-index-checker', title: 'Sunburn happens faster than you think', promptTheme: 'a sun icon with a sunscreen bottle or a small umbrella', boards: ['Travel Safety', 'Travel Health Tips', 'Travel Tips'], tags: ['#travelsafety', '#traveltips', '#travelhealth', '#travelsmarter', '#traveladvice'] },
+  { category: 'departure-tax-checker', toolSlug: 'departure-tax-checker', title: 'The cash-only fee that catches travelers by surprise', promptTheme: 'an airplane departing with a small ticket or receipt icon', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'wildlife-safety-checker', toolSlug: 'wildlife-safety-checker', title: 'The safety tip most packing lists skip', promptTheme: 'a stylized snake or paw print icon with a small warning triangle', boards: ['Travel Safety', 'Travel Health Tips', 'Travel Tips'], tags: ['#travelsafety', '#traveltips', '#travelhealth', '#travelsmarter', '#traveladvice'] },
+  { category: 'time-zone-checker', toolSlug: 'time-zone-checker', title: 'The "let\'s call later" that never works', promptTheme: 'a world clock or two overlapping clock faces showing different times', boards: ['Travel Planning', 'Travel Hacks', 'Travel Tips'], tags: ['#traveltips', '#travelhacks', '#travelplanning', '#travelsmarter'] },
+  { category: 'drinking-age-checker', toolSlug: 'drinking-age-checker', title: 'Legal in one country, not the next border over', promptTheme: 'a wine glass or beer mug next to a small ID card icon', boards: ['Travel Tips', 'Cultural Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#traveletiquette', '#travelhacks', '#travelsmarter', '#traveladvice'] },
+  { category: 'vpn-censorship-checker', toolSlug: 'vpn-censorship-checker', title: 'The app store that disappears once you land', promptTheme: 'a smartphone or laptop icon with a shield or lock symbol', boards: ['Travel Tips', 'Cultural Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#traveletiquette', '#travelhacks', '#travelsmarter', '#traveladvice'] },
+  { category: 'smoking-vaping-checker', toolSlug: 'smoking-vaping-checker', title: 'Legal at home, confiscated at customs', promptTheme: 'a no-smoking style icon paired with a small e-cigarette/vape device silhouette', boards: ['Travel Tips', 'Cultural Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#traveletiquette', '#travelhacks', '#travelsmarter', '#traveladvice'] },
+  { category: 'natural-disaster-checker', toolSlug: 'natural-disaster-checker', title: 'Booking a beach trip during hurricane season', promptTheme: 'a weather warning triangle icon with a small storm cloud or seismic wave symbol', boards: ['Travel Safety', 'Travel Health Tips', 'Travel Tips'], tags: ['#travelsafety', '#traveltips', '#travelhealth', '#travelsmarter', '#traveladvice'] },
+  { category: 'cashless-payment-checker', toolSlug: 'cashless-payment-checker', title: 'Your card works everywhere — except where it doesn\'t', promptTheme: 'a credit card with a contactless payment wave symbol next to a small coin or banknote', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'etiquette-checker', toolSlug: 'etiquette-checker', title: 'One gesture, two very different meanings', promptTheme: 'a stylized handshake or bowing greeting icon with a small speech bubble', boards: ['Travel Tips', 'Cultural Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#traveletiquette', '#travelhacks', '#travelsmarter', '#traveladvice'] },
+  { category: 'business-hours-checker', toolSlug: 'business-hours-checker', title: 'Showing up on a Sunday in Germany', promptTheme: 'a store-front icon with a clock and an open/closed sign', boards: ['Travel Hacks', 'Travel Tips', 'Travel Tools'], tags: ['#travelhacks', '#traveltips', '#traveltools', '#travelsmarter'] },
+  { category: 'internet-speed-checker', toolSlug: 'internet-speed-checker', title: 'Booking a "workation" with no wifi to work on', promptTheme: 'a laptop with wifi signal bars and a small speedometer icon', boards: ['Travel Hacks', 'Travel Tips', 'Travel Tools'], tags: ['#travelhacks', '#traveltips', '#traveltools', '#travelsmarter'] },
+  { category: 'airport-arrival-time-checker', toolSlug: 'airport-arrival-time-checker', title: 'Sprinting through LAX with 12 minutes to spare', promptTheme: 'an airport departure board with a clock icon', boards: ['Travel Planning', 'Travel Hacks', 'Travel Tips'], tags: ['#traveltips', '#travelhacks', '#travelplanning', '#travelsmarter'] },
+  { category: 'medication-legality-checker', toolSlug: 'medication-legality-checker', title: 'Your routine prescription, their controlled substance', promptTheme: 'a pill bottle with a small customs/passport stamp icon', boards: ['Travel Tips', 'Cultural Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#traveletiquette', '#travelhacks', '#travelsmarter', '#traveladvice'] },
+  { category: 'vat-refund-checker', toolSlug: 'vat-refund-checker', title: 'The UK stopped tax-free shopping and nobody told you', promptTheme: 'a shopping bag with a percentage symbol and a small receipt icon', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'resort-fee-checker', toolSlug: 'resort-fee-checker', title: 'That $99 Vegas room is actually $140', promptTheme: 'a hotel building icon with a small hidden price tag or magnifying glass on a receipt', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'travel-advisory-checker', toolSlug: 'travel-advisory-checker', title: 'Is your destination actually safe right now?', promptTheme: 'a shield icon overlaid on a small world map with a subtle warning-level indicator', boards: ['Travel Safety', 'Travel Health Tips', 'Travel Tips'], tags: ['#travelsafety', '#traveltips', '#travelhealth', '#travelsmarter', '#traveladvice'] },
 ];
 
 class PinterestService {
@@ -149,12 +140,19 @@ class PinterestService {
   }
 
   async generateImage(topic) {
-    const prompt = `Pinterest travel infographic, portrait format, clean modern design.
-Bold headline at top: "${topic.title}"
-Travel theme: ${topic.promptTheme}
-Color palette: warm coral and cream with navy accents. Travel icons. High contrast text.
-Style: flat design infographic, professional, eye-catching, Pinterest-optimized.
-No watermarks, no logos.`;
+    const prompt = `Pinterest pin design, vertical 2:3 portrait format, bold flat-design travel infographic — optimized to stop the scroll.
+
+HEADLINE (large, bold sans-serif, perfectly spelled, sharply legible, high contrast against its background, max 8 words): "${topic.title}"
+
+VISUAL: ${topic.promptTheme} — one single clean, centered flat-design icon/illustration with generous white space around it. Not a busy or photorealistic scene — simplicity keeps the headline readable.
+
+SMALL BOTTOM BANNER TEXT (small, clean, legible): "Free Instant Check →"
+
+Color palette: warm coral (#FF6B4A) and cream background with deep navy (#1A2744) accents — bright, high-contrast, eye-catching.
+
+Style: modern flat-design infographic, clean vector-art illustration, professional travel-blog aesthetic, generous margins, no clutter.
+
+No watermarks, no stock photos of people, no fake logos.`;
 
     if (this.openaiKey) {
       const response = await axios.post(
@@ -190,12 +188,12 @@ No watermarks, no logos.`;
   }
 
   async generateDescription(topic) {
-    const prompt = `Write a Pinterest pin description for a travel infographic titled "${topic.title}" about ${topic.promptTheme}.
+    const prompt = `Write a Pinterest pin description for a free instant travel checker tool. Pin headline: "${topic.title}". What the tool covers: ${topic.promptTheme}.
 
 Requirements:
-- 2–3 sentences, inspiring and practical
-- Mention 1–2 specific benefits or tips
-- Conversational, not corporate
+- 2–3 sentences, conversational, not corporate
+- Make clear it's a free, instant, no-signup tool
+- Mention 1 specific reason this matters while planning a trip
 - Max 300 characters
 
 Output only the description text. No hashtags (those come separately).`;
@@ -215,9 +213,9 @@ Output only the description text. No hashtags (those come separately).`;
     const topic = TOPICS[index % TOPICS.length];
     const includeCTA = true; // always true — destination link is always present
     const board = this._pickBoard(topic);
-    // Unique UTM link per pin so Pinterest analytics shows which pin drives traffic
-    const pinSlug = topic.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '').substring(0, 40);
-    const link = `https://travelsmarterapp.com/welcome.html?ref=pinterest&pin=${pinSlug}`;
+    // Link straight to the tool page the pin is actually about, with a UTM
+    // tag so Pinterest analytics/free-tool analytics can attribute traffic.
+    const link = `https://travelsmarterapp.com/${topic.toolSlug}.html?ref=pinterest&pin=${topic.toolSlug}`;
 
     console.log(`📌 Pinterest: generating description for "${topic.title}"`);
     const description = await this.generateDescription(topic);
