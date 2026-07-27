@@ -1,0 +1,177 @@
+// Registry of every free-tool controller included in a Trip Brief. Each
+// entry's controller exports computeResult(args) directly (see the
+// `exports.computeResult = computeResult;` line added to each of these 35
+// controllers) — the Trip Brief generator calls each one for the trip's
+// destination and assembles the results into one combined PDF.
+//
+// Only tools with a verified, uniform `computeResult({ country, ... })`
+// signature are included here. Airline/airport/route-based tools (carry-on
+// size, seat pitch, baggage fee, layover, airport transfer/amenities,
+// arrival time, jet lag, time zone, best-time-to-book, packing list,
+// budget, carbon, best-month, transit, delay compensation, insurance) use
+// different input shapes and are deliberately left out of this first
+// version — a traveler can still check those individually on their own
+// tool pages. Extending the registry to cover them is a natural fast-follow.
+//
+// `conditional` is null for tools that always run off the destination
+// alone, or the trip field name required to include that tool (the
+// section is silently omitted from the brief if the traveler didn't
+// provide it).
+const TOOLS = [
+  // --- Documents & Entry ---
+  { slug: 'customs-checker', name: 'Customs Rules', icon: '🛃', category: 'Documents & Entry',
+    controller: '../controllers/customsController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'driving-checker', name: 'Driving & IDP', icon: '🚗', category: 'Documents & Entry',
+    controller: '../controllers/drivingController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'passport-validity-checker', name: 'Passport Validity', icon: '🛂', category: 'Documents & Entry',
+    controller: '../controllers/passportValidityController', conditional: 'passportExpiryDate',
+    buildArgs: (trip) => ({ country: trip.destination, expiryDate: trip.passportExpiryDate }) },
+  { slug: 'lost-passport-checker', name: 'If You Lose Your Passport', icon: '📕', category: 'Documents & Entry',
+    controller: '../controllers/lostPassportController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+
+  // --- Money ---
+  { slug: 'currency-checker', name: 'Currency', icon: '💱', category: 'Money',
+    controller: '../controllers/currencyController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'atm-fee-checker', name: 'ATM Fees', icon: '🏧', category: 'Money',
+    controller: '../controllers/atmFeeController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination, amount: 200 }) },
+  { slug: 'tipping-calculator', name: 'Tipping', icon: '💵', category: 'Money',
+    controller: '../controllers/tippingController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination, billAmount: 50 }) },
+  { slug: 'vat-refund-checker', name: 'Tax-Free Shopping', icon: '🧾', category: 'Money',
+    controller: '../controllers/vatRefundController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'tourist-tax-checker', name: 'Tourist Tax', icon: '🏛️', category: 'Money',
+    controller: '../controllers/touristTaxController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'departure-tax-checker', name: 'Departure Tax', icon: '🛫', category: 'Money',
+    controller: '../controllers/departureTaxController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'cashless-payment-checker', name: 'Card & Cash', icon: '💳', category: 'Money',
+    controller: '../controllers/cashlessPaymentController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'resort-fee-checker', name: 'Resort Fees', icon: '🏨', category: 'Money',
+    controller: '../controllers/resortFeeController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+
+  // --- Health & Safety ---
+  { slug: 'travel-health-checker', name: 'Health & Vaccines', icon: '🩺', category: 'Health & Safety',
+    controller: '../controllers/healthController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'water-safety-checker', name: 'Tap Water Safety', icon: '💧', category: 'Health & Safety',
+    controller: '../controllers/waterController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'uv-index-checker', name: 'UV Index', icon: '☀️', category: 'Health & Safety',
+    controller: '../controllers/uvIndexController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'wildlife-safety-checker', name: 'Wildlife Safety', icon: '🐍', category: 'Health & Safety',
+    controller: '../controllers/wildlifeSafetyController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'natural-disaster-checker', name: 'Natural Disaster Risk', icon: '⛈️', category: 'Health & Safety',
+    controller: '../controllers/naturalDisasterController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'emergency-number-checker', name: 'Emergency Numbers', icon: '🚨', category: 'Health & Safety',
+    controller: '../controllers/emergencyController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+
+  // --- On the Ground ---
+  { slug: 'sim-checker', name: 'SIM / eSIM', icon: '📱', category: 'On the Ground',
+    controller: '../controllers/simController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'internet-speed-checker', name: 'Internet & Remote Work', icon: '📶', category: 'On the Ground',
+    controller: '../controllers/internetSpeedController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'rideshare-checker', name: 'Rideshare Apps', icon: '🚕', category: 'On the Ground',
+    controller: '../controllers/rideshareController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'short-term-rental-checker', name: 'Short-Term Rental Rules', icon: '🏠', category: 'On the Ground',
+    controller: '../controllers/shortTermRentalController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'business-hours-checker', name: 'Business Hours & Weekend', icon: '🕒', category: 'On the Ground',
+    controller: '../controllers/businessHoursController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'language-checker', name: 'Language', icon: '🗣️', category: 'On the Ground',
+    controller: '../controllers/languageController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'power-plug-checker', name: 'Power Plug & Voltage', icon: '🔌', category: 'On the Ground',
+    controller: '../controllers/plugController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+
+  // --- Local Rules ---
+  { slug: 'alcohol-checker', name: 'Alcohol Laws', icon: '🍷', category: 'Local Rules',
+    controller: '../controllers/alcoholController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'drinking-age-checker', name: 'Legal Drinking Age', icon: '🍺', category: 'Local Rules',
+    controller: '../controllers/drinkingAgeController', conditional: 'age',
+    buildArgs: (trip) => ({ country: trip.destination, age: trip.age }) },
+  { slug: 'smoking-vaping-checker', name: 'Smoking & Vaping', icon: '🚬', category: 'Local Rules',
+    controller: '../controllers/smokingVapingController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'drone-checker', name: 'Drone Rules', icon: '🛸', category: 'Local Rules',
+    controller: '../controllers/droneController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'vpn-censorship-checker', name: 'Internet Censorship & VPN', icon: '🌐', category: 'Local Rules',
+    controller: '../controllers/vpnCensorshipController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'dress-code-checker', name: 'Dress Code', icon: '👗', category: 'Local Rules',
+    controller: '../controllers/dressCodeController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'etiquette-checker', name: 'Local Etiquette', icon: '🤝', category: 'Local Rules',
+    controller: '../controllers/etiquetteController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'medication-legality-checker', name: 'Medication Legality', icon: '💊', category: 'Local Rules',
+    controller: '../controllers/medicationLegalityController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'rental-age-checker', name: 'Car Rental Age', icon: '🚙', category: 'Local Rules',
+    controller: '../controllers/rentalAgeController', conditional: 'age',
+    buildArgs: (trip) => ({ country: trip.destination, age: trip.age }) },
+
+  // --- Pet Travel ---
+  { slug: 'pet-travel-checker', name: 'Traveling with Pets', icon: '🐾', category: 'Pet Travel',
+    controller: '../controllers/petTravelController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
+];
+
+// Fixed display order for categories in the PDF/preview.
+const CATEGORY_ORDER = [
+  'Documents & Entry', 'Money', 'Health & Safety', 'On the Ground', 'Local Rules', 'Pet Travel',
+];
+
+// Runs every applicable tool for a trip, skipping conditional tools whose
+// required field wasn't provided and tolerating any single tool throwing
+// (e.g. an edge-case country/age combination) without failing the whole
+// brief — a missing section is better than no brief at all.
+function computeTripBriefSections(trip) {
+  const sections = [];
+  for (const tool of TOOLS) {
+    if (tool.conditional && !trip[tool.conditional]) continue;
+    try {
+      // eslint-disable-next-line global-require
+      const controller = require(tool.controller);
+      const result = controller.computeResult(tool.buildArgs(trip));
+      sections.push({ slug: tool.slug, name: tool.name, icon: tool.icon, category: tool.category, result });
+    } catch (err) {
+      console.warn(`Trip Brief: skipping ${tool.slug} for ${trip.destination} — ${err.message}`);
+    }
+  }
+  return sections;
+}
+
+// Groups already-computed sections by category, in CATEGORY_ORDER, dropping
+// any category that ended up with zero sections (e.g. Pet Travel data gap).
+function groupSectionsByCategory(sections) {
+  const byCategory = {};
+  for (const section of sections) {
+    if (!byCategory[section.category]) byCategory[section.category] = [];
+    byCategory[section.category].push(section);
+  }
+  return CATEGORY_ORDER
+    .map(category => ({ category, sections: byCategory[category] || [] }))
+    .filter(group => group.sections.length > 0);
+}
+
+module.exports = { TOOLS, CATEGORY_ORDER, computeTripBriefSections, groupSectionsByCategory };

@@ -161,3 +161,4 @@ exports.generateWildlifeSafetyPdf = async (req, res) => {
 };
 
 exports.COUNTRIES = COUNTRIES;
+exports.computeResult = computeResult;

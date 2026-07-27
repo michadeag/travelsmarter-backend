@@ -172,3 +172,4 @@ exports.generateInternetSpeedPdf = async (req, res) => {
 };
 
 exports.COUNTRIES = COUNTRIES;
+exports.computeResult = computeResult;

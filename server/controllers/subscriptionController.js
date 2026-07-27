@@ -204,9 +204,21 @@ exports.handleWebhook = async (req, res) => {
 
     try {
       switch (event.type) {
-        case 'checkout.session.completed':
-          await handleCheckoutSessionCompleted(event.data.object);
+        case 'checkout.session.completed': {
+          const session = event.data.object;
+          // Trip Brief uses this same webhook endpoint/secret (mode:
+          // 'payment', not 'subscription') rather than a second Stripe
+          // Dashboard webhook — branch here before the subscription-specific
+          // logic below, which expects session.metadata.userId/tier and a
+          // session.subscription that a one-time payment session doesn't have.
+          if (session.metadata && session.metadata.type === 'trip_brief') {
+            const tripBriefController = require('./tripBriefController');
+            await tripBriefController.handleTripBriefCheckoutCompleted(session);
+          } else {
+            await handleCheckoutSessionCompleted(session);
+          }
           break;
+        }
 
         case 'customer.subscription.updated':
           await handleSubscriptionUpdated(event.data.object);

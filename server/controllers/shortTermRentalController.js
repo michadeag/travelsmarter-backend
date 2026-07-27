@@ -163,3 +163,4 @@ exports.generateShortTermRentalPdf = async (req, res) => {
 };
 
 exports.COUNTRIES = COUNTRIES;
+exports.computeResult = computeResult;

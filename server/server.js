@@ -89,6 +89,7 @@ const businessHoursRoutes = require('./routes/businessHoursRoutes');
 const internetSpeedRoutes = require('./routes/internetSpeedRoutes');
 const airportArrivalTimeRoutes = require('./routes/airportArrivalTimeRoutes');
 const medicationLegalityRoutes = require('./routes/medicationLegalityRoutes');
+const tripBriefRoutes = require('./routes/tripBriefRoutes');
 const vatRefundRoutes = require('./routes/vatRefundRoutes');
 const resortFeeRoutes = require('./routes/resortFeeRoutes');
 const affiliateController = require('./controllers/affiliateController');
@@ -147,6 +148,7 @@ app.use(express.static(__dirname));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/trip-brief', tripBriefRoutes);
 app.use('/api/deals', dealsRoutes);
 app.use('/api/hacks', hacksRoutes);
 app.use('/api/user/deal-filters', dealFiltersRoutes);
@@ -1859,6 +1861,47 @@ async function initializeApp() {
       );
       CREATE INDEX IF NOT EXISTS idx_tool_lead_emails_status ON tool_lead_scheduled_emails(status);
       CREATE INDEX IF NOT EXISTS idx_tool_lead_emails_lead ON tool_lead_scheduled_emails(lead_id);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    // Trip Brief: a paid, personalized PDF combining every relevant tool's
+    // result for one destination (see tripBriefRegistry.js). product:
+    // 'single' ($19, one trip) | 'lifetime' ($99, unlimited future briefs —
+    // checked via trip_brief_lifetime_access before requiring payment again).
+    // status: 'pending' (checkout session created) -> 'paid' (webhook
+    // confirmed payment) -> 'generated' (PDF built and emailed) | 'failed'.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS trip_briefs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email VARCHAR(255) NOT NULL,
+        first_name VARCHAR(255),
+        destination_country VARCHAR(100) NOT NULL,
+        age INTEGER,
+        passport_expiry_date DATE,
+        product VARCHAR(20) NOT NULL DEFAULT 'single',
+        stripe_session_id VARCHAR(255),
+        stripe_payment_intent_id VARCHAR(255),
+        amount_paid DECIMAL(10, 2),
+        status VARCHAR(30) NOT NULL DEFAULT 'pending',
+        pdf_generated_at TIMESTAMPTZ,
+        source_page VARCHAR(300),
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_trip_briefs_email ON trip_briefs(email);
+      CREATE INDEX IF NOT EXISTS idx_trip_briefs_session ON trip_briefs(stripe_session_id);
+      CREATE INDEX IF NOT EXISTS idx_trip_briefs_status ON trip_briefs(status);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    // One row per email that bought the $99 'lifetime' product — checked by
+    // tripBriefController before creating a new checkout session, so a
+    // returning lifetime customer skips payment entirely on future trips.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS trip_brief_lifetime_access (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email VARCHAR(255) NOT NULL UNIQUE,
+        stripe_payment_intent_id VARCHAR(255),
+        granted_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_trip_brief_lifetime_email ON trip_brief_lifetime_access(email);
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
 
     // Seed default email sequence (first run), then sync templates from code

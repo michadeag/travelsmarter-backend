@@ -164,3 +164,4 @@ exports.generateDepartureTaxPdf = async (req, res) => {
 };
 
 exports.COUNTRIES = COUNTRIES;
+exports.computeResult = computeResult;

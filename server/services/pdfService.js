@@ -33,6 +33,16 @@ function heading(doc, text) {
   doc.moveDown(0.3);
 }
 
+// Smaller, coral-colored heading for a sub-item within a section — used by
+// the Trip Brief to label each individual tool's result under its category
+// heading, one step down from heading() in the visual hierarchy.
+function subheading(doc, text) {
+  doc.moveDown(0.4);
+  doc.fillColor(CORAL).fontSize(13).font('Helvetica-Bold').text(text);
+  doc.fillColor('black').font('Helvetica');
+  doc.moveDown(0.15);
+}
+
 function paragraph(doc, text) {
   doc.fontSize(11).fillColor('#1f2937').font('Helvetica').text(text, { lineGap: 3 });
   doc.moveDown(0.5);
@@ -69,9 +79,25 @@ function addFooterCTA(doc) {
   doc.y = startY + 100;
 }
 
+// Collects a PDFDocument's output into a Buffer instead of streaming it to
+// an HTTP response — needed wherever a PDF is emailed as an attachment
+// (base64) rather than downloaded directly, e.g. the Trip Brief. Call
+// BEFORE doc.end(): pass the doc, write all content, call doc.end(), then
+// await the returned promise.
+function toBuffer(doc) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+  });
+}
+
 module.exports = {
   createBrandedDoc,
+  toBuffer,
   heading,
+  subheading,
   paragraph,
   bulletList,
   highlightBox,

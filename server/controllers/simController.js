@@ -167,3 +167,4 @@ exports.generateSimPdf = async (req, res) => {
 };
 
 exports.COUNTRIES = COUNTRIES;
+exports.computeResult = computeResult;
