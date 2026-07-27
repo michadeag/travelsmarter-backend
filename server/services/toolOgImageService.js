@@ -56,6 +56,7 @@ const TOOL_THEMES = [
   { slug: 'time-zone-checker', theme: 'a world clock or two overlapping clock faces showing different times' },
   { slug: 'drinking-age-checker', theme: 'a wine glass or beer mug next to a small ID card icon' },
   { slug: 'vpn-censorship-checker', theme: 'a smartphone or laptop icon with a shield or lock symbol' },
+  { slug: 'smoking-vaping-checker', theme: 'a no-smoking style icon paired with a small e-cigarette/vape device silhouette' },
 ];
 
 async function getIdeogramKey() {
