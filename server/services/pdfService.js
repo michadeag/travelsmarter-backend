@@ -64,19 +64,37 @@ function highlightBox(doc, text) {
   doc.y = startY + boxHeight + 12;
 }
 
-// Standard closing CTA block — same on every tool's PDF.
-function addFooterCTA(doc) {
+// Standard closing CTA block — same on every tool's PDF. When called with a
+// destination country slug, pitches the Trip Brief (this trip's other open
+// questions, combined into one PDF) as the primary CTA, with TravelSmarter
+// Pro as a smaller secondary line — otherwise falls back to the original
+// Pro-only box, e.g. for airline/airport-based tools with no destination.
+function addFooterCTA(doc, tripDestination) {
   doc.moveDown(1);
   const startY = doc.y;
-  doc.rect(50, startY, 495, 90).fill(NAVY);
-  doc.fillColor('white').fontSize(13).font('Helvetica-Bold')
-    .text('This tool is part of TravelSmarter Pro', 65, startY + 16, { width: 465 });
-  doc.fontSize(10).font('Helvetica')
-    .text('Get 50+ more travel tools, AI-powered recommendations, and ongoing updates — plus the full 87-hack library.', 65, startY + 38, { width: 465 });
-  doc.fillColor(CORAL).font('Helvetica-Bold')
-    .text('travelsmarterapp.com/sales-page.html', 65, startY + 66);
+  const boxHeight = tripDestination ? 108 : 90;
+  doc.rect(50, startY, 495, boxHeight).fill(NAVY);
+
+  if (tripDestination) {
+    doc.fillColor('white').fontSize(13).font('Helvetica-Bold')
+      .text('Got other open questions about this trip?', 65, startY + 16, { width: 465 });
+    doc.fontSize(10).font('Helvetica')
+      .text('Get the full Trip Brief — visa, money, health, local laws, and more, combined into one PDF for $19.', 65, startY + 38, { width: 465 });
+    doc.fillColor(CORAL).font('Helvetica-Bold')
+      .text(`travelsmarterapp.com/trip-brief.html?destination=${tripDestination}`, 65, startY + 62, { width: 465 });
+    doc.fillColor(LIGHT_GRAY).fontSize(8.5).font('Helvetica')
+      .text('Or unlock 50+ tools and ongoing updates with TravelSmarter Pro — travelsmarterapp.com/sales-page.html', 65, startY + 86, { width: 465 });
+  } else {
+    doc.fillColor('white').fontSize(13).font('Helvetica-Bold')
+      .text('This tool is part of TravelSmarter Pro', 65, startY + 16, { width: 465 });
+    doc.fontSize(10).font('Helvetica')
+      .text('Get 50+ more travel tools, AI-powered recommendations, and ongoing updates — plus the full 87-hack library.', 65, startY + 38, { width: 465 });
+    doc.fillColor(CORAL).font('Helvetica-Bold')
+      .text('travelsmarterapp.com/sales-page.html', 65, startY + 66);
+  }
+
   doc.fillColor('black').font('Helvetica');
-  doc.y = startY + 100;
+  doc.y = startY + boxHeight + 12;
 }
 
 // Collects a PDFDocument's output into a Buffer instead of streaming it to

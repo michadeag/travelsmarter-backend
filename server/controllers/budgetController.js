@@ -143,7 +143,7 @@ exports.generateBudgetPdf = async (req, res) => {
       'Mix free activities (walking tours, parks, viewpoints) with a few paid highlights rather than paying for everything.',
     ]);
 
-    pdfService.addFooterCTA(doc);
+    pdfService.addFooterCTA(doc, destination);
     doc.end();
 
     emailService.sendEmail({
@@ -153,6 +153,7 @@ exports.generateBudgetPdf = async (req, res) => {
 <p>Here's your travel budget estimate:</p>
 <p style="background:#f0f4ff;padding:16px 20px;border-radius:8px;font-weight:bold;color:#1a2744;">${result.headline}</p>
 <p>Want automatic price alerts and money-saving hacks that go beyond budgeting? That's what TravelSmarter does.</p>
+<p style="background:#fff7ed;border-left:4px solid #ff6b4a;padding:14px 18px;border-radius:6px;">🧭 <strong>Got other open questions about this trip?</strong> Get the full Trip Brief — visa, money, health, local laws, and more, combined into one PDF for $19. <a href="https://travelsmarterapp.com/trip-brief.html?destination=${destination}" style="color:#ff6b4a;font-weight:bold;">See your Trip Brief →</a></p>
 <p><a href="https://travelsmarterapp.com/sales-page.html" style="background:#ff6b4a;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;">See TravelSmarter Pro →</a></p>
 <p>Safe travels,<br>The TravelSmarter Team</p>`,
     }).catch(err => console.error('Failed to send budget-calculator confirmation email:', err.message));

@@ -175,7 +175,7 @@ exports.generatePlugPdf = async (req, res) => {
     pdfService.heading(doc, 'Adapter vs. converter — what you actually need');
     pdfService.paragraph(doc, 'A plug adapter only changes the shape of the plug so it fits the outlet — it does not change the voltage. Most modern electronics (phone chargers, laptop chargers, camera chargers) are dual-voltage (100-240V) and only need an adapter. Single-voltage, high-wattage devices like hair dryers, straighteners, and some electric razors may need an actual voltage converter, not just an adapter — check the fine print on the device or its charger, usually printed near the plug prongs.');
 
-    pdfService.addFooterCTA(doc);
+    pdfService.addFooterCTA(doc, country);
     doc.end();
 
     emailService.sendEmail({
@@ -185,6 +185,7 @@ exports.generatePlugPdf = async (req, res) => {
 <p>Here's your power plug check for ${result.countryName}:</p>
 <p style="background:#f0f4ff;padding:16px 20px;border-radius:8px;font-weight:bold;color:#1a2744;">${result.headline}</p>
 <p>Want automatic price alerts and trip-planning tools that go beyond packing logistics? That's what TravelSmarter does.</p>
+<p style="background:#fff7ed;border-left:4px solid #ff6b4a;padding:14px 18px;border-radius:6px;">🧭 <strong>Got other open questions about this trip?</strong> Get the full Trip Brief — visa, money, health, local laws, and more, combined into one PDF for $19. <a href="https://travelsmarterapp.com/trip-brief.html?destination=${country}" style="color:#ff6b4a;font-weight:bold;">See your Trip Brief →</a></p>
 <p><a href="https://travelsmarterapp.com/sales-page.html" style="background:#ff6b4a;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;">See TravelSmarter Pro →</a></p>
 <p>Safe travels,<br>The TravelSmarter Team</p>`,
     }).catch(err => console.error('Failed to send plug-checker confirmation email:', err.message));

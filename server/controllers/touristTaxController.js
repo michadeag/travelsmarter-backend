@@ -148,7 +148,7 @@ exports.generateTouristTaxPdf = async (req, res) => {
       'Rates and rules change relatively often — this guide reflects general, widely-known patterns rather than a real-time official source, so it\'s worth a quick check closer to your travel dates.',
     ]);
 
-    pdfService.addFooterCTA(doc);
+    pdfService.addFooterCTA(doc, country);
     doc.end();
 
     emailService.sendEmail({
@@ -158,6 +158,7 @@ exports.generateTouristTaxPdf = async (req, res) => {
 <p>Here's your tourist tax check for ${result.countryName}:</p>
 <p style="background:#f0f4ff;padding:16px 20px;border-radius:8px;font-weight:bold;color:#1a2744;">${result.headline}</p>
 <p>Want automatic price alerts and trip-planning tools that go beyond hidden fees? That's what TravelSmarter does.</p>
+<p style="background:#fff7ed;border-left:4px solid #ff6b4a;padding:14px 18px;border-radius:6px;">🧭 <strong>Got other open questions about this trip?</strong> Get the full Trip Brief — visa, money, health, local laws, and more, combined into one PDF for $19. <a href="https://travelsmarterapp.com/trip-brief.html?destination=${country}" style="color:#ff6b4a;font-weight:bold;">See your Trip Brief →</a></p>
 <p><a href="https://travelsmarterapp.com/sales-page.html" style="background:#ff6b4a;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;">See TravelSmarter Pro →</a></p>
 <p>Safe travels,<br>The TravelSmarter Team</p>`,
     }).catch(err => console.error('Failed to send tourist-tax-checker confirmation email:', err.message));
