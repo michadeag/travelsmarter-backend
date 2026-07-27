@@ -61,6 +61,7 @@ const TOOL_THEMES = [
   { slug: 'cashless-payment-checker', theme: 'a credit card with a contactless payment wave symbol next to a small coin or banknote' },
   { slug: 'etiquette-checker', theme: 'a stylized handshake or bowing greeting icon with a small speech bubble' },
   { slug: 'business-hours-checker', theme: 'a store-front icon with a clock and an open/closed sign' },
+  { slug: 'internet-speed-checker', theme: 'a laptop with wifi signal bars and a small speedometer icon' },
 ];
 
 async function getIdeogramKey() {

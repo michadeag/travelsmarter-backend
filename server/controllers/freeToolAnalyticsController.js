@@ -24,7 +24,7 @@ const TOOL_BASE_SLUGS = [
   'departure-tax-checker', 'wildlife-safety-checker', 'time-zone-checker',
   'drinking-age-checker', 'vpn-censorship-checker', 'smoking-vaping-checker',
   'natural-disaster-checker', 'cashless-payment-checker', 'etiquette-checker',
-  'business-hours-checker',
+  'business-hours-checker', 'internet-speed-checker',
 ].sort((a, b) => b.length - a.length);
 
 function deriveToolSlug(pagePath) {
