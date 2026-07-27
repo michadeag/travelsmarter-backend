@@ -53,6 +53,7 @@ const TOOL_THEMES = [
   { slug: 'uv-index-checker', theme: 'a sun icon with a sunscreen bottle or a small umbrella' },
   { slug: 'departure-tax-checker', theme: 'an airplane departing with a small ticket or receipt icon' },
   { slug: 'wildlife-safety-checker', theme: 'a stylized snake or paw print icon with a small warning triangle' },
+  { slug: 'time-zone-checker', theme: 'a world clock or two overlapping clock faces showing different times' },
 ];
 
 async function getIdeogramKey() {
