@@ -174,4 +174,55 @@ function groupSectionsByCategory(sections) {
     .filter(group => group.sections.length > 0);
 }
 
-module.exports = { TOOLS, CATEGORY_ORDER, computeTripBriefSections, groupSectionsByCategory };
+// Countries safe to offer as a Trip Brief destination — the verified
+// intersection of every one of the 35 tools above's own country roster.
+// This exists because the 54 free tools were NOT all built against one
+// shared country list: 14 of the 35 tools here (built in earlier phases
+// of the project, before the country roster was standardized) use an
+// older, resort/island-oriented list that's missing major destinations
+// entirely — including the United States. Offering a destination outside
+// this intersection would silently produce an incomplete paid PDF (some
+// tools throwing "Unknown country" and being dropped from the brief with
+// no visible warning to the buyer). Expanding the older tools' country
+// data to close this gap is a real fast-follow, tracked separately —
+// until then, this is the honest, complete set.
+const SAFE_DESTINATIONS = [
+  { slug: 'argentina', name: 'Argentina' },
+  { slug: 'australia', name: 'Australia' },
+  { slug: 'austria', name: 'Austria' },
+  { slug: 'brazil', name: 'Brazil' },
+  { slug: 'canada', name: 'Canada' },
+  { slug: 'colombia', name: 'Colombia' },
+  { slug: 'costa-rica', name: 'Costa Rica' },
+  { slug: 'czech-republic', name: 'Czech Republic' },
+  { slug: 'france', name: 'France' },
+  { slug: 'germany', name: 'Germany' },
+  { slug: 'greece', name: 'Greece' },
+  { slug: 'iceland', name: 'Iceland' },
+  { slug: 'india', name: 'India' },
+  { slug: 'israel', name: 'Israel' },
+  { slug: 'italy', name: 'Italy' },
+  { slug: 'japan', name: 'Japan' },
+  { slug: 'kenya', name: 'Kenya' },
+  { slug: 'mexico', name: 'Mexico' },
+  { slug: 'morocco', name: 'Morocco' },
+  { slug: 'netherlands', name: 'Netherlands' },
+  { slug: 'new-zealand', name: 'New Zealand' },
+  { slug: 'peru', name: 'Peru' },
+  { slug: 'portugal', name: 'Portugal' },
+  { slug: 'south-korea', name: 'South Korea' },
+  { slug: 'spain', name: 'Spain' },
+  { slug: 'sweden', name: 'Sweden' },
+  { slug: 'switzerland', name: 'Switzerland' },
+  { slug: 'thailand', name: 'Thailand' },
+  { slug: 'turkey', name: 'Turkey' },
+  { slug: 'united-arab-emirates', name: 'United Arab Emirates' },
+  { slug: 'united-kingdom', name: 'United Kingdom' },
+  { slug: 'vietnam', name: 'Vietnam' },
+];
+const SAFE_DESTINATION_SLUGS = new Set(SAFE_DESTINATIONS.map(d => d.slug));
+
+module.exports = {
+  TOOLS, CATEGORY_ORDER, computeTripBriefSections, groupSectionsByCategory,
+  SAFE_DESTINATIONS, SAFE_DESTINATION_SLUGS,
+};

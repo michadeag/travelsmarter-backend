@@ -2,11 +2,13 @@ const pool = require('../config/database');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
-const { computeTripBriefSections, groupSectionsByCategory } = require('../services/tripBriefRegistry');
-// Any one of the 35 registry controllers carries the same canonical
-// 47-country roster (they were all built from the same list) — used here
-// purely to validate a destination slug and look up its display name.
-const { COUNTRIES: CANONICAL_COUNTRIES } = require('./currencyController');
+const { computeTripBriefSections, groupSectionsByCategory, SAFE_DESTINATIONS } = require('../services/tripBriefRegistry');
+// SAFE_DESTINATIONS is the verified intersection of all 35 registry tools'
+// own country rosters — NOT all 54 free tools share one country list (see
+// the comment on SAFE_DESTINATIONS itself), so this is deliberately
+// narrower than "every country any tool has ever covered." Selecting
+// outside this set would silently produce an incomplete paid PDF.
+const DESTINATION_LOOKUP = new Map(SAFE_DESTINATIONS.map(d => [d.slug, d]));
 
 const PRICING = {
   single: { name: 'Trip Brief', price: 1900, priceUSD: 19.00, description: 'One personalized trip brief, combining every relevant check for your destination into one PDF.' },
@@ -14,7 +16,7 @@ const PRICING = {
 };
 
 function resolveDestination(destination) {
-  const data = CANONICAL_COUNTRIES[destination];
+  const data = DESTINATION_LOOKUP.get(destination);
   if (!data) throw new Error('Unknown or unsupported destination');
   return data;
 }
@@ -30,6 +32,16 @@ exports.getTripBriefTools = (req, res) => {
     tools: TOOLS.filter(t => t.category === category).map(t => ({ name: t.name, icon: t.icon, conditional: t.conditional })),
   }));
   res.status(200).json({ success: true, categories: byCategory, totalTools: TOOLS.length });
+};
+
+// @desc List destinations safe to offer for a Trip Brief — the frontend
+//   dropdown is built from this instead of hardcoding its own country list,
+//   so it can never drift out of sync with which destinations actually
+//   produce a complete brief (see SAFE_DESTINATIONS in tripBriefRegistry.js).
+// @route GET /api/trip-brief/destinations
+// @access Public
+exports.getTripBriefDestinations = (req, res) => {
+  res.status(200).json({ success: true, destinations: SAFE_DESTINATIONS });
 };
 
 // @desc Check whether an email already has lifetime Trip Brief access
