@@ -58,7 +58,8 @@ function computeResult({ airport, flightType }) {
   const flightTypeLabel = flightType === 'domestic' ? 'domestic' : 'international';
   const securityLevelLabel = SECURITY_LABELS[data.securityLevel];
 
-  const headline = `Arrive at ${data.name} at least ${recommendedMinutes} minutes before a ${flightTypeLabel} flight. Security/check-in congestion here is ${securityLevelLabel}.`;
+  const article = flightType === 'international' ? 'an' : 'a';
+  const headline = `Arrive at ${data.name} at least ${recommendedMinutes} minutes before ${article} ${flightTypeLabel} flight. Security/check-in congestion here is ${securityLevelLabel}.`;
 
   return {
     airport, airportName: data.name, flightType, flightTypeLabel, recommendedMinutes,
