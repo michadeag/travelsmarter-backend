@@ -75,6 +75,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', yellowFeverEntryRequirement: false, malariaRisk: 'none', commonRecommended: ['Routine vaccines up to date'] },
   colombia: { name: 'Colombia', yellowFeverEntryRequirement: false, malariaRisk: 'low', commonRecommended: ['Yellow fever recommended for most areas below 2,300m, not required for Bogotá/Cartagena city centers', 'Hepatitis A', 'Typhoid'] },
   brazil: { name: 'Brazil', yellowFeverEntryRequirement: false, malariaRisk: 'low', commonRecommended: ['Yellow fever recommended for most of the country outside coastal cities like Rio/São Paulo', 'Hepatitis A', 'Typhoid'] },
+  'united-states': { name: 'United States', yellowFeverEntryRequirement: false, malariaRisk: 'none', commonRecommended: ['Routine vaccines up to date'] },
 };
 
 const MALARIA_LABELS = { none: 'No malaria risk', low: 'Low malaria risk', moderate: 'Moderate malaria risk', high: 'High malaria risk' };

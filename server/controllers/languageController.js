@@ -69,6 +69,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', language: 'Spanish', englishLevel: 'moderate', note: 'Common in Santiago and tourist areas, less consistent elsewhere.' },
   colombia: { name: 'Colombia', language: 'Spanish', englishLevel: 'moderate', note: 'Improving quickly in Bogotá and Medellín, but still limited outside major cities and tourist zones.' },
   brazil: { name: 'Brazil', language: 'Portuguese', englishLevel: 'moderate', note: 'Notably less common than in Spanish-speaking South American neighbors — tourist areas and upscale hotels are the exception, not the rule.' },
+  'united-states': { name: 'United States', language: 'English', englishLevel: 'very_high', note: 'English is the primary language nationwide, though Spanish is also widely spoken in many regions — no language barrier for English speakers.' },
 };
 
 const LEVEL_LABELS = {

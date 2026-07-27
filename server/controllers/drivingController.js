@@ -70,6 +70,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', side: 'right', idpStatus: 'recommended', note: 'Chile accepts a valid US license for short stays but recommends carrying an IDP as well.' },
   colombia: { name: 'Colombia', side: 'right', idpStatus: 'recommended', note: 'Colombia generally accepts a US license for visitors, but an IDP is recommended and often requested by rental agencies.' },
   brazil: { name: 'Brazil', side: 'right', idpStatus: 'required', note: 'Brazil requires an International Driving Permit alongside your home license for foreign visitors to drive.' },
+  'united-states': { name: 'United States', side: 'right', idpStatus: 'not_required', note: "You're driving in your home country — just your regular US driver's license, no IDP needed." },
 };
 
 const SIDE_LABELS = { left: 'left', right: 'right' };

@@ -71,6 +71,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', status: 'safe', note: 'Tap water is safe to drink in Santiago and most of Chile, though it can have a distinct mineral taste in some regions.' },
   colombia: { name: 'Colombia', status: 'caution', note: 'Tap water is treated and generally safe in Bogotá, but bottled or filtered water is the safer default in Cartagena and other coastal/rural areas.' },
   brazil: { name: 'Brazil', status: 'not_recommended', note: 'Stick to bottled or filtered water throughout Brazil — tap water quality varies significantly and isn\'t reliable for travelers.' },
+  'united-states': { name: 'United States', status: 'safe', note: 'Tap water is safe to drink nationwide and heavily regulated by the EPA, though taste and mineral content vary by city.' },
 };
 
 const STATUS_LABELS = { safe: 'Safe to drink', caution: 'Use caution', not_recommended: 'Not recommended' };

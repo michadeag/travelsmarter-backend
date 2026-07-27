@@ -69,6 +69,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', status: 'easy', note: 'Register your drone with the DGAC before flying — generally accessible outside restricted zones.' },
   colombia: { name: 'Colombia', status: 'easy', note: 'Register your drone with Aerocivil before flying — generally accessible outside restricted zones.' },
   brazil: { name: 'Brazil', status: 'easy', note: "Register your drone via Brazil's SISANT platform before flying — generally accessible outside restricted zones." },
+  'united-states': { name: 'United States', status: 'restricted', note: "Drones over 250g must be registered with the FAA via the FAADroneZone before flying, and flying is banned entirely in all US National Parks — check airspace restrictions near airports and cities with the FAA's B4UFLY app." },
 };
 
 const STATUS_LABELS = { easy: 'drone-friendly with basic registration', restricted: 'restricted — permits required for most areas', banned: 'effectively banned for tourists' };

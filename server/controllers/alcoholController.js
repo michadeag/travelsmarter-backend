@@ -69,6 +69,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', status: 'freely_available', note: 'Widely available — the legal drinking age is 18, with sales bans on election days.' },
   colombia: { name: 'Colombia', status: 'freely_available', note: 'Widely available — the legal drinking age is 18, with "ley seca" sales bans on election days and some holidays.' },
   brazil: { name: 'Brazil', status: 'freely_available', note: 'Widely available — the legal drinking age is 18, with sales bans on election days.' },
+  'united-states': { name: 'United States', status: 'freely_available', note: 'Sold in licensed stores, bars, and restaurants nationwide — the legal drinking age is 21, the highest in this list, and ID checks are strictly enforced. Some counties, mostly in the South, are fully dry.' },
 };
 
 const STATUS_LABELS = { freely_available: 'freely available', restricted: 'legal but restricted', largely_dry: 'largely off-limits to visitors' };

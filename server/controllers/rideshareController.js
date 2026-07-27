@@ -69,6 +69,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', status: 'full', primaryApp: 'Uber', localAlternative: 'Cabify, DiDi', note: 'Uber operates normally in Santiago alongside Cabify and DiDi.' },
   colombia: { name: 'Colombia', status: 'limited', primaryApp: 'Uber (gray area)', localAlternative: 'DiDi, Cabify', note: 'Uber has faced legal challenges and periodic bans in Colombia — DiDi and Cabify are popular, more established alternatives.' },
   brazil: { name: 'Brazil', status: 'full', primaryApp: 'Uber', localAlternative: '99', note: 'Uber operates widely across Brazil alongside 99 (owned by Didi), which is equally or more popular in many cities.' },
+  'united-states': { name: 'United States', status: 'full', primaryApp: 'Uber', localAlternative: 'Lyft', note: 'Uber and Lyft both operate nationwide in every major and mid-size city, though coverage and wait times thin out considerably in rural areas.' },
 };
 
 const STATUS_LABELS = { full: 'Uber operates normally', limited: 'Uber operates with limitations', unavailable: 'Uber is not available' };

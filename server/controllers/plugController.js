@@ -89,6 +89,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', plugTypes: ['C', 'L'], voltage: 220, frequency: 50 },
   colombia: { name: 'Colombia', plugTypes: ['A', 'B'], voltage: 110, frequency: 60 },
   brazil: { name: 'Brazil', plugTypes: ['C', 'N'], voltage: 127, frequency: 60, voltageNote: 'Voltage varies by region in Brazil — some areas run 127V, others 220V. Check the specific city on your itinerary.' },
+  'united-states': { name: 'United States', plugTypes: ['A', 'B'], voltage: 120, frequency: 60 },
 };
 
 function computeResult({ country }) {

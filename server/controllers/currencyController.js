@@ -69,6 +69,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', currencyName: 'Chilean Peso (CLP)', cashCulture: 'card_friendly', note: 'Cards are widely accepted throughout, including contactless payment in most cities.' },
   colombia: { name: 'Colombia', currencyName: 'Colombian Peso (COP)', cashCulture: 'mixed', note: 'Cards work well in Bogotá and Medellín, but markets and smaller towns expect pesos in cash.' },
   brazil: { name: 'Brazil', currencyName: 'Brazilian Real (BRL)', cashCulture: 'mixed', note: 'Cards (including the local Pix instant-payment system) work well in cities, but smaller vendors and beach areas often expect reais in cash.' },
+  'united-states': { name: 'United States', currencyName: 'US Dollar (USD)', cashCulture: 'card_friendly', note: 'Cards and contactless/tap-to-pay are accepted almost everywhere, including small purchases — carrying much cash is rarely necessary, though some independent food trucks or rural spots may be cash-only.' },
 };
 
 const CASH_CULTURE_LABELS = { cash_preferred: 'cash is still king', mixed: 'a mix of cash and card', card_friendly: 'cards work almost everywhere' };

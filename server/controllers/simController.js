@@ -70,6 +70,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', bestOption: 'esim', registrationRequired: false, note: 'eSIM coverage in Chile is solid in Santiago and main tourist areas, with no registration hassle.' },
   colombia: { name: 'Colombia', bestOption: 'physical_sim', registrationRequired: true, note: 'Colombia requires ID/passport registration for local SIMs (Claro, Tigo); eSIM coverage is strong in cities like Bogotá and Medellín.' },
   brazil: { name: 'Brazil', bestOption: 'physical_sim', registrationRequired: true, note: 'Brazil requires a CPF (Brazilian tax ID) or passport registration for local SIMs, which can be a hassle for short trips — many travelers use an eSIM instead to skip the paperwork.' },
+  'united-states': { name: 'United States', bestOption: 'esim', registrationRequired: false, note: 'eSIM coverage from providers like Airalo, Google Fi, and major carriers is excellent nationwide, and no ID registration is required to activate a US SIM or eSIM.' },
 };
 
 const BEST_OPTION_LABELS = { esim: 'get an eSIM before you go', physical_sim: 'a local physical SIM is the better choice' };

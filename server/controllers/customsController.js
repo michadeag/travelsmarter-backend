@@ -74,6 +74,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', cbiEligible: false, watchItem: 'Fresh produce and certain wood products need USDA/agricultural declaration.' },
   colombia: { name: 'Colombia', cbiEligible: false, watchItem: 'Emeralds should have proper documentation; wildlife and coral products are restricted under CITES rules.' },
   brazil: { name: 'Brazil', cbiEligible: false, watchItem: 'Wildlife products and certain wood items are restricted under CITES rules; keep receipts for gemstones.' },
+  'united-states': { name: 'United States', cbiEligible: false, watchItem: "This checker covers duty-free limits when a US traveler re-enters the US from abroad — since your trip stays within the US, there's no customs process to check." },
 };
 
 const EXEMPTION_USD = 800;
@@ -82,11 +83,13 @@ function computeResult({ country }) {
   const data = COUNTRIES[country];
   if (!data) throw new Error('Unknown country');
 
-  if (country === 'puerto-rico') {
+  if (country === 'puerto-rico' || country === 'united-states') {
     return {
       country, countryName: data.name, exemptionUSD: null, alcoholLiters: null, cbiEligible: false,
       watchItem: data.watchItem,
-      headline: `Returning from ${data.name}: no customs process at all — it's a US territory, same as flying home from any other state.`,
+      headline: country === 'united-states'
+        ? "Staying within the US: no customs process — this checker applies when re-entering the US from abroad."
+        : `Returning from ${data.name}: no customs process at all — it's a US territory, same as flying home from any other state.`,
     };
   }
 

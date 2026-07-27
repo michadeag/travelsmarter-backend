@@ -71,6 +71,7 @@ const COUNTRIES = {
   chile: { name: 'Chile', unifiedNumber: null, police: '133', fire: '132', ambulance: '131', note: 'Chile uses separate numbers by service — 133 for police (Carabineros), 132 for fire, 131 for ambulance.' },
   colombia: { name: 'Colombia', unifiedNumber: '123', police: '123', fire: '123', ambulance: '123', note: 'Colombia uses a unified 123 number for all emergency services.' },
   brazil: { name: 'Brazil', unifiedNumber: null, police: '190', fire: '193', ambulance: '192', note: 'Brazil uses separate numbers by service — 190 for police, 192 for ambulance (SAMU), 193 for fire.' },
+  'united-states': { name: 'United States', unifiedNumber: '911', police: '911', fire: '911', ambulance: '911', note: '911 reaches all emergency services nationwide and works from any phone, including one without an active SIM card.' },
 };
 
 function computeResult({ country }) {

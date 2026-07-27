@@ -177,15 +177,16 @@ function groupSectionsByCategory(sections) {
 // Countries safe to offer as a Trip Brief destination — the verified
 // intersection of every one of the 35 tools above's own country roster.
 // This exists because the 54 free tools were NOT all built against one
-// shared country list: 14 of the 35 tools here (built in earlier phases
-// of the project, before the country roster was standardized) use an
-// older, resort/island-oriented list that's missing major destinations
-// entirely — including the United States. Offering a destination outside
-// this intersection would silently produce an incomplete paid PDF (some
-// tools throwing "Unknown country" and being dropped from the brief with
-// no visible warning to the buyer). Expanding the older tools' country
-// data to close this gap is a real fast-follow, tracked separately —
-// until then, this is the honest, complete set.
+// shared country list: 14 of the 35 tools here were built in earlier
+// phases of the project, before the country roster was standardized,
+// against an older resort/island-oriented list. Those 14 controllers
+// (alcohol, currency, customs, driving, drone, emergency, health,
+// language, petTravel, plug, rideshare, sim, tipping, water) have since
+// each had a 'united-states' entry added, closing the original gap.
+// Offering a destination outside this intersection would silently
+// produce an incomplete paid PDF (some tools throwing "Unknown country"
+// and being dropped from the brief with no visible warning to the
+// buyer) — this list is the honest, complete set.
 const SAFE_DESTINATIONS = [
   { slug: 'argentina', name: 'Argentina' },
   { slug: 'australia', name: 'Australia' },
@@ -218,6 +219,7 @@ const SAFE_DESTINATIONS = [
   { slug: 'turkey', name: 'Turkey' },
   { slug: 'united-arab-emirates', name: 'United Arab Emirates' },
   { slug: 'united-kingdom', name: 'United Kingdom' },
+  { slug: 'united-states', name: 'United States' },
   { slug: 'vietnam', name: 'Vietnam' },
 ];
 const SAFE_DESTINATION_SLUGS = new Set(SAFE_DESTINATIONS.map(d => d.slug));
