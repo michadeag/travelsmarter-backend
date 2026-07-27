@@ -64,6 +64,7 @@ const TOOL_THEMES = [
   { slug: 'internet-speed-checker', theme: 'a laptop with wifi signal bars and a small speedometer icon' },
   { slug: 'airport-arrival-time-checker', theme: 'an airport departure board with a clock icon' },
   { slug: 'medication-legality-checker', theme: 'a pill bottle with a small customs/passport stamp icon' },
+  { slug: 'vat-refund-checker', theme: 'a shopping bag with a percentage symbol and a small receipt icon' },
 ];
 
 async function getIdeogramKey() {

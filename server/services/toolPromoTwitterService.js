@@ -32,7 +32,7 @@ const TOOL_BASE_SLUGS = [
   'drinking-age-checker', 'vpn-censorship-checker', 'smoking-vaping-checker',
   'natural-disaster-checker', 'cashless-payment-checker', 'etiquette-checker',
   'business-hours-checker', 'internet-speed-checker', 'airport-arrival-time-checker',
-  'medication-legality-checker',
+  'medication-legality-checker', 'vat-refund-checker',
 ].sort((a, b) => b.length - a.length);
 
 const SITEMAP_URL = 'https://travelsmarterapp.com/sitemap.xml';
