@@ -57,6 +57,7 @@ const TOOL_THEMES = [
   { slug: 'drinking-age-checker', theme: 'a wine glass or beer mug next to a small ID card icon' },
   { slug: 'vpn-censorship-checker', theme: 'a smartphone or laptop icon with a shield or lock symbol' },
   { slug: 'smoking-vaping-checker', theme: 'a no-smoking style icon paired with a small e-cigarette/vape device silhouette' },
+  { slug: 'natural-disaster-checker', theme: 'a weather warning triangle icon with a small storm cloud or seismic wave symbol' },
 ];
 
 async function getIdeogramKey() {
