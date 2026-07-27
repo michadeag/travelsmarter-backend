@@ -291,6 +291,17 @@ const SCRIPT_IDEAS = [
     caption: "The trip prep that can't be rushed, no matter how much you pay 🐾",
     hashtags: "#travelwithpets #petsoftiktok #traveltips",
   },
+  {
+    key: 'travel-advisory-level-hides-nuance',
+    toolSlug: 'travel-advisory-checker',
+    toolName: 'Travel Advisory Checker',
+    hook: "\"Is it safe?\" has a more complicated answer than you think",
+    voiceover: "A country's travel advisory level is a national average — it can hide a lot. Somewhere can be genuinely safe in its main tourist areas and a real risk somewhere else in the same country. The level tells you where to start, not the whole story. Always check the specific reason behind the rating, and confirm against your own government's official advisory before you book.",
+    ctaYoutube: "Free Travel Advisory Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Travel Advisory Checker — link in bio",
+    caption: "The safety rating that's more nuanced than a single number 🛡️",
+    hashtags: "#traveltips #travelsafety #traveladvice",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

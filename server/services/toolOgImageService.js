@@ -66,6 +66,7 @@ const TOOL_THEMES = [
   { slug: 'medication-legality-checker', theme: 'a pill bottle with a small customs/passport stamp icon' },
   { slug: 'vat-refund-checker', theme: 'a shopping bag with a percentage symbol and a small receipt icon' },
   { slug: 'resort-fee-checker', theme: 'a hotel building icon with a small hidden price tag or magnifying glass on a receipt' },
+  { slug: 'travel-advisory-checker', theme: 'a shield icon overlaid on a small world map with a subtle warning-level indicator' },
 ];
 
 async function getIdeogramKey() {

@@ -77,6 +77,9 @@ const TOOLS = [
   { slug: 'emergency-number-checker', name: 'Emergency Numbers', icon: '🚨', category: 'Health & Safety',
     controller: '../controllers/emergencyController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'travel-advisory-checker', name: 'Travel Advisory', icon: '🛡️', category: 'Health & Safety',
+    controller: '../controllers/travelAdvisoryController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- On the Ground ---
   { slug: 'sim-checker', name: 'SIM / eSIM', icon: '📱', category: 'On the Ground',
