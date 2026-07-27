@@ -81,7 +81,7 @@ function computeResult({ country }) {
   const data = COUNTRIES[country];
   if (!data) throw new Error('Unknown country');
 
-  const headline = `${data.name}'s internet is ${SPEED_LABELS[data.speedTier]} On the visa side, ${NOMAD_LABELS[data.digitalNomadVisa]}.`;
+  const headline = `${data.name}'s internet is ${SPEED_LABELS[data.speedTier]}. On the visa side, ${NOMAD_LABELS[data.digitalNomadVisa]}.`;
 
   return {
     country, countryName: data.name, speedTier: data.speedTier, speedTierLabel: SPEED_LABELS[data.speedTier],
