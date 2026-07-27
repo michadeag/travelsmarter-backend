@@ -60,6 +60,7 @@ const TOOL_THEMES = [
   { slug: 'natural-disaster-checker', theme: 'a weather warning triangle icon with a small storm cloud or seismic wave symbol' },
   { slug: 'cashless-payment-checker', theme: 'a credit card with a contactless payment wave symbol next to a small coin or banknote' },
   { slug: 'etiquette-checker', theme: 'a stylized handshake or bowing greeting icon with a small speech bubble' },
+  { slug: 'business-hours-checker', theme: 'a store-front icon with a clock and an open/closed sign' },
 ];
 
 async function getIdeogramKey() {
