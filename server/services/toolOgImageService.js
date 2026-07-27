@@ -65,6 +65,7 @@ const TOOL_THEMES = [
   { slug: 'airport-arrival-time-checker', theme: 'an airport departure board with a clock icon' },
   { slug: 'medication-legality-checker', theme: 'a pill bottle with a small customs/passport stamp icon' },
   { slug: 'vat-refund-checker', theme: 'a shopping bag with a percentage symbol and a small receipt icon' },
+  { slug: 'resort-fee-checker', theme: 'a hotel building icon with a small hidden price tag or magnifying glass on a receipt' },
 ];
 
 async function getIdeogramKey() {
