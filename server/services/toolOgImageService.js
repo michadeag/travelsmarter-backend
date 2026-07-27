@@ -62,6 +62,7 @@ const TOOL_THEMES = [
   { slug: 'etiquette-checker', theme: 'a stylized handshake or bowing greeting icon with a small speech bubble' },
   { slug: 'business-hours-checker', theme: 'a store-front icon with a clock and an open/closed sign' },
   { slug: 'internet-speed-checker', theme: 'a laptop with wifi signal bars and a small speedometer icon' },
+  { slug: 'airport-arrival-time-checker', theme: 'an airport departure board with a clock icon' },
 ];
 
 async function getIdeogramKey() {
