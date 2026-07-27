@@ -20,10 +20,16 @@ function btn(url, label) {
 function tipBox(content) {
   return `<div style="background:#f0f4ff;border-left:4px solid #667eea;border-radius:0 8px 8px 0;padding:18px 20px;margin:22px 0;color:#1f2937;line-height:1.7;">${content}</div>`;
 }
-function upgradeBox(text, linkUrl) {
+// Pitch-day box with two CTAs, ladder-style: the Trip Brief (one trip,
+// $19, low-friction) as the primary button, TravelSmarter Pro (ongoing,
+// $19/month) as a smaller secondary line — same pairing used in every
+// individual tool's PDF/confirmation email (see pdfService.addFooterCTA).
+function dualUpgradeBox(tripBriefText, proText) {
   return `<div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:10px;padding:18px 20px;margin:22px 0;">
-    <p style="margin:0 0 12px;font-size:14px;color:#92400e;">${text}</p>
-    <a href="${linkUrl}" style="display:inline-block;background:#1a2744;color:white;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">See Plans →</a>
+    <p style="margin:0 0 12px;font-size:14px;color:#92400e;">${tripBriefText}</p>
+    <a href="{appUrl}/trip-brief.html" style="display:inline-block;background:#ff6b4a;color:white;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">Get My Trip Brief →</a>
+    <p style="margin:16px 0 8px;font-size:12.5px;color:#92400e;">${proText}</p>
+    <a href="{appUrl}/sales-page.html" style="display:inline-block;background:#1a2744;color:white;padding:9px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12.5px;">See TravelSmarter Pro →</a>
   </div>`;
 }
 function h(text) {
@@ -122,15 +128,15 @@ function buildToolLeadSequence() {
     html += btn(`{appUrl}/${tool.url}`, `Try ${tool.name}`);
 
     if (isFinale) {
-      html += upgradeBox(
-        `Liked the free tools? TravelSmarter Pro goes further — automatic price alerts, 87 verified travel hacks, and every tool in this series with saved trip profiles. $19/month, cancel anytime.`,
-        '{appUrl}/sales-page.html'
+      html += dualUpgradeBox(
+        `Ready for your next trip? Skip checking tools one by one — get every relevant check (visa, money, health, local laws, and more) combined into one Trip Brief PDF for $19.`,
+        `Traveling often? TravelSmarter Pro adds automatic price alerts, 87 verified travel hacks, and every tool in this series with saved trip profiles. $19/month, cancel anytime.`
       );
       html += small(`That's it for this series — but the tools are always free and always there at <a href="{appUrl}/free-travel-tools.html" style="color:#667eea;">travelsmarterapp.com/free-travel-tools.html</a>. Safe travels.`);
     } else if (isPitchDay) {
-      html += upgradeBox(
-        `Enjoying the free tools? TravelSmarter Pro adds automatic price alerts and 87 verified travel hacks on top of everything free. $19/month, cancel anytime.`,
-        '{appUrl}/sales-page.html'
+      html += dualUpgradeBox(
+        `Planning an actual trip? Get every relevant check — visa, money, health, local laws, and more — combined into one Trip Brief PDF for $19, instead of checking tools one by one.`,
+        `Or if you travel often, TravelSmarter Pro adds automatic price alerts and 87 verified travel hacks on top of everything free. $19/month, cancel anytime.`
       );
       html += small(`Tomorrow: ${TOOLS[day % TOOLS.length].hook.toLowerCase()}.`);
     } else {
