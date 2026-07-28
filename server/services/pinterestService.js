@@ -77,6 +77,7 @@ const TOPICS = [
   { category: 'lounge-access-checker', toolSlug: 'lounge-access-checker', title: 'Your Priority Pass might be useless at your own hub', promptTheme: 'a comfortable armchair icon with a small key card or membership badge symbol', boards: ['Travel Hacks', 'Travel Tips', 'Travel Rewards'], tags: ['#travelhacks', '#prioritypass', '#traveltips', '#travelsmarter'] },
   { category: 'accessible-travel-checker', toolSlug: 'accessible-travel-checker', title: 'The most charming parts of a city are often the least accessible', promptTheme: 'a wheelchair accessibility icon next to a small world map silhouette', boards: ['Accessible Travel', 'Travel Tips', 'Travel Safety'], tags: ['#accessibletravel', '#wheelchairtravel', '#traveltips', '#travelsmarter'] },
   { category: 'holiday-season-checker', toolSlug: 'holiday-season-checker', title: "You didn't check the calendar. Now every train is sold out", promptTheme: 'a calendar page with a festive confetti or crowd icon marking a busy date range', boards: ['Travel Planning', 'Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#travelplanning', '#travelhacks', '#travelsmarter'] },
+  { category: 'overweight-baggage-checker', toolSlug: 'overweight-baggage-checker', title: '3 extra pounds just cost more than your plane ticket', promptTheme: 'a suitcase on a luggage scale with a small warning weight icon', boards: ['Travel Hacks', 'Budget Travel', 'Travel Tips'], tags: ['#travelhacks', '#budgettravel', '#traveltips', '#travelsmarter'] },
 ];
 
 class PinterestService {

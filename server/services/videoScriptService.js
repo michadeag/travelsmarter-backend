@@ -346,6 +346,17 @@ const SCRIPT_IDEAS = [
     caption: "The calendar check that saves your whole trip 📅",
     hashtags: "#traveltips #travelplanning #travelhacks",
   },
+  {
+    key: 'overweight-baggage-3lb-costs-more-than-ticket',
+    toolSlug: 'overweight-baggage-checker',
+    toolName: 'Overweight & Oversized Baggage Fee Checker',
+    hook: "3 extra pounds just cost more than your actual plane ticket",
+    voiceover: "Budget airlines like Ryanair and Wizz Air don't just charge a flat overweight fee — they charge per kilo, and at the gate that can hit €10-12 per kilo. A bag that's just a few pounds over the limit can cost you more than the flight itself. Pre-booking extra weight online instead of at the gate is dramatically cheaper — and a $15 luggage scale at home pays for itself the first time it saves you this fee.",
+    ctaYoutube: "Free Overweight Baggage Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Overweight Baggage Checker — link in bio",
+    caption: "The fee that can cost more than the flight 🧳",
+    hashtags: "#travelhacks #budgettravel #traveltips",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
