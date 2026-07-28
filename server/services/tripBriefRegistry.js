@@ -106,6 +106,9 @@ const TOOLS = [
   { slug: 'accessible-travel-checker', name: 'Wheelchair & Mobility Accessibility', icon: '♿', category: 'On the Ground',
     controller: '../controllers/accessibleTravelController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'holiday-season-checker', name: 'Holiday Season Disruption', icon: '📅', category: 'On the Ground',
+    controller: '../controllers/holidaySeasonController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Local Rules ---
   { slug: 'alcohol-checker', name: 'Alcohol Laws', icon: '🍷', category: 'Local Rules',

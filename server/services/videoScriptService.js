@@ -335,6 +335,17 @@ const SCRIPT_IDEAS = [
     caption: "Charming for some, a real barrier for others ♿",
     hashtags: "#accessibletravel #traveltips #wheelchairtravel",
   },
+  {
+    key: 'holiday-season-golden-week-wrecks-trips',
+    toolSlug: 'holiday-season-checker',
+    toolName: 'National Holiday Season Checker',
+    hook: "You didn't check the calendar. Now every train in the country is sold out",
+    voiceover: "China's Spring Festival, Japan's Golden Week, Brazil's Carnival, Vietnam's Tet — these aren't single-day closures like a public holiday. They're weeks where trains and hotels book out nationwide and prices spike hard. Checking the weather forecast isn't enough — check your destination's disruptive holiday season before you lock in your dates.",
+    ctaYoutube: "Free National Holiday Season Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free National Holiday Season Checker — link in bio",
+    caption: "The calendar check that saves your whole trip 📅",
+    hashtags: "#traveltips #travelplanning #travelhacks",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
