@@ -323,5 +323,48 @@ exports.getRecentLeads = async (req, res) => {
   }
 };
 
+// Same shape as server.js's POST /api/tools/*/pdf guard — kept in sync
+// manually since one is a Postgres regex (~) and the other a JS RegExp.
+const INVALID_EMAIL_SQL = `email !~ '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$'`;
+
+// @desc Preview tool_leads rows with a malformed email (not a real
+//   address — e.g. a tool slug used as a placeholder during ad hoc API
+//   testing before the format guard existed). Call before DELETE to see
+//   exactly what would be removed.
+// @route GET /api/analytics/free-tools/invalid-leads
+// @access Admin
+exports.getInvalidLeads = async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, email, first_name, tool_slug, source_page, created_at
+       FROM tool_leads
+       WHERE ${INVALID_EMAIL_SQL}
+       ORDER BY created_at DESC`
+    );
+    res.json({ success: true, count: rows.length, data: rows });
+  } catch (error) {
+    console.error('getInvalidLeads error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc Permanently delete every tool_leads row with a malformed email
+//   (cascades to tool_lead_scheduled_emails, cancelling their drip too).
+//   Irreversible — the admin UI shows the preview list and asks for
+//   confirmation before calling this.
+// @route DELETE /api/analytics/free-tools/invalid-leads
+// @access Admin
+exports.deleteInvalidLeads = async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `DELETE FROM tool_leads WHERE ${INVALID_EMAIL_SQL} RETURNING id`
+    );
+    res.json({ success: true, deleted: rows.length });
+  } catch (error) {
+    console.error('deleteInvalidLeads error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 exports.deriveToolSlug = deriveToolSlug;
 exports.TOOL_BASE_SLUGS = TOOL_BASE_SLUGS;

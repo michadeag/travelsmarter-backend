@@ -20,7 +20,9 @@ const {
   getToolPromoWordpressStats,
   getLeadsSummary,
   getTopFreeToolLeads,
-  getRecentLeads
+  getRecentLeads,
+  getInvalidLeads,
+  deleteInvalidLeads
 } = require('../controllers/freeToolAnalyticsController');
 
 // All analytics routes require admin authentication
@@ -49,5 +51,7 @@ router.get('/free-tools/wordpress-posts', verifyAdminToken, getToolPromoWordpres
 router.get('/free-tools/leads-summary', verifyAdminToken, getLeadsSummary);
 router.get('/free-tools/leads-top', verifyAdminToken, getTopFreeToolLeads);
 router.get('/free-tools/leads-recent', verifyAdminToken, getRecentLeads);
+router.get('/free-tools/invalid-leads', verifyAdminToken, getInvalidLeads);
+router.delete('/free-tools/invalid-leads', verifyAdminToken, deleteInvalidLeads);
 
 module.exports = router;
