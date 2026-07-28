@@ -357,6 +357,17 @@ const SCRIPT_IDEAS = [
     caption: "The fee that can cost more than the flight 🧳",
     hashtags: "#travelhacks #budgettravel #traveltips",
   },
+  {
+    key: 'photography-tripod-permit-surprise',
+    toolSlug: 'photography-permit-checker',
+    toolName: 'Photography & Filming Permit Checker',
+    hook: "Your tripod might need a permit you don't even know about",
+    voiceover: "Casual photos are fine almost everywhere. But set up a tripod at the Louvre, the Uffizi, or Machu Picchu, and you can suddenly need a separate permit or fee you never planned for. It's not about the country's laws in general — it's the specific site. Check before you pack the tripod, not when a guard stops you.",
+    ctaYoutube: "Free Photography & Filming Permit Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Photography & Filming Permit Checker — link in bio",
+    caption: "The gear rule nobody checks until it's too late 📷",
+    hashtags: "#traveltips #travelphotography #travelhacks",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

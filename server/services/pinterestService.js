@@ -78,6 +78,7 @@ const TOPICS = [
   { category: 'accessible-travel-checker', toolSlug: 'accessible-travel-checker', title: 'The most charming parts of a city are often the least accessible', promptTheme: 'a wheelchair accessibility icon next to a small world map silhouette', boards: ['Accessible Travel', 'Travel Tips', 'Travel Safety'], tags: ['#accessibletravel', '#wheelchairtravel', '#traveltips', '#travelsmarter'] },
   { category: 'holiday-season-checker', toolSlug: 'holiday-season-checker', title: "You didn't check the calendar. Now every train is sold out", promptTheme: 'a calendar page with a festive confetti or crowd icon marking a busy date range', boards: ['Travel Planning', 'Travel Tips', 'Travel Hacks'], tags: ['#traveltips', '#travelplanning', '#travelhacks', '#travelsmarter'] },
   { category: 'overweight-baggage-checker', toolSlug: 'overweight-baggage-checker', title: '3 extra pounds just cost more than your plane ticket', promptTheme: 'a suitcase on a luggage scale with a small warning weight icon', boards: ['Travel Hacks', 'Budget Travel', 'Travel Tips'], tags: ['#travelhacks', '#budgettravel', '#traveltips', '#travelsmarter'] },
+  { category: 'photography-permit-checker', toolSlug: 'photography-permit-checker', title: "Your tripod might need a permit you don't even know about", promptTheme: 'a camera icon with a small tripod silhouette and a subtle permit stamp', boards: ['Travel Photography', 'Travel Tips', 'Travel Hacks'], tags: ['#travelphotography', '#traveltips', '#travelhacks', '#travelsmarter'] },
 ];
 
 class PinterestService {

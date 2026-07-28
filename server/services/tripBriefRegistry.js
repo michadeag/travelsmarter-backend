@@ -141,6 +141,9 @@ const TOOLS = [
   { slug: 'lgbtq-travel-safety-checker', name: 'LGBTQ+ Travel Safety', icon: '🏳️‍🌈', category: 'Local Rules',
     controller: '../controllers/lgbtqSafetyController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'photography-permit-checker', name: 'Photography & Filming Rules', icon: '📷', category: 'Local Rules',
+    controller: '../controllers/photographyPermitController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Pet Travel ---
   { slug: 'pet-travel-checker', name: 'Traveling with Pets', icon: '🐾', category: 'Pet Travel',

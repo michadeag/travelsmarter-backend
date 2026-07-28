@@ -72,6 +72,7 @@ const TOOL_THEMES = [
   { slug: 'accessible-travel-checker', theme: 'a wheelchair accessibility icon next to a small world map silhouette' },
   { slug: 'holiday-season-checker', theme: 'a calendar page with a festive confetti or crowd icon marking a busy date range' },
   { slug: 'overweight-baggage-checker', theme: 'a suitcase on a luggage scale with a small warning weight icon' },
+  { slug: 'photography-permit-checker', theme: 'a camera icon with a small tripod silhouette and a subtle permit stamp' },
 ];
 
 async function getIdeogramKey() {
