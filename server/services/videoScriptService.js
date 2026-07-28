@@ -368,6 +368,17 @@ const SCRIPT_IDEAS = [
     caption: "The gear rule nobody checks until it's too late 📷",
     hashtags: "#traveltips #travelphotography #travelhacks",
   },
+  {
+    key: 'souvenir-buddha-statue-not-legal',
+    toolSlug: 'souvenir-export-checker',
+    toolName: 'Souvenir & Prohibited Export Items Checker',
+    hook: "That souvenir you just bought might not be legal to take home",
+    voiceover: "A Buddha statue in Thailand. Ancient coins in Greece. Ivory almost anywhere. Some of the most tempting souvenirs are either banned outright or need an official export permit you didn't know existed — and customs finds out at the worst possible moment, right as you're trying to leave. Check before you buy, not after it's already confiscated.",
+    ctaYoutube: "Free Souvenir & Export Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Souvenir & Export Checker — link in bio",
+    caption: "The souvenir that gets confiscated at the airport 🛍️",
+    hashtags: "#traveltips #travelhacks #travelmistakes",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

@@ -57,6 +57,9 @@ const TOOLS = [
   { slug: 'resort-fee-checker', name: 'Resort Fees', icon: '🏨', category: 'Money',
     controller: '../controllers/resortFeeController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'souvenir-export-checker', name: 'Souvenir Export Rules', icon: '🛍️', category: 'Money',
+    controller: '../controllers/souvenirExportController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Health & Safety ---
   { slug: 'travel-health-checker', name: 'Health & Vaccines', icon: '🩺', category: 'Health & Safety',
