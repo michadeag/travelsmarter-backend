@@ -132,6 +132,9 @@ const TOOLS = [
   { slug: 'rental-age-checker', name: 'Car Rental Age', icon: '🚙', category: 'Local Rules',
     controller: '../controllers/rentalAgeController', conditional: 'age',
     buildArgs: (trip) => ({ country: trip.destination, age: trip.age }) },
+  { slug: 'lgbtq-travel-safety-checker', name: 'LGBTQ+ Travel Safety', icon: '🏳️‍🌈', category: 'Local Rules',
+    controller: '../controllers/lgbtqSafetyController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Pet Travel ---
   { slug: 'pet-travel-checker', name: 'Traveling with Pets', icon: '🐾', category: 'Pet Travel',

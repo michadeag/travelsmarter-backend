@@ -302,6 +302,17 @@ const SCRIPT_IDEAS = [
     caption: "The safety rating that's more nuanced than a single number 🛡️",
     hashtags: "#traveltips #travelsafety #traveladvice",
   },
+  {
+    key: 'lgbtq-legal-status-swings-wildly',
+    toolSlug: 'lgbtq-travel-safety-checker',
+    toolName: 'LGBTQ+ Travel Safety Checker',
+    hook: "Legal in one country, criminalized a few hours' flight away",
+    voiceover: "Same-sex relationships are legally recognized with full protections in some countries — and criminalized under the law in others, sometimes just a short flight apart. Laws in this specific area have been changing fast, in both directions, in a lot of places recently. Always check the current, city-level detail for your exact destination before you book, not just the country in general.",
+    ctaYoutube: "Free LGBTQ+ Travel Safety Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free LGBTQ+ Travel Safety Checker — link in bio",
+    caption: "The travel-planning check that genuinely matters 🏳️‍🌈",
+    hashtags: "#traveltips #lgbtqtravel #travelsafety",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
