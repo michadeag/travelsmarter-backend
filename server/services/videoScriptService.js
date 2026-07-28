@@ -379,6 +379,17 @@ const SCRIPT_IDEAS = [
     caption: "The souvenir that gets confiscated at the airport 🛍️",
     hashtags: "#traveltips #travelhacks #travelmistakes",
   },
+  {
+    key: 'tourist-scams-know-before-you-land',
+    toolSlug: 'tourist-scams-checker',
+    toolName: 'Common Tourist Scams Checker',
+    hook: "The #1 tourist scam in your destination — before you land",
+    voiceover: "A friendly stranger in Budapest who invites you to 'their favorite bar.' A Bangkok tuk-tuk driver who says the temple is 'closed today.' A fake student in Beijing inviting you to a tea ceremony. Every destination has one scam that catches more tourists than any other, and it almost always starts with someone being unusually friendly. Know what it looks like before you go, and it can't work on you.",
+    ctaYoutube: "Free Tourist Scams Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Tourist Scams Checker — link in bio",
+    caption: "The scam that gets tourists every single time 🎭",
+    hashtags: "#traveltips #travelhacks #travelsafety",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
