@@ -103,6 +103,9 @@ const TOOLS = [
   { slug: 'power-plug-checker', name: 'Power Plug & Voltage', icon: '🔌', category: 'On the Ground',
     controller: '../controllers/plugController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'accessible-travel-checker', name: 'Wheelchair & Mobility Accessibility', icon: '♿', category: 'On the Ground',
+    controller: '../controllers/accessibleTravelController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Local Rules ---
   { slug: 'alcohol-checker', name: 'Alcohol Laws', icon: '🍷', category: 'Local Rules',

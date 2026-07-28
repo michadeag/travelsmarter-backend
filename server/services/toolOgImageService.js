@@ -69,6 +69,7 @@ const TOOL_THEMES = [
   { slug: 'travel-advisory-checker', theme: 'a shield icon overlaid on a small world map with a subtle warning-level indicator' },
   { slug: 'lgbtq-travel-safety-checker', theme: 'a small pride-flag-colored heart or checkmark icon next to a world map silhouette' },
   { slug: 'lounge-access-checker', theme: 'a comfortable armchair icon with a small key card or membership badge symbol' },
+  { slug: 'accessible-travel-checker', theme: 'a wheelchair accessibility icon next to a small world map silhouette' },
 ];
 
 async function getIdeogramKey() {

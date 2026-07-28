@@ -324,6 +324,17 @@ const SCRIPT_IDEAS = [
     caption: "The card perk that quietly doesn't work everywhere 🛋️",
     hashtags: "#travelhacks #prioritypass #traveltips",
   },
+  {
+    key: 'accessible-travel-historic-charm-vs-access',
+    toolSlug: 'accessible-travel-checker',
+    toolName: 'Accessible & Wheelchair Travel Checker',
+    hook: "The most charming parts of a city are often the least accessible",
+    voiceover: "Modern hotels and museums are genuinely accessible almost everywhere now. It's the historic old towns — centuries-old cobblestones, ancient stairs, narrow doorways — where real, often unavoidable barriers show up, no matter how much a country has invested elsewhere. Before you book, check accessibility for the specific neighborhood you're staying in, not just the country in general.",
+    ctaYoutube: "Free Accessible Travel Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Accessible Travel Checker — link in bio",
+    caption: "Charming for some, a real barrier for others ♿",
+    hashtags: "#accessibletravel #traveltips #wheelchairtravel",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
