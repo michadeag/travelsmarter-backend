@@ -246,6 +246,21 @@ app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/broadcast', broadcastRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/affiliate', affiliateRoutes);
+// Shared email-format guard for every tool's /pdf lead-capture endpoint.
+// Each individual controller only ever checked `!email` (truthy), not
+// format — so any non-empty string was accepted and inserted into
+// tool_leads. In practice this let junk in (e.g. ad hoc API testing using
+// a tool's own slug as a placeholder "email"), which then got enrolled in
+// the real 30-day drip sequence. One guard here closes the gap for every
+// current and future tool, instead of touching ~60 individual controllers.
+app.post(/^\/api\/tools\/[^/]+\/pdf$/, (req, res, next) => {
+  const email = req.body && req.body.email;
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ success: false, error: 'Please provide a valid email address' });
+  }
+  next();
+});
+
 app.use('/api/tools', toolsRoutes);
 app.use('/api/tools', carryOnRoutes);
 app.use('/api/tools', visaRoutes);
