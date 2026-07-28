@@ -184,6 +184,15 @@ exports.signup = async (req, res) => {
 
     const user = newUser.rows[0];
 
+    // Link any prior anonymous free-tool leads (PDF downloads) from this
+    // same email to the new account — lets the "Leads by Source/Tool"
+    // admin report show conversion, and stops toolLeadEmailSequence's drip
+    // for this person (it checks converted_to_user_id IS NOT NULL).
+    pool.query(
+      `UPDATE tool_leads SET converted_to_user_id = $1 WHERE email = $2 AND converted_to_user_id IS NULL`,
+      [user.id, email.toLowerCase()]
+    ).catch(err => console.error('Failed to link tool_leads to new user:', err.message));
+
     // Create JWT token
     const token = generateToken(user.id);
 

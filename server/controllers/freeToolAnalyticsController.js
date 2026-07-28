@@ -238,5 +238,90 @@ exports.getToolPromoWordpressStats = async (req, res) => {
   }
 };
 
+// @desc Top-level LEAD totals (today/yesterday/7d/30d/all-time) from
+//   tool_leads — the actual email captures (PDF downloads), as opposed to
+//   the anonymous pageviews above. Also reports how many have converted to
+//   a real account (converted_to_user_id, set on signup — see
+//   authController.signup).
+// @route GET /api/analytics/free-tools/leads-summary
+// @access Admin
+exports.getLeadsSummary = async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE created_at >= date_trunc('day', NOW()))::int AS today,
+        COUNT(*) FILTER (WHERE created_at >= date_trunc('day', NOW()) - interval '1 day'
+                            AND created_at < date_trunc('day', NOW()))::int AS yesterday,
+        COUNT(*) FILTER (WHERE created_at >= NOW() - interval '7 days')::int AS last_7_days,
+        COUNT(*) FILTER (WHERE created_at >= NOW() - interval '30 days')::int AS last_30_days,
+        COUNT(*)::int AS all_time,
+        COUNT(*) FILTER (WHERE converted_to_user_id IS NOT NULL)::int AS converted_all_time
+      FROM tool_leads
+    `);
+    res.json({ success: true, summary: rows[0] });
+  } catch (error) {
+    console.error('getLeadsSummary error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc Top pages or top tools by LEAD count (email captures, not just
+//   views), plus how many of those leads converted to a real account —
+//   the lead-side counterpart to getTopFreeToolPages above.
+// @route GET /api/analytics/free-tools/leads-top?period=today&limit=10&groupBy=page
+// @access Admin
+exports.getTopFreeToolLeads = async (req, res) => {
+  try {
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
+    const period = ['today', '7days', '30days', 'all'].includes(req.query.period) ? req.query.period : 'today';
+    const groupBy = req.query.groupBy === 'tool' ? 'tool' : 'page';
+
+    let whereClause = '';
+    if (period === 'today') whereClause = `WHERE created_at >= date_trunc('day', NOW())`;
+    else if (period === '7days') whereClause = `WHERE created_at >= NOW() - interval '7 days'`;
+    else if (period === '30days') whereClause = `WHERE created_at >= NOW() - interval '30 days'`;
+
+    const selectCols = groupBy === 'tool' ? 'tool_slug' : 'source_page, tool_slug';
+    const groupCols = groupBy === 'tool' ? 'tool_slug' : 'source_page, tool_slug';
+
+    const { rows } = await pool.query(
+      `SELECT ${selectCols}, COUNT(*)::int AS leads,
+              COUNT(*) FILTER (WHERE converted_to_user_id IS NOT NULL)::int AS converted
+       FROM tool_leads
+       ${whereClause}
+       GROUP BY ${groupCols}
+       ORDER BY leads DESC
+       LIMIT $1`,
+      [limit]
+    );
+    res.json({ success: true, period, groupBy, data: rows });
+  } catch (error) {
+    console.error('getTopFreeToolLeads error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc Most recent individual leads — email, tool, exact source page, and
+//   whether they've since converted to a real account.
+// @route GET /api/analytics/free-tools/leads-recent?limit=20
+// @access Admin
+exports.getRecentLeads = async (req, res) => {
+  try {
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+    const { rows } = await pool.query(
+      `SELECT email, first_name, tool_slug, source_page, created_at,
+              (converted_to_user_id IS NOT NULL) AS converted
+       FROM tool_leads
+       ORDER BY created_at DESC
+       LIMIT $1`,
+      [limit]
+    );
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('getRecentLeads error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 exports.deriveToolSlug = deriveToolSlug;
 exports.TOOL_BASE_SLUGS = TOOL_BASE_SLUGS;

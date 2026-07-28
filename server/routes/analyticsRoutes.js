@@ -17,7 +17,10 @@ const {
   getTopFreeToolPages,
   getToolPromoTwitterStats,
   getToolPromoBloggerStats,
-  getToolPromoWordpressStats
+  getToolPromoWordpressStats,
+  getLeadsSummary,
+  getTopFreeToolLeads,
+  getRecentLeads
 } = require('../controllers/freeToolAnalyticsController');
 
 // All analytics routes require admin authentication
@@ -39,5 +42,12 @@ router.get('/free-tools/top', verifyAdminToken, getTopFreeToolPages);
 router.get('/free-tools/twitter-posts', verifyAdminToken, getToolPromoTwitterStats);
 router.get('/free-tools/blogger-posts', verifyAdminToken, getToolPromoBloggerStats);
 router.get('/free-tools/wordpress-posts', verifyAdminToken, getToolPromoWordpressStats);
+
+// Lead-capture reporting (tool_leads — actual email captures with a
+// converted_to_user_id link to real signups, as opposed to the anonymous
+// pageviews above)
+router.get('/free-tools/leads-summary', verifyAdminToken, getLeadsSummary);
+router.get('/free-tools/leads-top', verifyAdminToken, getTopFreeToolLeads);
+router.get('/free-tools/leads-recent', verifyAdminToken, getRecentLeads);
 
 module.exports = router;
