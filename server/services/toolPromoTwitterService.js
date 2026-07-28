@@ -33,7 +33,7 @@ const TOOL_BASE_SLUGS = [
   'natural-disaster-checker', 'cashless-payment-checker', 'etiquette-checker',
   'business-hours-checker', 'internet-speed-checker', 'airport-arrival-time-checker',
   'medication-legality-checker', 'vat-refund-checker', 'resort-fee-checker',
-  'travel-advisory-checker', 'lgbtq-travel-safety-checker',
+  'travel-advisory-checker', 'lgbtq-travel-safety-checker', 'lounge-access-checker',
 ].sort((a, b) => b.length - a.length);
 
 const SITEMAP_URL = 'https://travelsmarterapp.com/sitemap.xml';

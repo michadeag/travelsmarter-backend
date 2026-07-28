@@ -313,6 +313,17 @@ const SCRIPT_IDEAS = [
     caption: "The travel-planning check that genuinely matters 🏳️‍🌈",
     hashtags: "#traveltips #lgbtqtravel #travelsafety",
   },
+  {
+    key: 'priority-pass-doesnt-work-your-hub',
+    toolSlug: 'lounge-access-checker',
+    toolName: 'Airport Lounge Access Checker',
+    hook: "Your Priority Pass might be useless at your own home airport",
+    voiceover: "At airports run by one dominant airline — Delta Sky Clubs at Atlanta, United Clubs at Chicago O'Hare — Priority Pass often only gets you a restaurant credit, not an actual lounge. You paid for the membership and still can't get in. Always check your specific airport's Priority Pass coverage before you count on it.",
+    ctaYoutube: "Free Airport Lounge Access Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Airport Lounge Access Checker — link in bio",
+    caption: "The card perk that quietly doesn't work everywhere 🛋️",
+    hashtags: "#travelhacks #prioritypass #traveltips",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

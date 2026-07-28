@@ -74,6 +74,7 @@ const TOPICS = [
   { category: 'resort-fee-checker', toolSlug: 'resort-fee-checker', title: 'That $99 Vegas room is actually $140', promptTheme: 'a hotel building icon with a small hidden price tag or magnifying glass on a receipt', boards: ['Travel Money Tips', 'Budget Travel', 'Travel Hacks'], tags: ['#travelmoney', '#budgettravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
   { category: 'travel-advisory-checker', toolSlug: 'travel-advisory-checker', title: 'Is your destination actually safe right now?', promptTheme: 'a shield icon overlaid on a small world map with a subtle warning-level indicator', boards: ['Travel Safety', 'Travel Health Tips', 'Travel Tips'], tags: ['#travelsafety', '#traveltips', '#travelhealth', '#travelsmarter', '#traveladvice'] },
   { category: 'lgbtq-travel-safety-checker', toolSlug: 'lgbtq-travel-safety-checker', title: 'Legal in one country, criminalized a few hours away', promptTheme: 'a small pride-flag-colored heart or checkmark icon next to a world map silhouette', boards: ['Travel Safety', 'Travel Tips', 'LGBTQ Travel'], tags: ['#travelsafety', '#lgbtqtravel', '#traveltips', '#travelsmarter', '#traveladvice'] },
+  { category: 'lounge-access-checker', toolSlug: 'lounge-access-checker', title: 'Your Priority Pass might be useless at your own hub', promptTheme: 'a comfortable armchair icon with a small key card or membership badge symbol', boards: ['Travel Hacks', 'Travel Tips', 'Travel Rewards'], tags: ['#travelhacks', '#prioritypass', '#traveltips', '#travelsmarter'] },
 ];
 
 class PinterestService {
