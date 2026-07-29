@@ -401,6 +401,17 @@ const SCRIPT_IDEAS = [
     caption: "What airlines don't tell you when they lose your bag 🧳",
     hashtags: "#traveltips #travelhacks #flightcompensation",
   },
+  {
+    key: 'cash-declaration-limit-before-customs',
+    toolSlug: 'cash-declaration-checker',
+    toolName: 'Cash Declaration Limit Checker',
+    hook: "Carrying cash on your trip? Know this number first",
+    voiceover: "Almost every country has a cash declaration limit — often around $10,000, but in some places it's way lower, like $5,000 in Turkey or Vietnam. Go over it without declaring, and customs can legally seize the entire amount on the spot, even if it's completely legitimate money. Know the number for your destination before you pack your wallet, not after you're standing in a customs line.",
+    ctaYoutube: "Free Cash Declaration Limit Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Cash Declaration Limit Checker — link in bio",
+    caption: "The number that decides if customs keeps your cash 💵",
+    hashtags: "#traveltips #travelhacks #travelmoney",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

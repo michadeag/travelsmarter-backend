@@ -76,6 +76,7 @@ const TOOL_THEMES = [
   { slug: 'souvenir-export-checker', theme: 'a small gift bag or shopping bag icon with a subtle warning or customs stamp symbol' },
   { slug: 'tourist-scams-checker', theme: 'a theatrical mask or magnifying glass icon with a subtle warning triangle, suggesting deception to watch out for' },
   { slug: 'lost-baggage-checker', theme: 'a suitcase with a question mark or a small tracking-radar icon, suggesting a bag that has gone missing' },
+  { slug: 'cash-declaration-checker', theme: 'a stack of banknotes with a small customs declaration form or stamp icon' },
 ];
 
 async function getIdeogramKey() {
