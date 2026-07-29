@@ -82,6 +82,7 @@ const TOOL_THEMES = [
   { slug: 'solo-female-travel-checker', theme: 'a female traveler silhouette with a backpack next to a small compass or shield icon' },
   { slug: 'minor-consent-checker', theme: 'a small notarized document or letter icon next to a simple parent-and-child silhouette' },
   { slug: 'ramadan-checker', theme: 'a crescent moon and small lantern icon, evoking Ramadan evenings, in a warm minimal style' },
+  { slug: 'halal-food-checker', theme: 'a simple plate with a fork and a small crescent/checkmark icon, suggesting verified halal dining' },
 ];
 
 async function getIdeogramKey() {

@@ -467,6 +467,17 @@ const SCRIPT_IDEAS = [
     caption: "The one thing that changes everything about this trip 🌙",
     hashtags: "#traveltips #travelhacks #ramadan",
   },
+  {
+    key: 'halal-food-availability-by-destination',
+    toolSlug: 'halal-food-checker',
+    toolName: 'Halal Food Availability Checker',
+    hook: "How easy is it actually going to be to eat halal on this trip?",
+    voiceover: "In Turkey or Malaysia, halal is just the default — you don't think about it. But fly to a small Caribbean island or a rural stretch of Latin America, and dedicated halal food can be genuinely hard to find, sometimes down to a handful of restaurants in the capital city or nothing at all. Knowing which end of that range your destination falls on before you go means you can actually plan — pack backup snacks, research specific restaurants, or just relax knowing it won't be an issue.",
+    ctaYoutube: "Free Halal Food Availability Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Halal Food Availability Checker — link in bio",
+    caption: "Will you actually be able to eat halal here? 🍽️",
+    hashtags: "#halaltravel #traveltips #muslimtravel",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

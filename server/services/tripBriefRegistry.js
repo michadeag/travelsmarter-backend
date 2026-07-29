@@ -133,6 +133,9 @@ const TOOLS = [
   { slug: 'ramadan-checker', name: 'Ramadan Travel Impact', icon: '🌙', category: 'On the Ground',
     controller: '../controllers/ramadanController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'halal-food-checker', name: 'Halal Food Availability', icon: '🍽️', category: 'On the Ground',
+    controller: '../controllers/halalFoodController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Local Rules ---
   { slug: 'alcohol-checker', name: 'Alcohol Laws', icon: '🍷', category: 'Local Rules',

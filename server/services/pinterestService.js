@@ -88,6 +88,7 @@ const TOPICS = [
   { category: 'solo-female-travel-checker', toolSlug: 'solo-female-travel-checker', title: "Is it actually safe for a woman to travel here alone?", promptTheme: 'a female traveler silhouette with a backpack next to a small compass or shield icon', boards: ['Travel Tips', 'Solo Female Travel', 'Travel Safety'], tags: ['#solofemaletravel', '#traveltips', '#travelsafety', '#travelsmarter'] },
   { category: 'minor-consent-checker', toolSlug: 'minor-consent-checker', title: "The document that saves your family trip at the border", promptTheme: 'a small notarized document or letter icon next to a simple parent-and-child silhouette', boards: ['Travel Tips', 'Family Travel', 'Travel Hacks'], tags: ['#familytravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
   { category: 'ramadan-checker', toolSlug: 'ramadan-checker', title: "The one thing that changes everything about this trip", promptTheme: 'a crescent moon and small lantern icon, evoking Ramadan evenings, in a warm minimal style', boards: ['Travel Tips', 'Travel Hacks', 'Trip Planning'], tags: ['#traveltips', '#travelhacks', '#ramadan', '#travelsmarter'] },
+  { category: 'halal-food-checker', toolSlug: 'halal-food-checker', title: "Will you actually be able to eat halal here?", promptTheme: 'a simple plate with a fork and a small crescent/checkmark icon, suggesting verified halal dining', boards: ['Travel Tips', 'Halal Travel', 'Trip Planning'], tags: ['#halaltravel', '#traveltips', '#muslimtravel', '#travelsmarter'] },
 ];
 
 class PinterestService {
