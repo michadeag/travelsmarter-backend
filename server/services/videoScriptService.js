@@ -412,6 +412,17 @@ const SCRIPT_IDEAS = [
     caption: "The number that decides if customs keeps your cash 💵",
     hashtags: "#traveltips #travelhacks #travelmoney",
   },
+  {
+    key: 'yellow-fever-certificate-entry-requirement',
+    toolSlug: 'yellow-fever-checker',
+    toolName: 'Yellow Fever Certificate Requirement Checker',
+    hook: "This isn't optional — some countries won't let you in without it",
+    voiceover: "There's a difference between 'you should get this vaccine' and 'you legally cannot enter without proof of this vaccine.' Some countries require a yellow fever certificate for literally every traveler, others only if you're arriving from a specific at-risk country — and if you show up without it where required, you can be denied boarding at check-in or quarantined the moment you land. Check the actual requirement for your destination, not just the general advice.",
+    ctaYoutube: "Free Yellow Fever Certificate Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Yellow Fever Certificate Checker — link in bio",
+    caption: "The vaccine that's actually a legal requirement, not just advice 💉",
+    hashtags: "#traveltips #travelhacks #traveldocuments",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

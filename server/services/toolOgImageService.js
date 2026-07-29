@@ -77,6 +77,7 @@ const TOOL_THEMES = [
   { slug: 'tourist-scams-checker', theme: 'a theatrical mask or magnifying glass icon with a subtle warning triangle, suggesting deception to watch out for' },
   { slug: 'lost-baggage-checker', theme: 'a suitcase with a question mark or a small tracking-radar icon, suggesting a bag that has gone missing' },
   { slug: 'cash-declaration-checker', theme: 'a stack of banknotes with a small customs declaration form or stamp icon' },
+  { slug: 'yellow-fever-checker', theme: 'a vaccination syringe or small vaccine vial next to a certificate/passport icon' },
 ];
 
 async function getIdeogramKey() {
