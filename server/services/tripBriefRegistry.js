@@ -130,6 +130,9 @@ const TOOLS = [
   { slug: 'holiday-season-checker', name: 'Holiday Season Disruption', icon: '📅', category: 'On the Ground',
     controller: '../controllers/holidaySeasonController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'ramadan-checker', name: 'Ramadan Travel Impact', icon: '🌙', category: 'On the Ground',
+    controller: '../controllers/ramadanController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Local Rules ---
   { slug: 'alcohol-checker', name: 'Alcohol Laws', icon: '🍷', category: 'Local Rules',

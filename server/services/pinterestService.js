@@ -87,6 +87,7 @@ const TOPICS = [
   { category: 'digital-nomad-visa-checker', toolSlug: 'digital-nomad-visa-checker', title: "The visa most remote workers don't know exists", promptTheme: 'a laptop on a small table with a palm tree or beach silhouette, suggesting remote work while traveling', boards: ['Travel Tips', 'Digital Nomad', 'Remote Work'], tags: ['#digitalnomad', '#traveltips', '#remotework', '#travelsmarter'] },
   { category: 'solo-female-travel-checker', toolSlug: 'solo-female-travel-checker', title: "Is it actually safe for a woman to travel here alone?", promptTheme: 'a female traveler silhouette with a backpack next to a small compass or shield icon', boards: ['Travel Tips', 'Solo Female Travel', 'Travel Safety'], tags: ['#solofemaletravel', '#traveltips', '#travelsafety', '#travelsmarter'] },
   { category: 'minor-consent-checker', toolSlug: 'minor-consent-checker', title: "The document that saves your family trip at the border", promptTheme: 'a small notarized document or letter icon next to a simple parent-and-child silhouette', boards: ['Travel Tips', 'Family Travel', 'Travel Hacks'], tags: ['#familytravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
+  { category: 'ramadan-checker', toolSlug: 'ramadan-checker', title: "The one thing that changes everything about this trip", promptTheme: 'a crescent moon and small lantern icon, evoking Ramadan evenings, in a warm minimal style', boards: ['Travel Tips', 'Travel Hacks', 'Trip Planning'], tags: ['#traveltips', '#travelhacks', '#ramadan', '#travelsmarter'] },
 ];
 
 class PinterestService {

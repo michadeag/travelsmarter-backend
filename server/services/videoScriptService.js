@@ -456,6 +456,17 @@ const SCRIPT_IDEAS = [
     caption: "The document that saves your family trip 👨‍👩‍👧",
     hashtags: "#familytravel #traveltips #travelhacks",
   },
+  {
+    key: 'ramadan-travel-impact-restaurants',
+    toolSlug: 'ramadan-checker',
+    toolName: 'Ramadan Travel Impact Checker',
+    hook: "Planning a trip to Morocco, Dubai, or Malaysia? Check the Ramadan dates first",
+    voiceover: "Show up in a Muslim-majority destination during Ramadan without knowing it, and you can spend a confused afternoon wondering why every local restaurant is closed. During daylight hours, many places shift to evening-only, public eating is discouraged or restricted in some areas, and alcohol gets harder to find. But the evenings after sunset are often the best part of the trip — festive markets, special foods, and a completely different energy. Know the dates before you book, since they shift about ten days earlier every year.",
+    ctaYoutube: "Free Ramadan Travel Impact Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Ramadan Travel Impact Checker — link in bio",
+    caption: "The one thing that changes everything about this trip 🌙",
+    hashtags: "#traveltips #travelhacks #ramadan",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

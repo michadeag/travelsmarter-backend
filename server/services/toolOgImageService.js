@@ -81,6 +81,7 @@ const TOOL_THEMES = [
   { slug: 'digital-nomad-visa-checker', theme: 'a laptop on a small table with a palm tree or beach silhouette, suggesting remote work while traveling' },
   { slug: 'solo-female-travel-checker', theme: 'a female traveler silhouette with a backpack next to a small compass or shield icon' },
   { slug: 'minor-consent-checker', theme: 'a small notarized document or letter icon next to a simple parent-and-child silhouette' },
+  { slug: 'ramadan-checker', theme: 'a crescent moon and small lantern icon, evoking Ramadan evenings, in a warm minimal style' },
 ];
 
 async function getIdeogramKey() {
