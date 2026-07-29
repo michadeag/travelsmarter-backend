@@ -500,6 +500,17 @@ const SCRIPT_IDEAS = [
     caption: "The rental car surprise nobody warns you about 🚗",
     hashtags: "#traveltips #travelhacks #carrental",
   },
+  {
+    key: 'pregnancy-travel-zika-risk-by-destination',
+    toolSlug: 'pregnancy-travel-checker',
+    toolName: 'Pregnancy Travel Risk Checker',
+    hook: "Pregnant and planning a trip? Check this before you book",
+    voiceover: "Zika risk isn't spread evenly around the world — it's concentrated in parts of Latin America, the Caribbean, and Southeast Asia, and essentially a non-issue almost everywhere else. Brazil, Mexico, Puerto Rico, Thailand, and French Polynesia all have documented histories of local transmission, and Zika during pregnancy carries real risk of serious birth defects. Knowing where your destination actually falls, and having that conversation with your OB/GYN before you book, beats finding out after your flight is already paid for.",
+    ctaYoutube: "Free Pregnancy Travel Risk Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Pregnancy Travel Risk Checker — link in bio",
+    caption: "Pregnant and traveling? Check this first 🤰",
+    hashtags: "#pregnancytravel #traveltips #travelhealth",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
