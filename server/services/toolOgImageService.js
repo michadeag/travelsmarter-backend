@@ -75,6 +75,7 @@ const TOOL_THEMES = [
   { slug: 'photography-permit-checker', theme: 'a camera icon with a small tripod silhouette and a subtle permit stamp' },
   { slug: 'souvenir-export-checker', theme: 'a small gift bag or shopping bag icon with a subtle warning or customs stamp symbol' },
   { slug: 'tourist-scams-checker', theme: 'a theatrical mask or magnifying glass icon with a subtle warning triangle, suggesting deception to watch out for' },
+  { slug: 'lost-baggage-checker', theme: 'a suitcase with a question mark or a small tracking-radar icon, suggesting a bag that has gone missing' },
 ];
 
 async function getIdeogramKey() {

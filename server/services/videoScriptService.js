@@ -390,6 +390,17 @@ const SCRIPT_IDEAS = [
     caption: "The scam that gets tourists every single time 🎭",
     hashtags: "#traveltips #travelhacks #travelsafety",
   },
+  {
+    key: 'lost-baggage-compensation-owed',
+    toolSlug: 'lost-baggage-checker',
+    toolName: 'Lost or Damaged Baggage Compensation Checker',
+    hook: "If the airline loses your bag, you're owed way more than you think",
+    voiceover: "Most people just accept it when an airline loses or damages their checked bag. But you're actually entitled to real compensation — up to $3,800 on a US domestic flight, or around 1,700 dollars internationally under the Montreal Convention. The catch: there are strict deadlines to file, as short as 7 days for damage. Know the number and the deadline before it happens, not after.",
+    ctaYoutube: "Free Lost Baggage Compensation Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Lost Baggage Compensation Checker — link in bio",
+    caption: "What airlines don't tell you when they lose your bag 🧳",
+    hashtags: "#traveltips #travelhacks #flightcompensation",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

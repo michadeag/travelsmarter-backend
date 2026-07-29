@@ -28,7 +28,7 @@ const TOOL_BASE_SLUGS = [
   'medication-legality-checker', 'vat-refund-checker', 'resort-fee-checker',
   'travel-advisory-checker', 'lgbtq-travel-safety-checker', 'lounge-access-checker',
   'accessible-travel-checker', 'holiday-season-checker', 'overweight-baggage-checker',
-  'photography-permit-checker', 'souvenir-export-checker', 'tourist-scams-checker',
+  'photography-permit-checker', 'souvenir-export-checker', 'tourist-scams-checker', 'lost-baggage-checker',
 ].sort((a, b) => b.length - a.length);
 
 function deriveToolSlug(pagePath) {
