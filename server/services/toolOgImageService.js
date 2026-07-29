@@ -80,6 +80,7 @@ const TOOL_THEMES = [
   { slug: 'yellow-fever-checker', theme: 'a vaccination syringe or small vaccine vial next to a certificate/passport icon' },
   { slug: 'digital-nomad-visa-checker', theme: 'a laptop on a small table with a palm tree or beach silhouette, suggesting remote work while traveling' },
   { slug: 'solo-female-travel-checker', theme: 'a female traveler silhouette with a backpack next to a small compass or shield icon' },
+  { slug: 'minor-consent-checker', theme: 'a small notarized document or letter icon next to a simple parent-and-child silhouette' },
 ];
 
 async function getIdeogramKey() {

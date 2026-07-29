@@ -34,6 +34,9 @@ const TOOLS = [
   { slug: 'digital-nomad-visa-checker', name: 'Digital Nomad Visa', icon: '💻', category: 'Documents & Entry',
     controller: '../controllers/digitalNomadVisaController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'minor-consent-checker', name: 'Minor Travel Consent Letter', icon: '👨‍👩‍👧', category: 'Documents & Entry',
+    controller: '../controllers/minorConsentController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Money ---
   { slug: 'currency-checker', name: 'Currency', icon: '💱', category: 'Money',

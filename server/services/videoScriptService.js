@@ -445,6 +445,17 @@ const SCRIPT_IDEAS = [
     caption: "The question every solo female traveler asks before booking 🧭",
     hashtags: "#solofemaletravel #traveltips #travelsafety",
   },
+  {
+    key: 'minor-consent-letter-single-parent',
+    toolSlug: 'minor-consent-checker',
+    toolName: 'Minor Travel Consent Letter Checker',
+    hook: "Traveling with your kid but not your co-parent? Do this first",
+    voiceover: "South Africa is the famous horror story — families turned away at the airport because they didn't have the right paperwork for their own child. But it's not just South Africa. Mexico, Canada, and several Latin American countries actively check for a notarized letter proving the other parent consented to the trip. It costs almost nothing and takes ten minutes to get notarized — and it's the difference between boarding your flight and standing in an airport office arguing with an immigration officer.",
+    ctaYoutube: "Free Minor Travel Consent Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Minor Travel Consent Checker — link in bio",
+    caption: "The document that saves your family trip 👨‍👩‍👧",
+    hashtags: "#familytravel #traveltips #travelhacks",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
