@@ -89,6 +89,7 @@ const TOPICS = [
   { category: 'minor-consent-checker', toolSlug: 'minor-consent-checker', title: "The document that saves your family trip at the border", promptTheme: 'a small notarized document or letter icon next to a simple parent-and-child silhouette', boards: ['Travel Tips', 'Family Travel', 'Travel Hacks'], tags: ['#familytravel', '#traveltips', '#travelhacks', '#travelsmarter'] },
   { category: 'ramadan-checker', toolSlug: 'ramadan-checker', title: "The one thing that changes everything about this trip", promptTheme: 'a crescent moon and small lantern icon, evoking Ramadan evenings, in a warm minimal style', boards: ['Travel Tips', 'Travel Hacks', 'Trip Planning'], tags: ['#traveltips', '#travelhacks', '#ramadan', '#travelsmarter'] },
   { category: 'halal-food-checker', toolSlug: 'halal-food-checker', title: "Will you actually be able to eat halal here?", promptTheme: 'a simple plate with a fork and a small crescent/checkmark icon, suggesting verified halal dining', boards: ['Travel Tips', 'Halal Travel', 'Trip Planning'], tags: ['#halaltravel', '#traveltips', '#muslimtravel', '#travelsmarter'] },
+  { category: 'kosher-food-checker', toolSlug: 'kosher-food-checker', title: "Will you actually be able to eat kosher here?", promptTheme: 'a simple plate with a fork and a small Star of David/checkmark icon, suggesting verified kosher dining', boards: ['Travel Tips', 'Kosher Travel', 'Trip Planning'], tags: ['#koshertravel', '#traveltips', '#jewishtravel', '#travelsmarter'] },
 ];
 
 class PinterestService {

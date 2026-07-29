@@ -478,6 +478,17 @@ const SCRIPT_IDEAS = [
     caption: "Will you actually be able to eat halal here? 🍽️",
     hashtags: "#halaltravel #traveltips #muslimtravel",
   },
+  {
+    key: 'kosher-food-availability-by-destination',
+    toolSlug: 'kosher-food-checker',
+    toolName: 'Kosher Food Availability Checker',
+    hook: "How easy is it actually going to be to eat kosher on this trip?",
+    voiceover: "Kosher availability follows a completely different map than you'd expect. The obvious ones — the US, Israel, the UK, France — have huge kosher scenes. But here's the trick most people don't know: Chabad Houses quietly operate in a surprising number of cities worldwide, from Bangkok to Mumbai to Kathmandu, and many welcome travelers for a kosher meal, no questions asked. Knowing your destination's actual availability level, and where the nearest Chabad House is, turns a stressful unknown into a solved problem before you even land.",
+    ctaYoutube: "Free Kosher Food Availability Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Kosher Food Availability Checker — link in bio",
+    caption: "Will you actually be able to eat kosher here? 🍽️",
+    hashtags: "#koshertravel #traveltips #jewishtravel",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
