@@ -434,6 +434,17 @@ const SCRIPT_IDEAS = [
     caption: "The visa most remote workers don't know exists 💻",
     hashtags: "#digitalnomad #traveltips #remotework",
   },
+  {
+    key: 'solo-female-travel-honest-orientation',
+    toolSlug: 'solo-female-travel-checker',
+    toolName: 'Solo Female Travel Safety Checker',
+    hook: "Is it actually safe for a woman to travel here alone?",
+    voiceover: "General crime advisories don't tell you what solo female travelers actually want to know — is the staring going to be intense, is catcalling common, do I need to dress more conservatively than I planned? Some destinations are consistently rated as some of the most comfortable in the world for women alone, others genuinely require extra caution, and most fall somewhere in between with millions of women still visiting safely every year. Get the honest, specific picture for your destination before you go.",
+    ctaYoutube: "Free Solo Female Travel Safety Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Solo Female Travel Safety Checker — link in bio",
+    caption: "The question every solo female traveler asks before booking 🧭",
+    hashtags: "#solofemaletravel #traveltips #travelsafety",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
