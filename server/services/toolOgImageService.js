@@ -84,6 +84,7 @@ const TOOL_THEMES = [
   { slug: 'ramadan-checker', theme: 'a crescent moon and small lantern icon, evoking Ramadan evenings, in a warm minimal style' },
   { slug: 'halal-food-checker', theme: 'a simple plate with a fork and a small crescent/checkmark icon, suggesting verified halal dining' },
   { slug: 'kosher-food-checker', theme: 'a simple plate with a fork and a small Star of David/checkmark icon, suggesting verified kosher dining' },
+  { slug: 'car-rental-insurance-checker', theme: 'a small rental car icon with a shield or document icon nearby, suggesting insurance coverage' },
 ];
 
 async function getIdeogramKey() {

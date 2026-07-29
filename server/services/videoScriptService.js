@@ -489,6 +489,17 @@ const SCRIPT_IDEAS = [
     caption: "Will you actually be able to eat kosher here? 🍽️",
     hashtags: "#koshertravel #traveltips #jewishtravel",
   },
+  {
+    key: 'car-rental-deposit-insurance-surprises',
+    toolSlug: 'car-rental-insurance-checker',
+    toolName: 'Car Rental Deposit & Insurance Checker',
+    hook: "Why did they just hold $1,500 on my card for a rental car?",
+    voiceover: "Every country has its own rental-counter surprise. Iceland and Ireland can hold thousands of dollars as a deposit. Costa Rica requires a local insurance policy most travelers have never heard of, and it's not optional. Mexico's counter staff are famous for upselling coverage you might already have through your credit card. None of this is a scam exactly — it's just information nobody hands you before you sign. Know your destination's specific quirk before you walk up to the counter, not after.",
+    ctaYoutube: "Free Car Rental Deposit & Insurance Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Car Rental Deposit & Insurance Checker — link in bio",
+    caption: "The rental car surprise nobody warns you about 🚗",
+    hashtags: "#traveltips #travelhacks #carrental",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

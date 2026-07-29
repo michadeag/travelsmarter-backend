@@ -90,6 +90,7 @@ const TOPICS = [
   { category: 'ramadan-checker', toolSlug: 'ramadan-checker', title: "The one thing that changes everything about this trip", promptTheme: 'a crescent moon and small lantern icon, evoking Ramadan evenings, in a warm minimal style', boards: ['Travel Tips', 'Travel Hacks', 'Trip Planning'], tags: ['#traveltips', '#travelhacks', '#ramadan', '#travelsmarter'] },
   { category: 'halal-food-checker', toolSlug: 'halal-food-checker', title: "Will you actually be able to eat halal here?", promptTheme: 'a simple plate with a fork and a small crescent/checkmark icon, suggesting verified halal dining', boards: ['Travel Tips', 'Halal Travel', 'Trip Planning'], tags: ['#halaltravel', '#traveltips', '#muslimtravel', '#travelsmarter'] },
   { category: 'kosher-food-checker', toolSlug: 'kosher-food-checker', title: "Will you actually be able to eat kosher here?", promptTheme: 'a simple plate with a fork and a small Star of David/checkmark icon, suggesting verified kosher dining', boards: ['Travel Tips', 'Kosher Travel', 'Trip Planning'], tags: ['#koshertravel', '#traveltips', '#jewishtravel', '#travelsmarter'] },
+  { category: 'car-rental-insurance-checker', toolSlug: 'car-rental-insurance-checker', title: "The rental car surprise nobody warns you about", promptTheme: 'a small rental car icon with a shield or document icon nearby, suggesting insurance coverage', boards: ['Travel Tips', 'Travel Hacks', 'Road Trip'], tags: ['#traveltips', '#travelhacks', '#carrental', '#travelsmarter'] },
 ];
 
 class PinterestService {
