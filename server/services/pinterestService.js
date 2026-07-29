@@ -92,6 +92,7 @@ const TOPICS = [
   { category: 'kosher-food-checker', toolSlug: 'kosher-food-checker', title: "Will you actually be able to eat kosher here?", promptTheme: 'a simple plate with a fork and a small Star of David/checkmark icon, suggesting verified kosher dining', boards: ['Travel Tips', 'Kosher Travel', 'Trip Planning'], tags: ['#koshertravel', '#traveltips', '#jewishtravel', '#travelsmarter'] },
   { category: 'car-rental-insurance-checker', toolSlug: 'car-rental-insurance-checker', title: "The rental car surprise nobody warns you about", promptTheme: 'a small rental car icon with a shield or document icon nearby, suggesting insurance coverage', boards: ['Travel Tips', 'Travel Hacks', 'Road Trip'], tags: ['#traveltips', '#travelhacks', '#carrental', '#travelsmarter'] },
   { category: 'pregnancy-travel-checker', toolSlug: 'pregnancy-travel-checker', title: "Pregnant and traveling? Check this first", promptTheme: 'a small mosquito icon with a subtle warning symbol, next to a gentle heart or care-related icon', boards: ['Travel Tips', 'Pregnancy Travel', 'Travel Health'], tags: ['#pregnancytravel', '#traveltips', '#travelhealth', '#travelsmarter'] },
+  { category: 'sports-equipment-checker', toolSlug: 'sports-equipment-checker', title: "Will your airline charge you for that ski bag?", promptTheme: 'a ski, golf club, and surfboard silhouette arranged together with a small luggage tag icon', boards: ['Travel Tips', 'Ski Trip', 'Travel Hacks'], tags: ['#traveltips', '#travelhacks', '#skitrip', '#travelsmarter'] },
 ];
 
 class PinterestService {

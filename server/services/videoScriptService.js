@@ -511,6 +511,17 @@ const SCRIPT_IDEAS = [
     caption: "Pregnant and traveling? Check this first 🤰",
     hashtags: "#pregnancytravel #traveltips #travelhealth",
   },
+  {
+    key: 'sports-equipment-fee-varies-wildly',
+    toolSlug: 'sports-equipment-checker',
+    toolName: 'Sports Equipment Baggage Fee Checker',
+    hook: "Packing skis or a surfboard? The fee depends entirely on which airline you picked",
+    voiceover: "Sports equipment doesn't follow normal baggage rules on most airlines — it's its own separate policy. Fly Southwest or Alaska with skis or golf clubs, and it's genuinely free as one of your checked bags. Fly a European budget carrier, and you're paying a flat special-item fee no matter what, cheaper if you pre-book online instead of paying at the airport. Check your specific airline's policy for your specific gear before you pack, not after you're standing at the counter doing the math.",
+    ctaYoutube: "Free Sports Equipment Baggage Fee Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Sports Equipment Baggage Fee Checker — link in bio",
+    caption: "Will your airline charge you for this? 🏂⛳🏄",
+    hashtags: "#traveltips #travelhacks #skitrip",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
