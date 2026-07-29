@@ -31,6 +31,9 @@ const TOOLS = [
   { slug: 'lost-passport-checker', name: 'If You Lose Your Passport', icon: '📕', category: 'Documents & Entry',
     controller: '../controllers/lostPassportController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'digital-nomad-visa-checker', name: 'Digital Nomad Visa', icon: '💻', category: 'Documents & Entry',
+    controller: '../controllers/digitalNomadVisaController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Money ---
   { slug: 'currency-checker', name: 'Currency', icon: '💱', category: 'Money',

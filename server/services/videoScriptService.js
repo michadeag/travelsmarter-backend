@@ -423,6 +423,17 @@ const SCRIPT_IDEAS = [
     caption: "The vaccine that's actually a legal requirement, not just advice 💉",
     hashtags: "#traveltips #travelhacks #traveldocuments",
   },
+  {
+    key: 'digital-nomad-visa-real-program',
+    toolSlug: 'digital-nomad-visa-checker',
+    toolName: 'Digital Nomad Visa Checker',
+    hook: "Working remotely on this trip? There might be an actual visa for that",
+    voiceover: "A tourist visa technically doesn't let you work, even remotely for a company back home — but a growing list of countries now have a real, dedicated digital nomad visa instead. Portugal, Spain, Costa Rica, Thailand's new DTV, Colombia, Brazil — each has its own income requirement and duration, and they're nothing like a standard tourist visa. If you're planning to work while you travel, this is the thing to check first, not after you land.",
+    ctaYoutube: "Free Digital Nomad Visa Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Digital Nomad Visa Checker — link in bio",
+    caption: "The visa most remote workers don't know exists 💻",
+    hashtags: "#digitalnomad #traveltips #remotework",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
