@@ -1,4 +1,6 @@
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 const pool = require('../config/database');
 
 // Generates one branded, themed thumbnail per free-tool category via
@@ -7,6 +9,17 @@ const pool = require('../config/database');
 // tool_og_images. These are used as og:image/twitter:image on every tool
 // page so link previews (Twitter, iMessage, Slack, etc.) show a real image
 // instead of a blank placeholder icon.
+//
+// Ideogram's /generate endpoint returns "ephemeral" signed URLs that expire
+// within ~24-48h (confirmed: they 410 after expiry) — storing that raw URL
+// directly, as this service originally did, meant every image silently went
+// dead within a day or two. To make these genuinely permanent, generateOne()
+// downloads the image bytes immediately and re-hosts them from this server's
+// own /og-images static folder; only that permanent, self-hosted URL is ever
+// written to the database.
+const API_BASE_URL = process.env.API_BASE_URL || 'https://api.travelsmarterapp.com';
+const OG_IMAGES_DIR = path.join(__dirname, '../og-images');
+fs.mkdirSync(OG_IMAGES_DIR, { recursive: true });
 
 // Kept in sync manually with the identically-named lists in
 // freeToolAnalyticsController.js / toolPromoTwitterService.js — see those
@@ -110,8 +123,14 @@ async function generateOne(ideogramKey, { slug, theme }) {
     { image_request: { prompt, model: 'V_2', aspect_ratio: 'ASPECT_1_1', style_type: 'DESIGN', magic_prompt_option: 'OFF' } },
     { headers: { 'Api-Key': ideogramKey, 'Content-Type': 'application/json' }, timeout: 60000 }
   );
-  const imageUrl = response.data?.data?.[0]?.url;
-  if (!imageUrl) throw new Error('Ideogram returned no image URL');
+  const ephemeralUrl = response.data?.data?.[0]?.url;
+  if (!ephemeralUrl) throw new Error('Ideogram returned no image URL');
+
+  // Ideogram's returned URL expires within ~24-48h — download it now and
+  // re-host permanently, since that's the only copy we'll ever get.
+  const imageRes = await axios.get(ephemeralUrl, { responseType: 'arraybuffer', timeout: 30000 });
+  fs.writeFileSync(path.join(OG_IMAGES_DIR, `${slug}.png`), imageRes.data);
+  const imageUrl = `${API_BASE_URL}/og-images/${slug}.png`;
 
   await pool.query(
     `INSERT INTO tool_og_images (tool_slug, image_url, prompt, generated_at)
@@ -123,20 +142,22 @@ async function generateOne(ideogramKey, { slug, theme }) {
 }
 
 // Fire-and-forget: kicks off generation for every tool slug that doesn't
-// already have an image (or all, if force=true), a few at a time so we
-// don't hammer Ideogram's rate limit. Callers poll getAllToolImages() to
-// watch results fill in — this intentionally does not block the HTTP
-// response that triggered it, since 30 sequential image generations would
-// likely exceed a typical request timeout.
+// already have a permanently-hosted image on disk (or all, if force=true),
+// a few at a time so we don't hammer Ideogram's rate limit. Checking the
+// filesystem rather than the database for "missing" means a tool is only
+// ever considered done once its image is actually sitting in OG_IMAGES_DIR —
+// a stale/pre-fix database row with a dead Ideogram URL doesn't count.
+// Callers poll getAllToolImages() to watch results fill in — this
+// intentionally does not block the HTTP response that triggered it, since
+// dozens of sequential image generations would likely exceed a typical
+// request timeout.
 async function generateAllToolImages(force = false) {
   const ideogramKey = await getIdeogramKey();
   if (!ideogramKey) throw new Error('Ideogram API key not configured');
 
   let targets = TOOL_THEMES;
   if (!force) {
-    const { rows } = await pool.query(`SELECT tool_slug FROM tool_og_images`);
-    const have = new Set(rows.map(r => r.tool_slug));
-    targets = TOOL_THEMES.filter(t => !have.has(t.slug));
+    targets = TOOL_THEMES.filter(t => !fs.existsSync(path.join(OG_IMAGES_DIR, `${t.slug}.png`)));
   }
   if (targets.length === 0) return { started: false, reason: 'All tool images already generated' };
 
