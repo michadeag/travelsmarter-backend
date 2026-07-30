@@ -367,5 +367,125 @@ exports.deleteInvalidLeads = async (req, res) => {
   }
 };
 
+// Health & Safety tools switched from a single-tool PDF offer to a
+// multi-check category-bundle PDF offer on this date — see
+// categoryBundleController.js. Everything below exists to answer one
+// question with real data instead of a guess: did that change actually
+// raise the tool-page-to-lead conversion rate.
+const BUNDLE_ROLLOUT_DATE = '2026-07-30';
+const BUNDLE_CATEGORY_SLUG = 'bundle-health-safety';
+const BUNDLE_CATEGORY_TOOL_SLUGS = [
+  'travel-health-checker', 'yellow-fever-checker', 'pregnancy-travel-checker',
+  'water-safety-checker', 'uv-index-checker', 'wildlife-safety-checker',
+  'natural-disaster-checker', 'emergency-number-checker', 'tourist-scams-checker',
+  'solo-female-travel-checker', 'beach-safety-checker', 'air-quality-checker',
+  'street-food-checker', 'altitude-sickness-checker', 'travel-advisory-checker',
+];
+
+// A bundle lead's own tool_slug is just 'bundle-health-safety' — it doesn't
+// say which of the 15 tool pages the visitor actually converted on. That's
+// only recoverable from source_page, run through the same deriveToolSlug()
+// used for pageview attribution. Pre-rollout leads already carry the
+// correct tool_slug directly and pass through untouched.
+function attributeLeadToTool(lead) {
+  if (lead.tool_slug === BUNDLE_CATEGORY_SLUG) {
+    return lead.source_page ? deriveToolSlug(lead.source_page) : null;
+  }
+  return BUNDLE_CATEGORY_TOOL_SLUGS.includes(lead.tool_slug) ? lead.tool_slug : null;
+}
+
+// @desc Before/after conversion rate (leads ÷ pageviews) for the 15
+//   Health & Safety tools, split at BUNDLE_ROLLOUT_DATE, both as a daily
+//   series (combined across all 15) and a per-tool before/after
+//   breakdown — the actual data needed to judge whether the category-
+//   bundle PDF change (single-tool offer -> multi-check bundle offer)
+//   moved the needle, instead of guessing.
+// @route GET /api/analytics/free-tools/bundle-conversion?days=60
+// @access Admin
+exports.getBundleConversionStats = async (req, res) => {
+  try {
+    const days = Math.min(180, Math.max(7, parseInt(req.query.days, 10) || 60));
+
+    const { rows: viewRows } = await pool.query(
+      `SELECT to_char(date_trunc('day', viewed_at), 'YYYY-MM-DD') AS date, tool_slug, COUNT(*)::int AS views
+       FROM free_tool_page_views
+       WHERE viewed_at >= NOW() - ($1 || ' days')::interval
+         AND tool_slug = ANY($2)
+       GROUP BY 1, 2`,
+      [days, BUNDLE_CATEGORY_TOOL_SLUGS]
+    );
+
+    const { rows: leadRows } = await pool.query(
+      `SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS date, tool_slug, source_page
+       FROM tool_leads
+       WHERE created_at >= NOW() - ($1 || ' days')::interval
+         AND (tool_slug = ANY($2) OR tool_slug = $3)`,
+      [days, BUNDLE_CATEGORY_TOOL_SLUGS, BUNDLE_CATEGORY_SLUG]
+    );
+
+    // date -> tool_slug -> {views, leads}
+    const byDate = {};
+    const ensure = (date, tool) => {
+      if (!byDate[date]) byDate[date] = {};
+      if (!byDate[date][tool]) byDate[date][tool] = { views: 0, leads: 0 };
+      return byDate[date][tool];
+    };
+
+    for (const row of viewRows) ensure(row.date, row.tool_slug).views += row.views;
+    for (const row of leadRows) {
+      const tool = attributeLeadToTool(row);
+      if (tool && BUNDLE_CATEGORY_TOOL_SLUGS.includes(tool)) ensure(row.date, tool).leads += 1;
+    }
+
+    // Combined daily series across all 15 tools.
+    const daily = Object.keys(byDate).sort().map(date => {
+      const tools = byDate[date];
+      const views = Object.values(tools).reduce((s, t) => s + t.views, 0);
+      const leads = Object.values(tools).reduce((s, t) => s + t.leads, 0);
+      return { date, views, leads, rate: views > 0 ? +(leads / views * 100).toFixed(2) : null };
+    });
+
+    const sumPeriod = (predicate) => {
+      let views = 0, leads = 0, dayCount = 0;
+      for (const d of daily) {
+        if (!predicate(d.date)) continue;
+        views += d.views; leads += d.leads; dayCount++;
+      }
+      return { days: dayCount, views, leads, rate: views > 0 ? +(leads / views * 100).toFixed(2) : null };
+    };
+    const before = sumPeriod(date => date < BUNDLE_ROLLOUT_DATE);
+    const after = sumPeriod(date => date >= BUNDLE_ROLLOUT_DATE);
+
+    // Per-tool before/after breakdown.
+    const perTool = BUNDLE_CATEGORY_TOOL_SLUGS.map(tool => {
+      const acc = { before: { views: 0, leads: 0 }, after: { views: 0, leads: 0 } };
+      for (const date of Object.keys(byDate)) {
+        const cell = byDate[date][tool];
+        if (!cell) continue;
+        const bucket = date < BUNDLE_ROLLOUT_DATE ? acc.before : acc.after;
+        bucket.views += cell.views; bucket.leads += cell.leads;
+      }
+      const rate = (b) => b.views > 0 ? +(b.leads / b.views * 100).toFixed(2) : null;
+      return {
+        tool_slug: tool,
+        before: { ...acc.before, rate: rate(acc.before) },
+        after: { ...acc.after, rate: rate(acc.after) },
+      };
+    });
+
+    res.json({
+      success: true,
+      rolloutDate: BUNDLE_ROLLOUT_DATE,
+      days,
+      daily,
+      beforeAfter: { before, after },
+      perTool,
+    });
+  } catch (error) {
+    console.error('getBundleConversionStats error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 exports.deriveToolSlug = deriveToolSlug;
 exports.TOOL_BASE_SLUGS = TOOL_BASE_SLUGS;
