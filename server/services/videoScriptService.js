@@ -577,6 +577,17 @@ const SCRIPT_IDEAS = [
     caption: "The travel check everyone forgets 🌫️",
     hashtags: "#traveltips #travelhealth #airquality",
   },
+  {
+    key: 'street-food-busy-stall-rule',
+    toolSlug: 'street-food-checker',
+    toolName: 'Street Food Safety Checker',
+    hook: "The one rule that predicts street food safety almost anywhere on Earth",
+    voiceover: "You don't need a medical degree to eat street food safely — you need one rule: eat where the locals are lining up. High turnover means fresher ingredients and less time for anything to go wrong. Some destinations, like Singapore, Thailand, and Taiwan, have street food so good and so safe it's a genuine highlight of the trip. Others, like India and Indonesia, are still incredible — they just reward a little more caution, especially with ice and pre-cut fruit. Know which one you're headed to before you go.",
+    ctaYoutube: "Free Street Food Safety Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Street Food Safety Checker — link in bio",
+    caption: "The only rule you actually need for street food 🍜",
+    hashtags: "#traveltips #streetfood #travelfood",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

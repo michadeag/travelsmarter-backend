@@ -92,6 +92,7 @@ const TOOL_THEMES = [
   { slug: 'public-restroom-checker', theme: 'a simple restroom door sign icon with a small toilet paper roll icon nearby, in a clean minimal style' },
   { slug: 'beach-safety-checker', theme: 'a wave icon with a small warning flag or jellyfish silhouette nearby' },
   { slug: 'air-quality-checker', theme: 'a hazy skyline icon with a small air/wind swirl motif' },
+  { slug: 'street-food-checker', theme: 'a street food cart or noodle bowl icon with a small steam swirl' },
 ];
 
 async function getIdeogramKey() {
