@@ -599,6 +599,17 @@ const SCRIPT_IDEAS = [
     caption: "Fitness doesn't protect you from this ⛰️",
     hashtags: "#traveltips #altitudesickness #travelhealth",
   },
+  {
+    key: 'onward-travel-denied-boarding',
+    toolSlug: 'onward-travel-checker',
+    toolName: 'Proof of Onward Travel Checker',
+    hook: "The reason one-way travelers get turned away at the check-in counter",
+    voiceover: "If you're booking a one-way flight, there's a check-in counter problem almost nobody warns you about: some countries require proof you're actually going to leave before they'll even let you board. Thailand, Indonesia, New Zealand, Costa Rica, and Panama are notorious for this — airlines get fined if they fly you in without it, so they check. The fix is almost free: a fully refundable flight you cancel later, or a proof-of-onward-travel service for a few dollars. Know before you're standing at the counter.",
+    ctaYoutube: "Free Proof of Onward Travel Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Proof of Onward Travel Checker — link in bio",
+    caption: "Why one-way travelers get stopped at check-in 🎫",
+    hashtags: "#traveltips #oneway #digitalnomad",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
