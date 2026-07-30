@@ -1,6 +1,4 @@
 const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
 const pool = require('../config/database');
 
 // Generates one branded, themed thumbnail per free-tool category via
@@ -13,13 +11,22 @@ const pool = require('../config/database');
 // Ideogram's /generate endpoint returns "ephemeral" signed URLs that expire
 // within ~24-48h (confirmed: they 410 after expiry) — storing that raw URL
 // directly, as this service originally did, meant every image silently went
-// dead within a day or two. To make these genuinely permanent, generateOne()
-// downloads the image bytes immediately and re-hosts them from this server's
-// own /og-images static folder; only that permanent, self-hosted URL is ever
-// written to the database.
+// dead within a day or two.
+//
+// A first attempt at fixing this downloaded the bytes and wrote them to this
+// server's own local disk (server/og-images/), serving them via
+// express.static. That silently never worked in production: this app runs
+// on a platform with an ephemeral/read-only container filesystem, so every
+// fs.writeFileSync() failed, was swallowed by the batch loop's
+// Promise.allSettled (logged server-side only, never surfaced to the admin
+// dashboard), and the database was never updated — "Generate Missing"
+// appeared to do nothing at all, every single time.
+//
+// The actual fix: store the image bytes themselves in Postgres (a real,
+// durable store that survives redeploys, unlike container disk) and serve
+// them back out through a dedicated route (GET /og-images/:slug.png,
+// registered in server.js) instead of a static file.
 const API_BASE_URL = process.env.API_BASE_URL || 'https://api.travelsmarterapp.com';
-const OG_IMAGES_DIR = path.join(__dirname, '../og-images');
-fs.mkdirSync(OG_IMAGES_DIR, { recursive: true });
 
 // Kept in sync manually with the identically-named lists in
 // freeToolAnalyticsController.js / toolPromoTwitterService.js — see those
@@ -127,37 +134,39 @@ async function generateOne(ideogramKey, { slug, theme }) {
   if (!ephemeralUrl) throw new Error('Ideogram returned no image URL');
 
   // Ideogram's returned URL expires within ~24-48h — download it now and
-  // re-host permanently, since that's the only copy we'll ever get.
+  // store the actual bytes in Postgres, since that's the only copy we'll
+  // ever get and the only storage here that's actually durable.
   const imageRes = await axios.get(ephemeralUrl, { responseType: 'arraybuffer', timeout: 30000 });
-  fs.writeFileSync(path.join(OG_IMAGES_DIR, `${slug}.png`), imageRes.data);
+  const imageBuffer = Buffer.from(imageRes.data);
   const imageUrl = `${API_BASE_URL}/og-images/${slug}.png`;
 
   await pool.query(
-    `INSERT INTO tool_og_images (tool_slug, image_url, prompt, generated_at)
-     VALUES ($1, $2, $3, NOW())
-     ON CONFLICT (tool_slug) DO UPDATE SET image_url = $2, prompt = $3, generated_at = NOW()`,
-    [slug, imageUrl, prompt]
+    `INSERT INTO tool_og_images (tool_slug, image_url, image_data, prompt, generated_at)
+     VALUES ($1, $2, $3, $4, NOW())
+     ON CONFLICT (tool_slug) DO UPDATE SET image_url = $2, image_data = $3, prompt = $4, generated_at = NOW()`,
+    [slug, imageUrl, imageBuffer, prompt]
   );
   return { slug, imageUrl };
 }
 
 // Fire-and-forget: kicks off generation for every tool slug that doesn't
-// already have a permanently-hosted image on disk (or all, if force=true),
-// a few at a time so we don't hammer Ideogram's rate limit. Checking the
-// filesystem rather than the database for "missing" means a tool is only
-// ever considered done once its image is actually sitting in OG_IMAGES_DIR —
-// a stale/pre-fix database row with a dead Ideogram URL doesn't count.
-// Callers poll getAllToolImages() to watch results fill in — this
-// intentionally does not block the HTTP response that triggered it, since
-// dozens of sequential image generations would likely exceed a typical
-// request timeout.
+// already have real image bytes stored (or all, if force=true), a few at a
+// time so we don't hammer Ideogram's rate limit. "Has bytes stored" (not
+// just "has a database row") means a stale pre-fix row with a dead
+// Ideogram URL and no image_data doesn't count as done. Callers poll
+// getAllToolImages() to watch results fill in — this intentionally does
+// not block the HTTP response that triggered it, since dozens of
+// sequential image generations would likely exceed a typical request
+// timeout.
 async function generateAllToolImages(force = false) {
   const ideogramKey = await getIdeogramKey();
   if (!ideogramKey) throw new Error('Ideogram API key not configured');
 
   let targets = TOOL_THEMES;
   if (!force) {
-    targets = TOOL_THEMES.filter(t => !fs.existsSync(path.join(OG_IMAGES_DIR, `${t.slug}.png`)));
+    const { rows } = await pool.query(`SELECT tool_slug FROM tool_og_images WHERE image_data IS NOT NULL`);
+    const have = new Set(rows.map(r => r.tool_slug));
+    targets = TOOL_THEMES.filter(t => !have.has(t.slug));
   }
   if (targets.length === 0) return { started: false, reason: 'All tool images already generated' };
 
@@ -177,13 +186,31 @@ async function generateAllToolImages(force = false) {
   return { started: true, count: targets.length };
 }
 
+// Only rows with real stored bytes count — a stale pre-fix row (dead
+// Ideogram URL, image_data NULL) would otherwise show as "generated" in
+// the admin dashboard while actually being a broken image everywhere it's
+// used.
 async function getAllToolImages() {
-  const { rows } = await pool.query(`SELECT tool_slug, image_url, generated_at FROM tool_og_images ORDER BY tool_slug ASC`);
+  const { rows } = await pool.query(
+    `SELECT tool_slug, image_url, generated_at FROM tool_og_images WHERE image_data IS NOT NULL ORDER BY tool_slug ASC`
+  );
   return rows;
+}
+
+// Serves the actual PNG bytes for GET /og-images/:slug.png (registered in
+// server.js) — the replacement for what used to be express.static reading
+// a file off disk.
+async function getToolImageBytes(slug) {
+  const { rows } = await pool.query(
+    `SELECT image_data FROM tool_og_images WHERE tool_slug = $1 AND image_data IS NOT NULL`,
+    [slug]
+  );
+  return rows[0]?.image_data || null;
 }
 
 module.exports = {
   TOOL_THEMES,
   generateAllToolImages,
   getAllToolImages,
+  getToolImageBytes,
 };

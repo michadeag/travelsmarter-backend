@@ -144,6 +144,7 @@ const partnerDealsRoutes = require('./routes/partnerDealsRoutes');
 const quoraRoutes = require('./routes/quoraRoutes');
 const bloggerRoutes = require('./routes/bloggerRoutes');
 const toolImageRoutes = require('./routes/toolImageRoutes');
+const toolOgImageService = require('./services/toolOgImageService');
 const youtubeRoutes = require('./routes/youtubeRoutes');
 
 // Import controllers
@@ -393,6 +394,24 @@ app.use('/api/quora', quoraRoutes);
 app.use('/api/blogger', bloggerRoutes);
 app.use('/api/tool-images', toolImageRoutes);
 app.use('/api/youtube', youtubeRoutes);
+
+// Serves a tool's og:image PNG straight from Postgres (see
+// toolOgImageService.js for why — the container filesystem this app runs
+// on isn't durable, so the bytes live in the database instead of on disk).
+// Public, no auth — these are meant to be embedded as public image URLs.
+app.get('/og-images/:filename', async (req, res) => {
+  const slug = req.params.filename.replace(/\.png$/i, '');
+  try {
+    const imageData = await toolOgImageService.getToolImageBytes(slug);
+    if (!imageData) return res.status(404).send('Not found');
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=604800'); // 7 days — these rarely change
+    res.send(imageData);
+  } catch (err) {
+    console.error('og-images serve error:', err.message);
+    res.status(500).send('Server error');
+  }
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -1477,6 +1496,11 @@ async function initializeApp() {
         prompt TEXT,
         generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+      -- Actual PNG bytes, stored in Postgres rather than on local disk —
+      -- this container's filesystem is ephemeral/read-only, so a prior
+      -- disk-based fix silently never wrote anything (see
+      -- toolOgImageService.js for the full story).
+      ALTER TABLE tool_og_images ADD COLUMN IF NOT EXISTS image_data BYTEA;
 
       -- Referral partners (bloggers/YouTubers recruited to promote TravelSmarter —
       -- distinct from affiliate_partners, which are outbound links TO other companies)
