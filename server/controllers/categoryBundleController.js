@@ -88,12 +88,24 @@ exports.generateCategoryBundlePdf = async (req, res) => {
     pdfService.heading(doc, `${countryName}: ${category}`);
     pdfService.paragraph(doc, `${sections.length} checks combined into one PDF, so you don't have to visit ${sections.length} separate pages for your trip to ${countryName}.`);
 
-    for (const section of sections) {
+    // A 15-check bundle is a long document — the only ask used to be the
+    // very last thing on the page, easy to never reach. This repeats it
+    // once, lightly, at the halfway point.
+    const midpoint = Math.floor(sections.length / 2);
+    sections.forEach((section, i) => {
       pdfService.subheading(doc, `${section.icon} ${section.name}`);
       pdfService.paragraph(doc, section.result.headline);
       const body = section.result.note || section.result.reason;
       if (body && body !== section.result.headline) pdfService.paragraph(doc, body);
-    }
+
+      if (i === midpoint && sections.length >= 6) {
+        pdfService.highlightBox(
+          doc,
+          `Halfway through — ${countryName}'s Trip Brief covers this and every other category (money, documents, local rules) in one $19 PDF.`,
+          `https://travelsmarterapp.com/trip-brief.html?destination=${country}`
+        );
+      }
+    });
 
     pdfService.addFooterCTA(doc, country);
     doc.end();
@@ -104,8 +116,9 @@ exports.generateCategoryBundlePdf = async (req, res) => {
       html: `<p>Hi ${firstName || 'there'},</p>
 <p>Here's your <strong>${countryName} ${category}</strong> bundle — ${sections.length} checks combined into one PDF:</p>
 <ul>${sections.map(s => `<li>${s.icon} ${s.name}</li>`).join('')}</ul>
-<p style="background:#fff7ed;border-left:4px solid #ff6b4a;padding:14px 18px;border-radius:6px;">🧭 <strong>This is just one category.</strong> The full Trip Brief combines every relevant check — Documents & Entry, Money, Health & Safety, On the Ground, Local Rules, and more — into one personalized PDF for $19. <a href="https://travelsmarterapp.com/trip-brief.html?destination=${country}" style="color:#ff6b4a;font-weight:bold;">See your full Trip Brief →</a></p>
-<p><a href="https://travelsmarterapp.com/sales-page.html" style="background:#ff6b4a;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;">See TravelSmarter Pro →</a></p>
+<p style="background:#fff7ed;border-left:4px solid #ff6b4a;padding:14px 18px;border-radius:6px;">🧭 <strong>This is just one category.</strong> The full Trip Brief combines every relevant check — Documents & Entry, Money, Health & Safety, On the Ground, Local Rules, and more — into one personalized PDF for $19.</p>
+<p><a href="https://travelsmarterapp.com/trip-brief.html?destination=${country}" style="background:#ff6b4a;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;">See Your Full Trip Brief →</a></p>
+<p style="font-size:13px;color:#9ca3af;">Or unlock 50+ tools and ongoing updates with <a href="https://travelsmarterapp.com/sales-page.html" style="color:#ff6b4a;font-weight:bold;">TravelSmarter Pro →</a></p>
 <p>Safe travels,<br>The TravelSmarter Team</p>`,
     }).catch(err => console.error('Failed to send category-bundle confirmation email:', err.message));
 

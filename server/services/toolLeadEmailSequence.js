@@ -24,10 +24,16 @@ function tipBox(content) {
 // $19, low-friction) as the primary button, TravelSmarter Pro (ongoing,
 // $19/month) as a smaller secondary line — same pairing used in every
 // individual tool's PDF/confirmation email (see pdfService.addFooterCTA).
+// {tripBriefUrl}/{tripBriefLabel} are resolved per-lead at send time in
+// sendPendingLeadEmails() — every lead already told us their destination
+// when they downloaded a tool PDF (tool_leads.input_data), so "Get My
+// Trip Brief" becomes "Get My Thailand Trip Brief" with a pre-filled
+// link whenever we know it, instead of a generic pitch for every lead
+// regardless of what they actually searched for.
 function dualUpgradeBox(tripBriefText, proText) {
   return `<div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:10px;padding:18px 20px;margin:22px 0;">
     <p style="margin:0 0 12px;font-size:14px;color:#92400e;">${tripBriefText}</p>
-    <a href="{appUrl}/trip-brief.html" style="display:inline-block;background:#ff6b4a;color:white;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">Get My Trip Brief →</a>
+    <a href="{tripBriefUrl}" style="display:inline-block;background:#ff6b4a;color:white;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">{tripBriefLabel}</a>
     <p style="margin:16px 0 8px;font-size:12.5px;color:#92400e;">${proText}</p>
     <a href="{appUrl}/sales-page.html" style="display:inline-block;background:#1a2744;color:white;padding:9px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12.5px;">See TravelSmarter Pro →</a>
   </div>`;
@@ -311,7 +317,9 @@ async function sendPendingLeadEmails() {
 
     const result = await pool.query(`
       SELECT tse.id, tse.lead_id, tse.template_id, tl.email, tl.first_name, tl.unsubscribe_token,
-             et.day, et.subject, et.html_content
+             et.day, et.subject, et.html_content,
+             COALESCE(tl.input_data->>'country', tl.input_data->>'destination') AS dest_slug,
+             COALESCE(tl.result_data->>'countryName', tl.result_data->>'destinationName') AS dest_name
       FROM tool_lead_scheduled_emails tse
       JOIN tool_leads tl ON tse.lead_id = tl.id
       JOIN email_templates et ON tse.template_id = et.id
@@ -329,9 +337,18 @@ async function sendPendingLeadEmails() {
 
     for (const row of result.rows) {
       try {
+        const tripBriefUrl = row.dest_slug
+          ? `${appUrl}/trip-brief.html?destination=${row.dest_slug}`
+          : `${appUrl}/trip-brief.html`;
+        const tripBriefLabel = row.dest_name
+          ? `Get My ${row.dest_name} Trip Brief →`
+          : 'Get My Trip Brief →';
+
         const emailHtml = (row.html_content || '')
           .split('{firstName}').join(row.first_name || 'there')
-          .split('{appUrl}').join(appUrl);
+          .split('{appUrl}').join(appUrl)
+          .split('{tripBriefUrl}').join(tripBriefUrl)
+          .split('{tripBriefLabel}').join(tripBriefLabel);
 
         const fullHtml = `
           <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">

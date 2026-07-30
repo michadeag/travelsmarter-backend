@@ -55,11 +55,15 @@ function bulletList(doc, items) {
   doc.moveDown(0.5);
 }
 
-function highlightBox(doc, text) {
+// linkUrl is optional — when passed, the whole box's text becomes a
+// clickable link (e.g. a mid-document Trip Brief nudge in a long bundle
+// PDF, so the ask isn't only ever at the very end of the document).
+function highlightBox(doc, text, linkUrl) {
   const startY = doc.y;
   const boxHeight = doc.heightOfString(text, { width: 460, fontSize: 12 }) + 24;
   doc.rect(50, startY, 495, boxHeight).fill('#f0f4ff');
-  doc.fillColor(NAVY).fontSize(12).font('Helvetica-Bold').text(text, 65, startY + 12, { width: 460 });
+  doc.fillColor(NAVY).fontSize(12).font('Helvetica-Bold')
+    .text(text, 65, startY + 12, linkUrl ? { width: 460, link: linkUrl, underline: true } : { width: 460 });
   doc.fillColor('black').font('Helvetica');
   doc.y = startY + boxHeight + 12;
 }
@@ -76,21 +80,22 @@ function addFooterCTA(doc, tripDestination) {
   doc.rect(50, startY, 495, boxHeight).fill(NAVY);
 
   if (tripDestination) {
+    const tripBriefUrl = `https://travelsmarterapp.com/trip-brief.html?destination=${tripDestination}`;
     doc.fillColor('white').fontSize(13).font('Helvetica-Bold')
       .text('Got other open questions about this trip?', 65, startY + 16, { width: 465 });
     doc.fontSize(10).font('Helvetica')
       .text('Get the full Trip Brief — visa, money, health, local laws, and more, combined into one PDF for $19.', 65, startY + 38, { width: 465 });
     doc.fillColor(CORAL).font('Helvetica-Bold')
-      .text(`travelsmarterapp.com/trip-brief.html?destination=${tripDestination}`, 65, startY + 62, { width: 465 });
+      .text(`travelsmarterapp.com/trip-brief.html?destination=${tripDestination}`, 65, startY + 62, { width: 465, link: tripBriefUrl, underline: true });
     doc.fillColor(LIGHT_GRAY).fontSize(8.5).font('Helvetica')
-      .text('Or unlock 50+ tools and ongoing updates with TravelSmarter Pro — travelsmarterapp.com/sales-page.html', 65, startY + 86, { width: 465 });
+      .text('Or unlock 50+ tools and ongoing updates with TravelSmarter Pro — travelsmarterapp.com/sales-page.html', 65, startY + 86, { width: 465, link: 'https://travelsmarterapp.com/sales-page.html' });
   } else {
     doc.fillColor('white').fontSize(13).font('Helvetica-Bold')
       .text('This tool is part of TravelSmarter Pro', 65, startY + 16, { width: 465 });
     doc.fontSize(10).font('Helvetica')
       .text('Get 50+ more travel tools, AI-powered recommendations, and ongoing updates — plus the full 87-hack library.', 65, startY + 38, { width: 465 });
     doc.fillColor(CORAL).font('Helvetica-Bold')
-      .text('travelsmarterapp.com/sales-page.html', 65, startY + 66);
+      .text('travelsmarterapp.com/sales-page.html', 65, startY + 66, { link: 'https://travelsmarterapp.com/sales-page.html', underline: true });
   }
 
   doc.fillColor('black').font('Helvetica');
