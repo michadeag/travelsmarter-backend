@@ -95,6 +95,7 @@ const TOPICS = [
   { category: 'sports-equipment-checker', toolSlug: 'sports-equipment-checker', title: "Will your airline charge you for that ski bag?", promptTheme: 'a ski, golf club, and surfboard silhouette arranged together with a small luggage tag icon', boards: ['Travel Tips', 'Ski Trip', 'Travel Hacks'], tags: ['#traveltips', '#travelhacks', '#skitrip', '#travelsmarter'] },
   { category: 'wedding-legal-checker', toolSlug: 'wedding-legal-checker', title: "Can you actually get legally married here?", promptTheme: 'a pair of interlocking wedding rings with a small legal document or passport icon nearby', boards: ['Travel Tips', 'Destination Wedding', 'Wedding Planning'], tags: ['#destinationwedding', '#traveltips', '#weddingplanning', '#travelsmarter'] },
   { category: 'luggage-storage-checker', toolSlug: 'luggage-storage-checker', title: "What to do with your bags after checkout", promptTheme: 'a small suitcase icon next to a locker or storage locker icon', boards: ['Travel Tips', 'Travel Hacks', 'Packing Tips'], tags: ['#traveltips', '#travelhacks', '#packingtips', '#travelsmarter'] },
+  { category: 'public-restroom-checker', toolSlug: 'public-restroom-checker', title: "The bathroom talk nobody gives you before you travel", promptTheme: 'a simple restroom door sign icon with a small toilet paper roll icon nearby, in a clean minimal style', boards: ['Travel Tips', 'Travel Hacks', 'First Time Traveler'], tags: ['#traveltips', '#travelhacks', '#firsttimetraveler', '#travelsmarter'] },
 ];
 
 class PinterestService {

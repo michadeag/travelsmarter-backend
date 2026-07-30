@@ -148,6 +148,9 @@ const TOOLS = [
   { slug: 'luggage-storage-checker', name: 'Left Luggage / Baggage Storage', icon: '🧳', category: 'On the Ground',
     controller: '../controllers/luggageStorageController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'public-restroom-checker', name: 'Public Restroom Availability', icon: '🚻', category: 'On the Ground',
+    controller: '../controllers/publicRestroomController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Local Rules ---
   { slug: 'alcohol-checker', name: 'Alcohol Laws', icon: '🍷', category: 'Local Rules',

@@ -544,6 +544,17 @@ const SCRIPT_IDEAS = [
     caption: "What to do with your bags after checkout 🧳",
     hashtags: "#traveltips #travelhacks #packingtips",
   },
+  {
+    key: 'public-restroom-etiquette-surprises',
+    toolSlug: 'public-restroom-checker',
+    toolName: 'Public Restroom Availability & Etiquette Checker',
+    hook: "Nobody tells you this before your first trip to certain countries",
+    voiceover: "Squat toilets instead of Western ones. A bin next to the toilet for used paper instead of flushing it, because the plumbing genuinely can't handle it. A hose or bidet sprayer instead of paper at all. These aren't hygiene downgrades, they're just different systems — but showing up with zero warning is how you end up in an awkward, avoidable moment on day one. Five minutes of reading before your flight, and you'll know exactly what to expect and what to pack.",
+    ctaYoutube: "Free Public Restroom Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Public Restroom Checker — link in bio",
+    caption: "The bathroom talk nobody gives you before you travel 🚻",
+    hashtags: "#traveltips #travelhacks #firsttimetraveler",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

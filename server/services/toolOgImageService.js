@@ -89,6 +89,7 @@ const TOOL_THEMES = [
   { slug: 'sports-equipment-checker', theme: 'a ski, golf club, and surfboard silhouette arranged together with a small luggage tag icon' },
   { slug: 'wedding-legal-checker', theme: 'a pair of interlocking wedding rings with a small legal document or passport icon nearby' },
   { slug: 'luggage-storage-checker', theme: 'a small suitcase icon next to a locker or storage locker icon' },
+  { slug: 'public-restroom-checker', theme: 'a simple restroom door sign icon with a small toilet paper roll icon nearby, in a clean minimal style' },
 ];
 
 async function getIdeogramKey() {
