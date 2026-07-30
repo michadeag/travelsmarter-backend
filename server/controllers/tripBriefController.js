@@ -44,6 +44,29 @@ exports.getTripBriefDestinations = (req, res) => {
   res.status(200).json({ success: true, destinations: SAFE_DESTINATIONS });
 };
 
+// @desc Streams a real sample Trip Brief PDF (fixed demo destination —
+//   Thailand, chosen for having entries across every category, including
+//   the sparser ones like Pet Travel) so a visitor can see exactly what
+//   they're paying for before checkout. No email required, not a lead
+//   capture — this exists purely to reduce purchase anxiety on a $19-99
+//   decision made sight-unseen otherwise.
+// @route GET /api/trip-brief/sample-pdf
+// @access Public
+exports.getSampleTripBriefPdf = async (req, res) => {
+  try {
+    const sampleDestination = 'thailand';
+    const destinationName = resolveDestination(sampleDestination).name;
+    const pdfBuffer = await generateTripBriefPdfBuffer({ destination: sampleDestination }, destinationName, true);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="trip-brief-sample-thailand.pdf"');
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('getSampleTripBriefPdf error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 // @desc Check whether an email already has lifetime Trip Brief access
 // @route POST /api/trip-brief/check-access
 // @access Public
@@ -64,15 +87,20 @@ exports.checkLifetimeAccess = async (req, res) => {
 };
 
 // Builds the combined PDF for a trip as a Buffer (for email attachment) —
-// shared by both the paid-checkout path and the free lifetime-access path.
-async function generateTripBriefPdfBuffer(trip, destinationName) {
+// shared by both the paid-checkout path and the free lifetime-access path,
+// plus the public sample-PDF endpoint (isSample: true) that lets a visitor
+// see a real Trip Brief before paying for one.
+async function generateTripBriefPdfBuffer(trip, destinationName, isSample = false) {
   const sections = computeTripBriefSections(trip);
   const groups = groupSectionsByCategory(sections);
 
-  const doc = pdfService.createBrandedDoc(`${destinationName} Trip Brief`);
+  const doc = pdfService.createBrandedDoc(`${destinationName} Trip Brief${isSample ? ' (Sample)' : ''}`);
   const bufferPromise = pdfService.toBuffer(doc);
 
   pdfService.heading(doc, `Your ${destinationName} Trip Brief`);
+  if (isSample) {
+    pdfService.paragraph(doc, `This is a real sample Trip Brief for ${destinationName}, shown so you know exactly what you're getting before you pay — every check below is live data, not a mockup. Enter your own destination at travelsmarterapp.com/trip-brief.html to get one personalized for your trip.`);
+  }
   pdfService.paragraph(doc, `This brief combines ${sections.length} checks across ${groups.length} categories into one place, so you don't have to track down each answer separately. Last verified: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}. Rules can change — always confirm anything critical (visas, health requirements, entry rules) against an official government source close to your travel date.`);
 
   for (const group of groups) {
