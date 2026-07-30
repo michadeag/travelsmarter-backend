@@ -2,16 +2,23 @@ const axios = require('axios');
 const pool = require('../config/database');
 
 // Generates one branded, themed thumbnail per free-tool category via
-// Ideogram (same API already used for Blogger/WordPress featured images),
-// and stores each as a permanent {tool_slug -> image_url} mapping in
-// tool_og_images. These are used as og:image/twitter:image on every tool
-// page so link previews (Twitter, iMessage, Slack, etc.) show a real image
-// instead of a blank placeholder icon.
+// OpenAI's image API (same provider already used as the Pinterest service's
+// preferred option — see pinterestService.js), and stores each as a
+// permanent {tool_slug -> image bytes} mapping in tool_og_images. These are
+// used as og:image/twitter:image on every tool page so link previews
+// (Twitter, iMessage, Slack, etc.) show a real image instead of a blank
+// placeholder icon.
 //
-// Ideogram's /generate endpoint returns "ephemeral" signed URLs that expire
-// within ~24-48h (confirmed: they 410 after expiry) — storing that raw URL
-// directly, as this service originally did, meant every image silently went
-// dead within a day or two.
+// Originally used Ideogram instead. Switched 2026-07-30 after Ideogram
+// started rejecting every request with 401s tracing back to a declined
+// payment method on that account — not a code issue, but OpenAI billing
+// is simpler to keep working and this app already depends on it elsewhere.
+//
+// Ideogram's /generate endpoint returned "ephemeral" signed URLs that
+// expire within ~24-48h (confirmed: they 410 after expiry) — storing that
+// raw URL directly, as this service originally did, meant every image
+// silently went dead within a day or two. OpenAI's gpt-image-1 returns
+// base64 image bytes directly (no ephemeral URL to worry about).
 //
 // A first attempt at fixing this downloaded the bytes and wrote them to this
 // server's own local disk (server/og-images/), serving them via
@@ -118,26 +125,33 @@ const TOOL_THEMES = [
   { slug: 'family-travel-checker', theme: 'a stroller or family icon with a small heart or sun motif' },
 ];
 
-async function getIdeogramKey() {
-  const r = await pool.query(`SELECT value FROM settings WHERE key = 'ideogram_api_key'`).catch(() => ({ rows: [] }));
+async function getOpenaiKey() {
+  const r = await pool.query(`SELECT value FROM settings WHERE key = 'openai_api_key'`).catch(() => ({ rows: [] }));
   return r.rows[0]?.value || null;
 }
 
-async function generateOne(ideogramKey, { slug, theme }) {
+async function generateOne(openaiKey, { slug, theme }) {
   const prompt = `Flat modern icon-style illustration representing ${theme}. Minimal, clean composition, vector-art style, TravelSmarter brand colors (deep blue background, orange accent), no text, no watermark, no logo, centered subject, square format.`;
   const response = await axios.post(
-    'https://api.ideogram.ai/generate',
-    { image_request: { prompt, model: 'V_2', aspect_ratio: 'ASPECT_1_1', style_type: 'DESIGN', magic_prompt_option: 'OFF' } },
-    { headers: { 'Api-Key': ideogramKey, 'Content-Type': 'application/json' }, timeout: 60000 }
+    'https://api.openai.com/v1/images/generations',
+    { model: 'gpt-image-1', prompt, n: 1, size: '1024x1024' },
+    { headers: { 'Authorization': `Bearer ${openaiKey}`, 'Content-Type': 'application/json' }, timeout: 120000 }
   );
-  const ephemeralUrl = response.data?.data?.[0]?.url;
-  if (!ephemeralUrl) throw new Error('Ideogram returned no image URL');
+  const imgData = response.data?.data?.[0];
+  if (!imgData) throw new Error('OpenAI returned no image');
 
-  // Ideogram's returned URL expires within ~24-48h — download it now and
-  // store the actual bytes in Postgres, since that's the only copy we'll
-  // ever get and the only storage here that's actually durable.
-  const imageRes = await axios.get(ephemeralUrl, { responseType: 'arraybuffer', timeout: 30000 });
-  const imageBuffer = Buffer.from(imageRes.data);
+  // gpt-image-1 returns base64 bytes directly (no expiring URL to chase
+  // like Ideogram had) — fall back to downloading a url if one is present.
+  let imageBuffer;
+  if (imgData.b64_json) {
+    imageBuffer = Buffer.from(imgData.b64_json, 'base64');
+  } else if (imgData.url) {
+    const imageRes = await axios.get(imgData.url, { responseType: 'arraybuffer', timeout: 30000 });
+    imageBuffer = Buffer.from(imageRes.data);
+  } else {
+    throw new Error('OpenAI returned no image data');
+  }
+
   const imageUrl = `${API_BASE_URL}/og-images/${slug}.png`;
 
   await pool.query(
@@ -157,8 +171,8 @@ async function generateOne(ideogramKey, { slug, theme }) {
 // doesn't count as done. Callers poll getAllToolImages() to watch results
 // fill in over the next few minutes.
 async function generateAllToolImages(force = false) {
-  const ideogramKey = await getIdeogramKey();
-  if (!ideogramKey) throw new Error('Ideogram API key not configured');
+  const openaiKey = await getOpenaiKey();
+  if (!openaiKey) throw new Error('OpenAI API key not configured');
 
   let targets = TOOL_THEMES;
   if (!force) {
@@ -194,10 +208,10 @@ async function processOgImageQueue() {
   );
   if (queued.length === 0) return { processed: 0 };
 
-  const ideogramKey = await getIdeogramKey();
-  if (!ideogramKey) {
-    console.error('❌ Tool OG image queue has pending items but no Ideogram API key configured');
-    return { processed: 0, error: 'Ideogram API key not configured' };
+  const openaiKey = await getOpenaiKey();
+  if (!openaiKey) {
+    console.error('❌ Tool OG image queue has pending items but no OpenAI API key configured');
+    return { processed: 0, error: 'OpenAI API key not configured' };
   }
 
   const themeBySlug = new Map(TOOL_THEMES.map(t => [t.slug, t]));
@@ -207,7 +221,7 @@ async function processOgImageQueue() {
     const target = themeBySlug.get(tool_slug);
     try {
       if (target) {
-        await generateOne(ideogramKey, target);
+        await generateOne(openaiKey, target);
         console.log(`🖼️ Tool OG image generated: ${tool_slug}`);
       } else {
         console.warn(`⚠️ Tool OG image queue had unknown slug, dropping: ${tool_slug}`);
