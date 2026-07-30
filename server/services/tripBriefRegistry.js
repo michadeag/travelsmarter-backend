@@ -75,6 +75,9 @@ const TOOLS = [
   { slug: 'souvenir-export-checker', name: 'Souvenir Export Rules', icon: '🛍️', category: 'Money',
     controller: '../controllers/souvenirExportController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'bargaining-checker', name: 'Bargaining & Haggling Norms', icon: '💬', category: 'Money',
+    controller: '../controllers/bargainingController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Health & Safety ---
   { slug: 'travel-health-checker', name: 'Health & Vaccines', icon: '🩺', category: 'Health & Safety',
