@@ -125,6 +125,7 @@ const TOOL_THEMES = [
   { slug: 'family-travel-checker', theme: 'a stroller or family icon with a small heart or sun motif' },
   { slug: 'bargaining-checker', theme: 'a hand gesture haggling over a small price tag or market stall icon, with a speech bubble motif' },
   { slug: 'punctuality-checker', theme: 'a clock or wristwatch icon with a small calendar or footstep motif suggesting arrival time' },
+  { slug: 'gift-giving-checker', theme: 'a wrapped gift box with a ribbon and a small speech bubble or heart motif' },
 ];
 
 async function getOpenaiKey() {
