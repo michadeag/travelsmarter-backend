@@ -566,6 +566,17 @@ const SCRIPT_IDEAS = [
     caption: "The ocean hazard that's actually the most dangerous 🌊",
     hashtags: "#traveltips #travelsafety #beachsafety",
   },
+  {
+    key: 'air-quality-hidden-travel-factor',
+    toolSlug: 'air-quality-checker',
+    toolName: 'Air Quality Checker',
+    hook: "The travel factor nobody checks until they can't breathe",
+    voiceover: "Everyone checks the weather forecast before a trip. Almost nobody checks the air quality forecast — and in cities like Delhi, Beijing, or Mexico City during the wrong season, that's a mistake that can genuinely ruin your trip if you have asthma or allergies. Even destinations known for clean air, like the western US, Canada, and Australia, can spike into unhealthy territory during wildfire season. A thirty-second check before you go tells you whether to pack a mask.",
+    ctaYoutube: "Free Air Quality Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Air Quality Checker — link in bio",
+    caption: "The travel check everyone forgets 🌫️",
+    hashtags: "#traveltips #travelhealth #airquality",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

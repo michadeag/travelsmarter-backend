@@ -91,6 +91,7 @@ const TOOL_THEMES = [
   { slug: 'luggage-storage-checker', theme: 'a small suitcase icon next to a locker or storage locker icon' },
   { slug: 'public-restroom-checker', theme: 'a simple restroom door sign icon with a small toilet paper roll icon nearby, in a clean minimal style' },
   { slug: 'beach-safety-checker', theme: 'a wave icon with a small warning flag or jellyfish silhouette nearby' },
+  { slug: 'air-quality-checker', theme: 'a hazy skyline icon with a small air/wind swirl motif' },
 ];
 
 async function getIdeogramKey() {

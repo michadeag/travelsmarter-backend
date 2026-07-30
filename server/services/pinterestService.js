@@ -97,6 +97,7 @@ const TOPICS = [
   { category: 'luggage-storage-checker', toolSlug: 'luggage-storage-checker', title: "What to do with your bags after checkout", promptTheme: 'a small suitcase icon next to a locker or storage locker icon', boards: ['Travel Tips', 'Travel Hacks', 'Packing Tips'], tags: ['#traveltips', '#travelhacks', '#packingtips', '#travelsmarter'] },
   { category: 'public-restroom-checker', toolSlug: 'public-restroom-checker', title: "The bathroom talk nobody gives you before you travel", promptTheme: 'a simple restroom door sign icon with a small toilet paper roll icon nearby, in a clean minimal style', boards: ['Travel Tips', 'Travel Hacks', 'First Time Traveler'], tags: ['#traveltips', '#travelhacks', '#firsttimetraveler', '#travelsmarter'] },
   { category: 'beach-safety-checker', toolSlug: 'beach-safety-checker', title: "The ocean hazard that's actually the most dangerous", promptTheme: 'a wave icon with a small warning flag or jellyfish silhouette nearby', boards: ['Travel Tips', 'Beach Travel', 'Travel Safety'], tags: ['#traveltips', '#travelsafety', '#beachsafety', '#travelsmarter'] },
+  { category: 'air-quality-checker', toolSlug: 'air-quality-checker', title: "The travel check everyone forgets", promptTheme: 'a hazy skyline icon with a small air/wind swirl motif', boards: ['Travel Tips', 'Travel Health', 'Travel Safety'], tags: ['#traveltips', '#travelhealth', '#airquality', '#travelsmarter'] },
 ];
 
 class PinterestService {
