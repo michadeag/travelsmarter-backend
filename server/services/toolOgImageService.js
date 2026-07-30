@@ -124,6 +124,7 @@ const TOOL_THEMES = [
   { slug: 'onward-travel-checker', theme: 'a boarding pass or ticket icon with a small checkmark or arrow motif' },
   { slug: 'family-travel-checker', theme: 'a stroller or family icon with a small heart or sun motif' },
   { slug: 'bargaining-checker', theme: 'a hand gesture haggling over a small price tag or market stall icon, with a speech bubble motif' },
+  { slug: 'punctuality-checker', theme: 'a clock or wristwatch icon with a small calendar or footstep motif suggesting arrival time' },
 ];
 
 async function getOpenaiKey() {
