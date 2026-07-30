@@ -95,6 +95,7 @@ const TOOL_THEMES = [
   { slug: 'street-food-checker', theme: 'a street food cart or noodle bowl icon with a small steam swirl' },
   { slug: 'altitude-sickness-checker', theme: 'a mountain peak icon with a small altimeter or thin-air swirl motif' },
   { slug: 'onward-travel-checker', theme: 'a boarding pass or ticket icon with a small checkmark or arrow motif' },
+  { slug: 'family-travel-checker', theme: 'a stroller or family icon with a small heart or sun motif' },
 ];
 
 async function getIdeogramKey() {

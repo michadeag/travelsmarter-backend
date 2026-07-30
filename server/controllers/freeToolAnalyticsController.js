@@ -28,7 +28,7 @@ const TOOL_BASE_SLUGS = [
   'medication-legality-checker', 'vat-refund-checker', 'resort-fee-checker',
   'travel-advisory-checker', 'lgbtq-travel-safety-checker', 'lounge-access-checker',
   'accessible-travel-checker', 'holiday-season-checker', 'overweight-baggage-checker',
-  'photography-permit-checker', 'souvenir-export-checker', 'tourist-scams-checker', 'lost-baggage-checker', 'cash-declaration-checker', 'yellow-fever-checker', 'digital-nomad-visa-checker', 'solo-female-travel-checker', 'minor-consent-checker', 'ramadan-checker', 'halal-food-checker', 'kosher-food-checker', 'car-rental-insurance-checker', 'pregnancy-travel-checker', 'sports-equipment-checker', 'wedding-legal-checker', 'luggage-storage-checker', 'public-restroom-checker', 'beach-safety-checker', 'air-quality-checker', 'street-food-checker', 'altitude-sickness-checker', 'onward-travel-checker',
+  'photography-permit-checker', 'souvenir-export-checker', 'tourist-scams-checker', 'lost-baggage-checker', 'cash-declaration-checker', 'yellow-fever-checker', 'digital-nomad-visa-checker', 'solo-female-travel-checker', 'minor-consent-checker', 'ramadan-checker', 'halal-food-checker', 'kosher-food-checker', 'car-rental-insurance-checker', 'pregnancy-travel-checker', 'sports-equipment-checker', 'wedding-legal-checker', 'luggage-storage-checker', 'public-restroom-checker', 'beach-safety-checker', 'air-quality-checker', 'street-food-checker', 'altitude-sickness-checker', 'onward-travel-checker', 'family-travel-checker',
 ].sort((a, b) => b.length - a.length);
 
 function deriveToolSlug(pagePath) {

@@ -101,6 +101,7 @@ const TOPICS = [
   { category: 'street-food-checker', toolSlug: 'street-food-checker', title: "The only rule you need for street food", promptTheme: 'a street food cart or noodle bowl icon with a small steam swirl', boards: ['Travel Tips', 'Travel Food', 'Travel Safety'], tags: ['#traveltips', '#streetfood', '#travelfood', '#travelsmarter'] },
   { category: 'altitude-sickness-checker', toolSlug: 'altitude-sickness-checker', title: "Fitness doesn't protect you from this", promptTheme: 'a mountain peak icon with a small altimeter or thin-air swirl motif', boards: ['Travel Tips', 'Travel Health', 'Travel Safety'], tags: ['#traveltips', '#altitudesickness', '#travelhealth', '#travelsmarter'] },
   { category: 'onward-travel-checker', toolSlug: 'onward-travel-checker', title: "Why one-way travelers get stopped at check-in", promptTheme: 'a boarding pass or ticket icon with a small checkmark or arrow motif', boards: ['Travel Tips', 'Digital Nomad', 'Travel Documents'], tags: ['#traveltips', '#oneway', '#digitalnomad', '#travelsmarter'] },
+  { category: 'family-travel-checker', toolSlug: 'family-travel-checker', title: "Stroller or carrier? Check before you pack", promptTheme: 'a stroller or family icon with a small heart or sun motif', boards: ['Travel Tips', 'Family Travel', 'Travel with Kids'], tags: ['#familytravel', '#traveltips', '#travelwithkids', '#travelsmarter'] },
 ];
 
 class PinterestService {

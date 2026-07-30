@@ -610,6 +610,17 @@ const SCRIPT_IDEAS = [
     caption: "Why one-way travelers get stopped at check-in 🎫",
     hashtags: "#traveltips #oneway #digitalnomad",
   },
+  {
+    key: 'family-travel-stroller-vs-carrier',
+    toolSlug: 'family-travel-checker',
+    toolName: 'Traveling with Kids Checker',
+    hook: "The one packing decision that makes or breaks a family trip",
+    voiceover: "Here's a question worth answering before you pack, not after you land: stroller or carrier? Destinations like Japan, Singapore, and the Nordic countries have genuinely excellent stroller infrastructure — smooth sidewalks, elevators everywhere, nursing rooms in every mall. But somewhere like Rome's cobblestones, a Bali sidewalk, or Machu Picchu's terrain, and a stroller becomes dead weight fast. Locals adore kids almost everywhere in the world — the real variable is the infrastructure, not the welcome.",
+    ctaYoutube: "Free Traveling with Kids Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Traveling with Kids Checker — link in bio",
+    caption: "Stroller or carrier? Check before you pack 👨‍👩‍👧",
+    hashtags: "#familytravel #traveltips #travelwithkids",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
