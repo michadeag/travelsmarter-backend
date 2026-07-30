@@ -11,6 +11,23 @@ const CORAL = '#ff6b4a';
 const GRAY = '#6b7280';
 const LIGHT_GRAY = '#9ca3af';
 
+// PDFKit's standard fonts (Helvetica etc.) use WinAnsi/CP1252 encoding —
+// they have no emoji glyphs, so any 🎫/💍/→-style character silently comes
+// out as garbled bytes (e.g. "Ø=Ü•") instead of erroring, which is why this
+// went unnoticed until someone actually read a generated PDF. Every text-
+// writing helper below routes through this first. Em/en dashes, curly
+// quotes, and other CP1252-safe punctuation are untouched — only the
+// specific "→" arrow (used as a from/to separator here and there) and true
+// pictographic emoji (tool icons, mainly) are stripped.
+const EMOJI_RANGE = /[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2300}-\u{23FF}\u{FE0F}\u{200D}]/gu;
+function sanitizeText(text) {
+  return String(text)
+    .replace(/→/g, '->')
+    .replace(EMOJI_RANGE, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
+}
+
 // Creates a new branded PDF document with a header already drawn.
 // Returns the PDFDocument — caller writes content, then calls addFooterCTA()
 // before doc.end().
@@ -19,7 +36,7 @@ function createBrandedDoc(title) {
 
   doc.rect(0, 0, doc.page.width, 90).fill(NAVY);
   doc.fillColor(CORAL).fontSize(20).font('Helvetica-Bold').text('TravelSmarter', 50, 30);
-  doc.fillColor('white').fontSize(11).font('Helvetica').text(title, 50, 58);
+  doc.fillColor('white').fontSize(11).font('Helvetica').text(sanitizeText(title), 50, 58);
   doc.fillColor('black');
   doc.y = 120;
 
@@ -28,7 +45,7 @@ function createBrandedDoc(title) {
 
 function heading(doc, text) {
   doc.moveDown(0.5);
-  doc.fillColor(NAVY).fontSize(16).font('Helvetica-Bold').text(text);
+  doc.fillColor(NAVY).fontSize(16).font('Helvetica-Bold').text(sanitizeText(text));
   doc.fillColor('black').font('Helvetica');
   doc.moveDown(0.3);
 }
@@ -38,19 +55,19 @@ function heading(doc, text) {
 // heading, one step down from heading() in the visual hierarchy.
 function subheading(doc, text) {
   doc.moveDown(0.4);
-  doc.fillColor(CORAL).fontSize(13).font('Helvetica-Bold').text(text);
+  doc.fillColor(CORAL).fontSize(13).font('Helvetica-Bold').text(sanitizeText(text));
   doc.fillColor('black').font('Helvetica');
   doc.moveDown(0.15);
 }
 
 function paragraph(doc, text) {
-  doc.fontSize(11).fillColor('#1f2937').font('Helvetica').text(text, { lineGap: 3 });
+  doc.fontSize(11).fillColor('#1f2937').font('Helvetica').text(sanitizeText(text), { lineGap: 3 });
   doc.moveDown(0.5);
 }
 
 function bulletList(doc, items) {
   items.forEach(item => {
-    doc.fontSize(11).fillColor('#1f2937').text(`•  ${item}`, { lineGap: 3, indent: 10 });
+    doc.fontSize(11).fillColor('#1f2937').text(`•  ${sanitizeText(item)}`, { lineGap: 3, indent: 10 });
   });
   doc.moveDown(0.5);
 }
@@ -59,11 +76,12 @@ function bulletList(doc, items) {
 // clickable link (e.g. a mid-document Trip Brief nudge in a long bundle
 // PDF, so the ask isn't only ever at the very end of the document).
 function highlightBox(doc, text, linkUrl) {
+  const clean = sanitizeText(text);
   const startY = doc.y;
-  const boxHeight = doc.heightOfString(text, { width: 460, fontSize: 12 }) + 24;
+  const boxHeight = doc.heightOfString(clean, { width: 460, fontSize: 12 }) + 24;
   doc.rect(50, startY, 495, boxHeight).fill('#f0f4ff');
   doc.fillColor(NAVY).fontSize(12).font('Helvetica-Bold')
-    .text(text, 65, startY + 12, linkUrl ? { width: 460, link: linkUrl, underline: true } : { width: 460 });
+    .text(clean, 65, startY + 12, linkUrl ? { width: 460, link: linkUrl, underline: true } : { width: 460 });
   doc.fillColor('black').font('Helvetica');
   doc.y = startY + boxHeight + 12;
 }
@@ -125,5 +143,6 @@ module.exports = {
   bulletList,
   highlightBox,
   addFooterCTA,
+  sanitizeText,
   COLORS: { NAVY, CORAL, GRAY, LIGHT_GRAY },
 };
