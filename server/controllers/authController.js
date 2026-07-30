@@ -193,6 +193,14 @@ exports.signup = async (req, res) => {
       [user.id, email.toLowerCase()]
     ).catch(err => console.error('Failed to link tool_leads to new user:', err.message));
 
+    // Same linkage for Trip Brief buyers — also stops
+    // tripBriefEmailSequence's post-purchase drip for this person, since
+    // they're about to get the Welcome + Feature Spotlight sequences instead.
+    pool.query(
+      `UPDATE trip_briefs SET converted_to_user_id = $1 WHERE email = $2 AND converted_to_user_id IS NULL`,
+      [user.id, email.toLowerCase()]
+    ).catch(err => console.error('Failed to link trip_briefs to new user:', err.message));
+
     // Create JWT token
     const token = generateToken(user.id);
 

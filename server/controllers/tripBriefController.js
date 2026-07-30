@@ -2,6 +2,7 @@ const pool = require('../config/database');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
+const tripBriefEmailSequence = require('../services/tripBriefEmailSequence');
 const { computeTripBriefSections, groupSectionsByCategory, SAFE_DESTINATIONS } = require('../services/tripBriefRegistry');
 // SAFE_DESTINATIONS is the verified intersection of all 35 registry tools'
 // own country rosters — NOT all 54 free tools share one country list (see
@@ -194,6 +195,9 @@ exports.createCheckoutSession = async (req, res) => {
         .then(async (pdfBuffer) => {
           await sendTripBriefEmail({ email: normalizedEmail, firstName, destinationName, pdfBuffer, destinationSlug: destination });
           await pool.query(`UPDATE trip_briefs SET status = 'generated', pdf_generated_at = NOW() WHERE id = $1`, [leadResult.rows[0].id]);
+          tripBriefEmailSequence.initializeTripBriefSequence(leadResult.rows[0].id, normalizedEmail, firstName).catch(err =>
+            console.error('Failed to initialize Trip Brief buyer sequence:', err.message)
+          );
         })
         .catch(err => console.error('Lifetime Trip Brief generation failed:', err.message));
 
@@ -297,6 +301,9 @@ exports.handleTripBriefCheckoutCompleted = async (session) => {
     });
 
     await pool.query(`UPDATE trip_briefs SET status = 'generated', pdf_generated_at = NOW() WHERE id = $1`, [tripBriefId]);
+    tripBriefEmailSequence.initializeTripBriefSequence(tripBriefId, brief.email, brief.first_name).catch(err =>
+      console.error('Failed to initialize Trip Brief buyer sequence:', err.message)
+    );
   } catch (err) {
     console.error(`Trip Brief PDF generation/email failed for ${tripBriefId}:`, err.message);
     await pool.query(`UPDATE trip_briefs SET status = 'failed' WHERE id = $1`, [tripBriefId]).catch(() => {});

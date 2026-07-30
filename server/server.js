@@ -6,6 +6,7 @@ require('dotenv').config();
 const pool = require('./config/database');
 const emailSequenceService = require('./services/emailSequenceService');
 const toolLeadEmailSequence = require('./services/toolLeadEmailSequence');
+const tripBriefEmailSequence = require('./services/tripBriefEmailSequence');
 const videoScriptService = require('./services/videoScriptService');
 const hackUpdateService = require('./services/hackUpdateService');
 const redditService = require('./services/redditService');
@@ -1984,6 +1985,34 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_trip_brief_lifetime_email ON trip_brief_lifetime_access(email);
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
 
+    // Per-buyer unsubscribe/opt-out (buyers have no `users` row unless they
+    // separately sign up, so this can't reuse users.unsubscribe_token) plus
+    // converted_to_user_id, set the same way tool_leads.converted_to_user_id
+    // is — on signup, by matching email — so the post-purchase sequence
+    // below knows to stop once someone creates a real account (they'll be
+    // in the Feature Spotlight nurture sequence at that point instead).
+    await pool.query(`
+      ALTER TABLE trip_briefs ADD COLUMN IF NOT EXISTS unsubscribe_token UUID DEFAULT gen_random_uuid();
+      ALTER TABLE trip_briefs ADD COLUMN IF NOT EXISTS email_opt_out BOOLEAN DEFAULT false;
+      ALTER TABLE trip_briefs ADD COLUMN IF NOT EXISTS converted_to_user_id UUID;
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    // Scheduling table for the post-purchase Trip Brief buyer sequence —
+    // same shape as tool_lead_scheduled_emails, FK'd to trip_briefs instead.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS trip_brief_scheduled_emails (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        trip_brief_id UUID NOT NULL REFERENCES trip_briefs(id) ON DELETE CASCADE,
+        template_id UUID NOT NULL REFERENCES email_templates(id),
+        scheduled_at TIMESTAMPTZ,
+        sent_at TIMESTAMPTZ,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_trip_brief_emails_status ON trip_brief_scheduled_emails(status);
+      CREATE INDEX IF NOT EXISTS idx_trip_brief_emails_brief ON trip_brief_scheduled_emails(trip_brief_id);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
     // Short-form (Shorts/Reels/TikTok) video script ideas for promoting the
     // free tools — admin dashboard feature under the Free Tools tab. Content
     // lives in code (videoScriptService.js) and is upserted here on every
@@ -2034,6 +2063,14 @@ async function initializeApp() {
     });
     await toolLeadEmailSequence.updateToolLeadTemplates().catch(err => {
       console.warn('⚠️ Error updating Free Tool Leads templates:', err.message);
+    });
+
+    // Seed the post-purchase Trip Brief buyer sequence, then sync from code
+    await tripBriefEmailSequence.seedTripBriefSequence().catch(err => {
+      console.warn('⚠️ Error seeding Trip Brief Buyer templates:', err.message);
+    });
+    await tripBriefEmailSequence.updateTripBriefTemplates().catch(err => {
+      console.warn('⚠️ Error updating Trip Brief Buyer templates:', err.message);
     });
 
     // Seed travel hacks if database is empty (skip in production for faster startup)
@@ -2146,6 +2183,11 @@ app.listen(PORT, () => {
       await toolLeadEmailSequence.sendPendingLeadEmails();
     } catch (error) {
       console.error('❌ Error in Free Tool Leads email scheduler:', error);
+    }
+    try {
+      await tripBriefEmailSequence.sendPendingTripBriefEmails();
+    } catch (error) {
+      console.error('❌ Error in Trip Brief Buyer email scheduler:', error);
     }
   }, 60 * 60 * 1000);
 
