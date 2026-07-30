@@ -555,6 +555,17 @@ const SCRIPT_IDEAS = [
     caption: "The bathroom talk nobody gives you before you travel 🚻",
     hashtags: "#traveltips #travelhacks #firsttimetraveler",
   },
+  {
+    key: 'beach-safety-rip-currents-real-risk',
+    toolSlug: 'beach-safety-checker',
+    toolName: 'Beach & Ocean Safety Checker',
+    hook: "The beach hazard that kills more people than sharks — and it's not close",
+    voiceover: "Rip currents kill more people at the beach every year than sharks, jellyfish, and every other ocean hazard combined — it's not close. Some destinations take this seriously with real flag systems and lifeguard culture, like Australia. Others have genuinely dangerous currents with almost no warning infrastructure. Know which one your destination is before you swim, and if you ever get caught in a current, don't fight it — swim parallel to shore until you're free, then head back in at an angle.",
+    ctaYoutube: "Free Beach & Ocean Safety Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Beach & Ocean Safety Checker — link in bio",
+    caption: "The ocean hazard that's actually the most dangerous 🌊",
+    hashtags: "#traveltips #travelsafety #beachsafety",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
