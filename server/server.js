@@ -1502,6 +1502,20 @@ async function initializeApp() {
       -- toolOgImageService.js for the full story).
       ALTER TABLE tool_og_images ADD COLUMN IF NOT EXISTS image_data BYTEA;
 
+      -- Queue for pending og:image generations. "Generate Missing" used to
+      -- kick off an unawaited async loop right inside the HTTP request
+      -- handler, which never actually completed in production even after
+      -- the disk-write bug was fixed — this platform doesn't reliably keep
+      -- that kind of fire-and-forget work alive once the response is sent.
+      -- The one background-execution pattern already proven to work here
+      -- is the setInterval poller (used for the email sequences), so
+      -- generation now goes through the same kind of loop: the button just
+      -- enqueues slugs, and a poller drains a few at a time.
+      CREATE TABLE IF NOT EXISTS tool_og_image_queue (
+        tool_slug VARCHAR(100) PRIMARY KEY,
+        requested_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- Referral partners (bloggers/YouTubers recruited to promote TravelSmarter —
       -- distinct from affiliate_partners, which are outbound links TO other companies)
       CREATE TABLE IF NOT EXISTS referral_partners (
@@ -2214,6 +2228,21 @@ app.listen(PORT, () => {
       console.error('❌ Error in Trip Brief Buyer email scheduler:', error);
     }
   }, 60 * 60 * 1000);
+
+  // Tool OG image queue drainer - runs frequently since fire-and-forget
+  // generation does not reliably survive past the triggering HTTP request
+  // on this platform. Small batches (see QUEUE_BATCH_SIZE) every 90s.
+  console.log('🖼️ Tool OG image queue drainer started (runs every 90s)');
+  setInterval(async () => {
+    try {
+      const result = await toolOgImageService.processOgImageQueue();
+      if (result.processed > 0) {
+        console.log(`🖼️ Tool OG image queue drained ${result.processed} item(s)`);
+      }
+    } catch (error) {
+      console.error('❌ Error in Tool OG image queue drainer:', error);
+    }
+  }, 90 * 1000);
 
   // Hack update scheduler - durable check against the database, not an in-memory
   // timer. A plain setInterval(14 days) resets to zero on every deploy/restart,

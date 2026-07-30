@@ -149,15 +149,13 @@ async function generateOne(ideogramKey, { slug, theme }) {
   return { slug, imageUrl };
 }
 
-// Fire-and-forget: kicks off generation for every tool slug that doesn't
-// already have real image bytes stored (or all, if force=true), a few at a
-// time so we don't hammer Ideogram's rate limit. "Has bytes stored" (not
-// just "has a database row") means a stale pre-fix row with a dead
-// Ideogram URL and no image_data doesn't count as done. Callers poll
-// getAllToolImages() to watch results fill in — this intentionally does
-// not block the HTTP response that triggered it, since dozens of
-// sequential image generations would likely exceed a typical request
-// timeout.
+// Enqueues every tool slug that doesn't already have real image bytes
+// stored (or all, if force=true) for a background poller to actually
+// generate — see processOgImageQueue() below for why this doesn't just
+// generate inline. "Has bytes stored" (not just "has a database row")
+// means a stale pre-fix row with a dead Ideogram URL and no image_data
+// doesn't count as done. Callers poll getAllToolImages() to watch results
+// fill in over the next few minutes.
 async function generateAllToolImages(force = false) {
   const ideogramKey = await getIdeogramKey();
   if (!ideogramKey) throw new Error('Ideogram API key not configured');
@@ -170,20 +168,62 @@ async function generateAllToolImages(force = false) {
   }
   if (targets.length === 0) return { started: false, reason: 'All tool images already generated' };
 
-  const BATCH_SIZE = 4;
-  (async () => {
-    for (let i = 0; i < targets.length; i += BATCH_SIZE) {
-      const batch = targets.slice(i, i + BATCH_SIZE);
-      const results = await Promise.allSettled(batch.map(t => generateOne(ideogramKey, t)));
-      results.forEach((r, idx) => {
-        if (r.status === 'fulfilled') console.log(`🖼️ Tool OG image generated: ${batch[idx].slug}`);
-        else console.error(`❌ Tool OG image failed for ${batch[idx].slug}:`, r.reason?.message);
-      });
-    }
-    console.log('🖼️ Tool OG image batch generation complete');
-  })().catch(err => console.error('❌ Tool OG image generation crashed:', err.message));
+  for (const t of targets) {
+    await pool.query(
+      `INSERT INTO tool_og_image_queue (tool_slug, requested_at) VALUES ($1, NOW())
+       ON CONFLICT (tool_slug) DO UPDATE SET requested_at = NOW()`,
+      [t.slug]
+    );
+  }
 
   return { started: true, count: targets.length };
+}
+
+// Drains a few pending slugs from tool_og_image_queue and actually
+// generates them — called from a setInterval in server.js (the one
+// background-execution pattern already proven reliable in this app,
+// unlike an unawaited async IIFE inside a request handler, which never
+// completed in production even once the disk-write bug was fixed).
+// BATCH_SIZE stays small since each Ideogram call can take several
+// seconds and this runs frequently rather than all at once.
+const QUEUE_BATCH_SIZE = 4;
+async function processOgImageQueue() {
+  const { rows: queued } = await pool.query(
+    `SELECT tool_slug FROM tool_og_image_queue ORDER BY requested_at ASC LIMIT $1`,
+    [QUEUE_BATCH_SIZE]
+  );
+  if (queued.length === 0) return { processed: 0 };
+
+  const ideogramKey = await getIdeogramKey();
+  if (!ideogramKey) {
+    console.error('❌ Tool OG image queue has pending items but no Ideogram API key configured');
+    return { processed: 0, error: 'Ideogram API key not configured' };
+  }
+
+  const themeBySlug = new Map(TOOL_THEMES.map(t => [t.slug, t]));
+  let processed = 0;
+
+  for (const { tool_slug } of queued) {
+    const target = themeBySlug.get(tool_slug);
+    try {
+      if (target) {
+        await generateOne(ideogramKey, target);
+        console.log(`🖼️ Tool OG image generated: ${tool_slug}`);
+      } else {
+        console.warn(`⚠️ Tool OG image queue had unknown slug, dropping: ${tool_slug}`);
+      }
+    } catch (err) {
+      console.error(`❌ Tool OG image failed for ${tool_slug}:`, err.message);
+    } finally {
+      // Remove regardless of outcome — a failed slug can be re-queued via
+      // "Generate Missing" (still missing image_data) or "Regenerate All"
+      // rather than retried forever automatically.
+      await pool.query(`DELETE FROM tool_og_image_queue WHERE tool_slug = $1`, [tool_slug]);
+      processed++;
+    }
+  }
+
+  return { processed };
 }
 
 // Only rows with real stored bytes count — a stale pre-fix row (dead
@@ -211,6 +251,7 @@ async function getToolImageBytes(slug) {
 module.exports = {
   TOOL_THEMES,
   generateAllToolImages,
+  processOgImageQueue,
   getAllToolImages,
   getToolImageBytes,
 };
