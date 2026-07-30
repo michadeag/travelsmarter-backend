@@ -99,6 +99,7 @@ const TOPICS = [
   { category: 'beach-safety-checker', toolSlug: 'beach-safety-checker', title: "The ocean hazard that's actually the most dangerous", promptTheme: 'a wave icon with a small warning flag or jellyfish silhouette nearby', boards: ['Travel Tips', 'Beach Travel', 'Travel Safety'], tags: ['#traveltips', '#travelsafety', '#beachsafety', '#travelsmarter'] },
   { category: 'air-quality-checker', toolSlug: 'air-quality-checker', title: "The travel check everyone forgets", promptTheme: 'a hazy skyline icon with a small air/wind swirl motif', boards: ['Travel Tips', 'Travel Health', 'Travel Safety'], tags: ['#traveltips', '#travelhealth', '#airquality', '#travelsmarter'] },
   { category: 'street-food-checker', toolSlug: 'street-food-checker', title: "The only rule you need for street food", promptTheme: 'a street food cart or noodle bowl icon with a small steam swirl', boards: ['Travel Tips', 'Travel Food', 'Travel Safety'], tags: ['#traveltips', '#streetfood', '#travelfood', '#travelsmarter'] },
+  { category: 'altitude-sickness-checker', toolSlug: 'altitude-sickness-checker', title: "Fitness doesn't protect you from this", promptTheme: 'a mountain peak icon with a small altimeter or thin-air swirl motif', boards: ['Travel Tips', 'Travel Health', 'Travel Safety'], tags: ['#traveltips', '#altitudesickness', '#travelhealth', '#travelsmarter'] },
 ];
 
 class PinterestService {

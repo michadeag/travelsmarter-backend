@@ -93,6 +93,7 @@ const TOOL_THEMES = [
   { slug: 'beach-safety-checker', theme: 'a wave icon with a small warning flag or jellyfish silhouette nearby' },
   { slug: 'air-quality-checker', theme: 'a hazy skyline icon with a small air/wind swirl motif' },
   { slug: 'street-food-checker', theme: 'a street food cart or noodle bowl icon with a small steam swirl' },
+  { slug: 'altitude-sickness-checker', theme: 'a mountain peak icon with a small altimeter or thin-air swirl motif' },
 ];
 
 async function getIdeogramKey() {

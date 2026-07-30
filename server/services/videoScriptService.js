@@ -588,6 +588,17 @@ const SCRIPT_IDEAS = [
     caption: "The only rule you actually need for street food 🍜",
     hashtags: "#traveltips #streetfood #travelfood",
   },
+  {
+    key: 'altitude-sickness-fitness-doesnt-matter',
+    toolSlug: 'altitude-sickness-checker',
+    toolName: 'Altitude Sickness Checker',
+    hook: "Being in great shape doesn't protect you from this — and almost nobody checks for it",
+    voiceover: "Here's the thing about altitude sickness that surprises people: your fitness level doesn't predict who gets hit. Marathon runners get slammed in Cusco while out-of-shape tourists feel fine. Destinations like Cusco and Machu Picchu in Peru, Bogotá in Colombia, Mexico City, and Kilimanjaro in Tanzania all sit high enough that real symptoms — headache, nausea, shortness of breath — are common if you don't pace yourself. Checking before you go means you plan an easy first day instead of pushing through a hike you're not ready for.",
+    ctaYoutube: "Free Altitude Sickness Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Altitude Sickness Checker — link in bio",
+    caption: "Fitness doesn't protect you from this ⛰️",
+    hashtags: "#traveltips #altitudesickness #travelhealth",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
