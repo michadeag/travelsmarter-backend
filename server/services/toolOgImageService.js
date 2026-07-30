@@ -87,6 +87,7 @@ const TOOL_THEMES = [
   { slug: 'car-rental-insurance-checker', theme: 'a small rental car icon with a shield or document icon nearby, suggesting insurance coverage' },
   { slug: 'pregnancy-travel-checker', theme: 'a small mosquito icon with a subtle warning symbol, next to a gentle heart or care-related icon' },
   { slug: 'sports-equipment-checker', theme: 'a ski, golf club, and surfboard silhouette arranged together with a small luggage tag icon' },
+  { slug: 'wedding-legal-checker', theme: 'a pair of interlocking wedding rings with a small legal document or passport icon nearby' },
 ];
 
 async function getIdeogramKey() {

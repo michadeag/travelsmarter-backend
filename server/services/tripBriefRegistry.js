@@ -37,6 +37,9 @@ const TOOLS = [
   { slug: 'minor-consent-checker', name: 'Minor Travel Consent Letter', icon: '👨‍👩‍👧', category: 'Documents & Entry',
     controller: '../controllers/minorConsentController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'wedding-legal-checker', name: 'Destination Wedding Legal Requirements', icon: '💍', category: 'Documents & Entry',
+    controller: '../controllers/weddingLegalController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Money ---
   { slug: 'currency-checker', name: 'Currency', icon: '💱', category: 'Money',

@@ -522,6 +522,17 @@ const SCRIPT_IDEAS = [
     caption: "Will your airline charge you for this? 🏂⛳🏄",
     hashtags: "#traveltips #travelhacks #skitrip",
   },
+  {
+    key: 'destination-wedding-legal-requirements-vary',
+    toolSlug: 'wedding-legal-checker',
+    toolName: 'Destination Wedding Legal Requirements Checker',
+    hook: "Planning to legally get married abroad? This decides everything",
+    voiceover: "Some countries make it genuinely easy — Denmark, most of the Caribbean — a day or two, minimal paperwork, done. Others require weeks of local residency before you can even file the application, which is exactly why so many couples in France or Germany do a symbolic ceremony there and handle the real legal marriage back home instead. Neither approach is wrong, but you need to know which category your destination falls into before you book the venue, not after.",
+    ctaYoutube: "Free Destination Wedding Legal Requirements Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Destination Wedding Legal Requirements Checker — link in bio",
+    caption: "Can you actually get legally married here? 💍",
+    hashtags: "#destinationwedding #traveltips #weddingplanning",
+  },
 ];
 
 async function syncVideoScriptIdeas() {
