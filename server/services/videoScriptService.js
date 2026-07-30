@@ -533,6 +533,17 @@ const SCRIPT_IDEAS = [
     caption: "Can you actually get legally married here? 💍",
     hashtags: "#destinationwedding #traveltips #weddingplanning",
   },
+  {
+    key: 'luggage-storage-late-flight-solution',
+    toolSlug: 'luggage-storage-checker',
+    toolName: 'Left Luggage / Baggage Storage Checker',
+    hook: "Late flight after checkout? Here's what to do with your bags",
+    voiceover: "Every trip has this moment — you checked out hours ago, your flight isn't until tonight, and you're stuck dragging a suitcase around. In Japan, it's a total non-issue, coin lockers are everywhere. In most of Europe, train stations and apps like Bounce and Nannybag solve it in minutes. But in a lot of destinations, there's genuinely no dedicated service, and your hotel holding your bags for free is the actual best option. Know which one your destination is before your last day, not while you're standing in the lobby with nowhere to go.",
+    ctaYoutube: "Free Luggage Storage Checker — link in the first comment 👇",
+    ctaReelsTiktok: "Free Luggage Storage Checker — link in bio",
+    caption: "What to do with your bags after checkout 🧳",
+    hashtags: "#traveltips #travelhacks #packingtips",
+  },
 ];
 
 async function syncVideoScriptIdeas() {

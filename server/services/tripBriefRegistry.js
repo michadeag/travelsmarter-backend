@@ -145,6 +145,9 @@ const TOOLS = [
   { slug: 'kosher-food-checker', name: 'Kosher Food Availability', icon: '🍽️', category: 'On the Ground',
     controller: '../controllers/kosherFoodController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
+  { slug: 'luggage-storage-checker', name: 'Left Luggage / Baggage Storage', icon: '🧳', category: 'On the Ground',
+    controller: '../controllers/luggageStorageController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Local Rules ---
   { slug: 'alcohol-checker', name: 'Alcohol Laws', icon: '🍷', category: 'Local Rules',

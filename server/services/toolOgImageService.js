@@ -88,6 +88,7 @@ const TOOL_THEMES = [
   { slug: 'pregnancy-travel-checker', theme: 'a small mosquito icon with a subtle warning symbol, next to a gentle heart or care-related icon' },
   { slug: 'sports-equipment-checker', theme: 'a ski, golf club, and surfboard silhouette arranged together with a small luggage tag icon' },
   { slug: 'wedding-legal-checker', theme: 'a pair of interlocking wedding rings with a small legal document or passport icon nearby' },
+  { slug: 'luggage-storage-checker', theme: 'a small suitcase icon next to a locker or storage locker icon' },
 ];
 
 async function getIdeogramKey() {
