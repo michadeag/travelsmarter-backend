@@ -126,6 +126,7 @@ const TOOL_THEMES = [
   { slug: 'bargaining-checker', theme: 'a hand gesture haggling over a small price tag or market stall icon, with a speech bubble motif' },
   { slug: 'punctuality-checker', theme: 'a clock or wristwatch icon with a small calendar or footstep motif suggesting arrival time' },
   { slug: 'gift-giving-checker', theme: 'a wrapped gift box with a ribbon and a small speech bubble or heart motif' },
+  { slug: 'restaurant-reservation-checker', theme: 'a set restaurant table with a small reserved sign or an open book icon suggesting a reservation' },
 ];
 
 async function getOpenaiKey() {
