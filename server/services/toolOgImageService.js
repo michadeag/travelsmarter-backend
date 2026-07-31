@@ -134,6 +134,7 @@ const TOOL_THEMES = [
   { slug: 'waste-disposal-checker', theme: 'a recycling symbol with small color-coded trash bin icons' },
   { slug: 'queue-culture-checker', theme: 'a small line of simple standing figures with a subtle numbered-ticket motif' },
   { slug: 'taxi-fare-checker', theme: 'a taxi cab icon with a small meter or price-tag motif' },
+  { slug: 'restaurant-pace-checker', theme: 'a restaurant table with a small clock or hourglass motif suggesting the pace of a meal' },
 ];
 
 async function getOpenaiKey() {
