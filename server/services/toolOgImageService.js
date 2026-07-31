@@ -130,6 +130,7 @@ const TOOL_THEMES = [
   { slug: 'bike-scooter-checker', theme: 'a shared city bike or e-scooter icon with a small smartphone/app motif nearby' },
   { slug: 'pharmacy-checker', theme: 'a pharmacy cross icon with a small pill bottle or capsule motif' },
   { slug: 'solo-dining-checker', theme: 'a single place setting at a small restaurant table with a bowl of noodles or ramen' },
+  { slug: 'laundry-checker', theme: 'a laundry washing machine icon with a small folded clothes or basket motif' },
 ];
 
 async function getOpenaiKey() {

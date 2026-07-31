@@ -132,6 +132,7 @@ const restaurantReservationRoutes = require('./routes/restaurantReservationRoute
 const bikeScooterRoutes = require('./routes/bikeScooterRoutes');
 const pharmacyRoutes = require('./routes/pharmacyRoutes');
 const soloDiningRoutes = require('./routes/soloDiningRoutes');
+const laundryRoutes = require('./routes/laundryRoutes');
 const affiliateController = require('./controllers/affiliateController');
 const referralRoutes = require('./routes/referralRoutes');
 const outreachRoutes = require('./routes/outreachRoutes');
@@ -386,6 +387,7 @@ app.use('/api/tools', restaurantReservationRoutes);
 app.use('/api/tools', bikeScooterRoutes);
 app.use('/api/tools', pharmacyRoutes);
 app.use('/api/tools', soloDiningRoutes);
+app.use('/api/tools', laundryRoutes);
 app.use('/api/tools', categoryBundleRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/outreach', outreachRoutes);
