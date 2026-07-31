@@ -133,6 +133,7 @@ const TOOL_THEMES = [
   { slug: 'laundry-checker', theme: 'a laundry washing machine icon with a small folded clothes or basket motif' },
   { slug: 'waste-disposal-checker', theme: 'a recycling symbol with small color-coded trash bin icons' },
   { slug: 'queue-culture-checker', theme: 'a small line of simple standing figures with a subtle numbered-ticket motif' },
+  { slug: 'taxi-fare-checker', theme: 'a taxi cab icon with a small meter or price-tag motif' },
 ];
 
 async function getOpenaiKey() {
