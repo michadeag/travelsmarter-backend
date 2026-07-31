@@ -138,6 +138,7 @@ const TOOL_THEMES = [
   { slug: 'currency-convertibility-checker', theme: 'a stack of colorful banknotes with a small exchange-arrows or currency-swap motif' },
   { slug: 'attraction-booking-checker', theme: 'an admission ticket icon with a small landmark or monument silhouette' },
   { slug: 'shipping-souvenirs-checker', theme: 'a cardboard shipping box icon with a small postage stamp or shipping-label motif' },
+  { slug: 'greeting-checker', theme: 'a friendly waving hand or handshake icon representing a warm greeting' },
 ];
 
 async function getOpenaiKey() {
