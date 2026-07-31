@@ -127,6 +127,7 @@ const TOOL_THEMES = [
   { slug: 'punctuality-checker', theme: 'a clock or wristwatch icon with a small calendar or footstep motif suggesting arrival time' },
   { slug: 'gift-giving-checker', theme: 'a wrapped gift box with a ribbon and a small speech bubble or heart motif' },
   { slug: 'restaurant-reservation-checker', theme: 'a set restaurant table with a small reserved sign or an open book icon suggesting a reservation' },
+  { slug: 'bike-scooter-checker', theme: 'a shared city bike or e-scooter icon with a small smartphone/app motif nearby' },
 ];
 
 async function getOpenaiKey() {
