@@ -137,6 +137,7 @@ const TOOL_THEMES = [
   { slug: 'restaurant-pace-checker', theme: 'a restaurant table with a small clock or hourglass motif suggesting the pace of a meal' },
   { slug: 'currency-convertibility-checker', theme: 'a stack of colorful banknotes with a small exchange-arrows or currency-swap motif' },
   { slug: 'attraction-booking-checker', theme: 'an admission ticket icon with a small landmark or monument silhouette' },
+  { slug: 'shipping-souvenirs-checker', theme: 'a cardboard shipping box icon with a small postage stamp or shipping-label motif' },
 ];
 
 async function getOpenaiKey() {
