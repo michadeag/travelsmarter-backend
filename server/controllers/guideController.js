@@ -294,13 +294,21 @@ exports.createBundleCheckout = async (req, res) => {
     const normalizedEmail = email.toLowerCase().trim();
 
     const guidesResult = await pool.query(
-      'SELECT country_name FROM guides WHERE country_slug = $1 AND published = true LIMIT 1',
+      'SELECT country_name, price_cents FROM guides WHERE country_slug = $1 AND published = true',
       [countrySlug]
     );
     if (guidesResult.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'No published guides for this country yet' });
     }
     const countryName = guidesResult.rows[0].country_name;
+
+    // Guard against selling a "bundle" that costs more than its parts —
+    // with only a few guides published for a country, $29 can exceed their
+    // combined individual price. Refuse rather than overcharge.
+    const singleTotalCents = guidesResult.rows.reduce((sum, g) => sum + g.price_cents, 0);
+    if (BUNDLE_PRICE_CENTS >= singleTotalCents) {
+      return res.status(400).json({ success: false, error: 'Bundle is not yet available for this country — not enough guides published' });
+    }
 
     const purchaseResult = await pool.query(
       `INSERT INTO guide_purchases (email, first_name, purchase_type, country_slug, country_name, status, source_page)
