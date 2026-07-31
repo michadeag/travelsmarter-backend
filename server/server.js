@@ -1533,6 +1533,11 @@ async function initializeApp() {
       -- disk-based fix silently never wrote anything (see
       -- toolOgImageService.js for the full story).
       ALTER TABLE tool_og_images ADD COLUMN IF NOT EXISTS image_data BYTEA;
+      -- Records why a generation attempt failed (rate limit, quota,
+      -- content-policy rejection, etc.) so a stalled queue is diagnosable
+      -- from the admin dashboard instead of only ever visible in server
+      -- logs. Cleared on the next successful generation.
+      ALTER TABLE tool_og_images ADD COLUMN IF NOT EXISTS last_error TEXT;
 
       -- Queue for pending og:image generations. "Generate Missing" used to
       -- kick off an unawaited async loop right inside the HTTP request

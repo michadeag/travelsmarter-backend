@@ -171,12 +171,27 @@ async function generateOne(openaiKey, { slug, theme }) {
   const imageUrl = `${API_BASE_URL}/og-images/${slug}.png`;
 
   await pool.query(
-    `INSERT INTO tool_og_images (tool_slug, image_url, image_data, prompt, generated_at)
-     VALUES ($1, $2, $3, $4, NOW())
-     ON CONFLICT (tool_slug) DO UPDATE SET image_url = $2, image_data = $3, prompt = $4, generated_at = NOW()`,
+    `INSERT INTO tool_og_images (tool_slug, image_url, image_data, prompt, generated_at, last_error)
+     VALUES ($1, $2, $3, $4, NOW(), NULL)
+     ON CONFLICT (tool_slug) DO UPDATE SET image_url = $2, image_data = $3, prompt = $4, generated_at = NOW(), last_error = NULL`,
     [slug, imageUrl, imageBuffer, prompt]
   );
   return { slug, imageUrl };
+}
+
+// Records why a generation attempt failed without touching image_data —
+// a slug with a recorded error but no bytes still counts as "missing" for
+// generateAllToolImages()/getAllToolImages() purposes, so it's picked up
+// again by "Generate Missing", but the reason is now visible in between.
+async function recordFailure(slug, message) {
+  const imageUrl = `${API_BASE_URL}/og-images/${slug}.png`;
+  await pool.query(
+    `INSERT INTO tool_og_images (tool_slug, image_url, last_error)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (tool_slug) DO UPDATE SET last_error = $3
+     WHERE tool_og_images.image_data IS NULL`,
+    [slug, imageUrl, message]
+  ).catch(err => console.error(`Failed to record OG image error for ${slug}:`, err.message));
 }
 
 // Enqueues every tool slug that doesn't already have real image bytes
@@ -243,7 +258,9 @@ async function processOgImageQueue() {
         console.warn(`⚠️ Tool OG image queue had unknown slug, dropping: ${tool_slug}`);
       }
     } catch (err) {
-      console.error(`❌ Tool OG image failed for ${tool_slug}:`, err.message);
+      const message = err.response?.data?.error?.message || err.message;
+      console.error(`❌ Tool OG image failed for ${tool_slug}:`, message);
+      await recordFailure(tool_slug, message);
     } finally {
       // Remove regardless of outcome — a failed slug can be re-queued via
       // "Generate Missing" (still missing image_data) or "Regenerate All"
@@ -267,6 +284,16 @@ async function getAllToolImages() {
   return rows;
 }
 
+// Slugs that were attempted and failed (no bytes stored, but a reason is
+// on record) — surfaced in the admin dashboard so a stalled queue is
+// diagnosable instead of just silently not growing.
+async function getFailedToolImages() {
+  const { rows } = await pool.query(
+    `SELECT tool_slug, last_error FROM tool_og_images WHERE image_data IS NULL AND last_error IS NOT NULL ORDER BY tool_slug ASC`
+  );
+  return rows;
+}
+
 // Serves the actual PNG bytes for GET /og-images/:slug.png (registered in
 // server.js) — the replacement for what used to be express.static reading
 // a file off disk.
@@ -283,5 +310,6 @@ module.exports = {
   generateAllToolImages,
   processOgImageQueue,
   getAllToolImages,
+  getFailedToolImages,
   getToolImageBytes,
 };
