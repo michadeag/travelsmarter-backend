@@ -128,6 +128,7 @@ const TOOL_THEMES = [
   { slug: 'gift-giving-checker', theme: 'a wrapped gift box with a ribbon and a small speech bubble or heart motif' },
   { slug: 'restaurant-reservation-checker', theme: 'a set restaurant table with a small reserved sign or an open book icon suggesting a reservation' },
   { slug: 'bike-scooter-checker', theme: 'a shared city bike or e-scooter icon with a small smartphone/app motif nearby' },
+  { slug: 'pharmacy-checker', theme: 'a pharmacy cross icon with a small pill bottle or capsule motif' },
 ];
 
 async function getOpenaiKey() {

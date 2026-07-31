@@ -80,6 +80,9 @@ const TOOLS = [
     buildArgs: (trip) => ({ country: trip.destination }) },
 
   // --- Health & Safety ---
+  { slug: 'pharmacy-checker', name: 'Pharmacy & OTC Medication', icon: '💊', category: 'Health & Safety',
+    controller: '../controllers/pharmacyController', conditional: null,
+    buildArgs: (trip) => ({ country: trip.destination }) },
   { slug: 'travel-health-checker', name: 'Health & Vaccines', icon: '🩺', category: 'Health & Safety',
     controller: '../controllers/healthController', conditional: null,
     buildArgs: (trip) => ({ country: trip.destination }) },
