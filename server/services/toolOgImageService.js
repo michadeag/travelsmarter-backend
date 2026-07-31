@@ -136,6 +136,7 @@ const TOOL_THEMES = [
   { slug: 'taxi-fare-checker', theme: 'a taxi cab icon with a small meter or price-tag motif' },
   { slug: 'restaurant-pace-checker', theme: 'a restaurant table with a small clock or hourglass motif suggesting the pace of a meal' },
   { slug: 'currency-convertibility-checker', theme: 'a stack of colorful banknotes with a small exchange-arrows or currency-swap motif' },
+  { slug: 'attraction-booking-checker', theme: 'an admission ticket icon with a small landmark or monument silhouette' },
 ];
 
 async function getOpenaiKey() {
