@@ -129,6 +129,7 @@ const TOOL_THEMES = [
   { slug: 'restaurant-reservation-checker', theme: 'a set restaurant table with a small reserved sign or an open book icon suggesting a reservation' },
   { slug: 'bike-scooter-checker', theme: 'a shared city bike or e-scooter icon with a small smartphone/app motif nearby' },
   { slug: 'pharmacy-checker', theme: 'a pharmacy cross icon with a small pill bottle or capsule motif' },
+  { slug: 'solo-dining-checker', theme: 'a single place setting at a small restaurant table with a bowl of noodles or ramen' },
 ];
 
 async function getOpenaiKey() {
