@@ -161,6 +161,7 @@ const quoraRoutes = require('./routes/quoraRoutes');
 const bloggerRoutes = require('./routes/bloggerRoutes');
 const toolImageRoutes = require('./routes/toolImageRoutes');
 const toolOgImageService = require('./services/toolOgImageService');
+const guideRoutes = require('./routes/guideRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
 
 // Import controllers
@@ -425,6 +426,7 @@ app.use('/api/wordpress', wordpressRoutes);
 app.use('/api/quora', quoraRoutes);
 app.use('/api/blogger', bloggerRoutes);
 app.use('/api/tool-images', toolImageRoutes);
+app.use('/api/guides', guideRoutes);
 app.use('/api/youtube', youtubeRoutes);
 
 // Serves a tool's og:image PNG straight from Postgres (see
@@ -2086,6 +2088,68 @@ async function initializeApp() {
       );
       CREATE INDEX IF NOT EXISTS idx_trip_brief_emails_status ON trip_brief_scheduled_emails(status);
       CREATE INDEX IF NOT EXISTS idx_trip_brief_emails_brief ON trip_brief_scheduled_emails(trip_brief_id);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    // PDF travel guides ("100 Best Restaurants in Germany" etc.) — a second
+    // paid-content product line alongside Trip Brief. Unlike the free-tool
+    // checkers (rule-based, generated from a heuristic COUNTRIES object),
+    // guide content is manually researched/written and uploaded as a
+    // finished PDF, so the source of truth here is the file itself, not a
+    // computeResult() function. pdf_data is stored as bytes in Postgres
+    // rather than on local disk — this platform's container filesystem is
+    // ephemeral/read-only, a lesson already paid for once by
+    // toolOgImageService.js (see that file's comments for the full story).
+    // free_items is the JSON array of {name, blurb} teaser entries shown
+    // publicly on the landing page before the paywall.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS guides (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        slug VARCHAR(150) NOT NULL UNIQUE,
+        title VARCHAR(255) NOT NULL,
+        subtitle TEXT,
+        country_slug VARCHAR(100) NOT NULL,
+        country_name VARCHAR(100) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        price_cents INTEGER NOT NULL DEFAULT 499,
+        free_items JSONB NOT NULL DEFAULT '[]',
+        pdf_data BYTEA,
+        pdf_filename VARCHAR(255),
+        pdf_size_bytes INTEGER,
+        published BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_guides_country ON guides(country_slug);
+      CREATE INDEX IF NOT EXISTS idx_guides_published ON guides(published);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    // Purchases of either a single guide ($4.99) or a country bundle ($29,
+    // covering every published guide for that country — computed
+    // dynamically from guides.country_slug at delivery time, not a fixed
+    // list, so a bundle buyer automatically gets any guide added for that
+    // country later too). guide_id is set for 'single', country_slug is set
+    // for 'bundle'. status: pending -> paid (webhook) -> delivered (PDF(s)
+    // emailed) | failed.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS guide_purchases (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email VARCHAR(255) NOT NULL,
+        first_name VARCHAR(255),
+        purchase_type VARCHAR(20) NOT NULL,
+        guide_id UUID REFERENCES guides(id),
+        country_slug VARCHAR(100),
+        country_name VARCHAR(100),
+        stripe_session_id VARCHAR(255),
+        stripe_payment_intent_id VARCHAR(255),
+        amount_paid DECIMAL(10, 2),
+        status VARCHAR(30) NOT NULL DEFAULT 'pending',
+        delivered_at TIMESTAMPTZ,
+        source_page VARCHAR(300),
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_guide_purchases_email ON guide_purchases(email);
+      CREATE INDEX IF NOT EXISTS idx_guide_purchases_session ON guide_purchases(stripe_session_id);
+      CREATE INDEX IF NOT EXISTS idx_guide_purchases_status ON guide_purchases(status);
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
 
     // Short-form (Shorts/Reels/TikTok) video script ideas for promoting the

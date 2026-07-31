@@ -214,6 +214,9 @@ exports.handleWebhook = async (req, res) => {
           if (session.metadata && session.metadata.type === 'trip_brief') {
             const tripBriefController = require('./tripBriefController');
             await tripBriefController.handleTripBriefCheckoutCompleted(session);
+          } else if (session.metadata && session.metadata.type === 'guide_purchase') {
+            const guideController = require('./guideController');
+            await guideController.handleGuideCheckoutCompleted(session);
           } else {
             await handleCheckoutSessionCompleted(session);
           }
