@@ -191,8 +191,12 @@ Only output valid JSON, nothing else.`;
     const personAuthor = authorUrn.replace(/^urn:li:member:/, 'urn:li:person:');
     console.log(`💼 LinkedIn: authorUrn=${authorUrn} → personAuthor=${personAuthor}`);
 
-    // Use new REST Posts API — try recent versions until one is active
-    const versionsToTry = ['202506', '202505', '202504', '202503', '202502'];
+    // Use new REST Posts API — try recent versions until one is active.
+    // LinkedIn's Analytics tab shows /posts-CREATE has been returning both
+    // 426 (Upgrade Required — a version in this list is now too old) and
+    // 403 every day for the past couple weeks, so the list needs the
+    // current month added, not just a longer fallback loop.
+    const versionsToTry = ['202507', '202506', '202505', '202504', '202503', '202502'];
     const body = {
       author: personAuthor,
       commentary: text,
@@ -206,6 +210,13 @@ Only output valid JSON, nothing else.`;
       isReshareDisabledByAuthor: false
     };
 
+    // Only re-throw once every version has been tried — previously this
+    // stopped at the first non-NONEXISTENT_VERSION error (e.g. a bare 403),
+    // so if LinkedIn ever restricts/deprecates just the newest version for
+    // this app, every post would fail at that first version and never fall
+    // through to an older one that's still fine, even though the loop was
+    // built specifically to "try recent versions until one is active."
+    let lastErr = null;
     for (const version of versionsToTry) {
       try {
         console.log(`💼 LinkedIn: POST /rest/posts version=${version} author=${authorUrn}`);
@@ -215,16 +226,12 @@ Only output valid JSON, nothing else.`;
         console.log(`💼 LinkedIn: /rest/posts ${version} success`);
         return response.headers['x-restli-id'] || response.data?.id || null;
       } catch (err) {
-        const code = err.response?.data?.code;
-        if (code === 'NONEXISTENT_VERSION') {
-          console.warn(`💼 LinkedIn version ${version} not active, trying next`);
-          continue;
-        }
-        console.error(`💼 LinkedIn /rest/posts error: ${err.response?.status} — ${JSON.stringify(err.response?.data)}`);
-        throw err;
+        lastErr = err;
+        console.warn(`💼 LinkedIn version ${version} failed (${err.response?.status} — ${JSON.stringify(err.response?.data)}), trying next`);
       }
     }
-    throw new Error('No active LinkedIn API version found in range 202502–202506');
+    console.error(`💼 LinkedIn: all versions ${versionsToTry.join(', ')} failed — last error: ${lastErr?.response?.status} — ${JSON.stringify(lastErr?.response?.data)}`);
+    throw lastErr || new Error('No active LinkedIn API version found in range 202502–202506');
   }
 
   async createAndPost() {
