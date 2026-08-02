@@ -1,5 +1,4 @@
 const axios = require('axios');
-const cron = require('node-cron');
 const Anthropic = require('@anthropic-ai/sdk');
 const pool = require('../config/database');
 const wordpressService = require('./wordpressService');
@@ -71,12 +70,6 @@ function todayInET() {
     timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
   }).formatToParts(new Date()).reduce((acc, p) => { if (p.type !== 'literal') acc[p.type] = p.value; return acc; }, {});
   return { year: +parts.year, month: +parts.month, day: +parts.day };
-}
-
-function randomTimeInWindow({ startHour, endHour }) {
-  const totalMinutes = (endHour - startHour) * 60;
-  const offset = Math.floor(Math.random() * totalMinutes);
-  return { hour: startHour + Math.floor(offset / 60), minute: offset % 60 };
 }
 
 // ─── PICK A TOOL PAGE ─────────────────────────────────────────────────────
@@ -246,37 +239,73 @@ async function postRandomToolBlogArticle() {
   return { success: true, url, wpUrl: published.url, title: article.title };
 }
 
-// ─── DAILY RANDOM SCHEDULER ─────────────────────────────────────────────────
+// ─── RESTART-RESILIENT DAILY POLLER ────────────────────────────────────────
+// A single long-lived setTimeout does not survive a process restart — this
+// platform redeploys on every git push (dozens/day during active
+// development), which wipes any in-memory timer and re-rolls a fresh
+// random time into a shrinking remaining window, so it can go indefinitely
+// without ever firing. Same bug already found and fixed for the identical
+// pattern in toolPromoBloggerService.js and toolPromoTwitterService.js.
+// Fix: today's target minute is derived deterministically from a hash of
+// the date (not stored in memory, so a restart recomputes the same
+// target instead of losing it), checked every 15 minutes against a
+// DB-backed "already posted today" query.
 
-let scheduledTimeout = null;
-let dailyPlannerJob = null;
+function pseudoRandomOffsetForDate(dateStr, totalMinutes) {
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) hash = (hash * 31 + dateStr.charCodeAt(i)) >>> 0;
+  return hash % totalMinutes;
+}
 
-function scheduleTodaysPost() {
-  if (scheduledTimeout) { clearTimeout(scheduledTimeout); scheduledTimeout = null; }
+function todaysTargetMinuteOfDay() {
   const { year, month, day } = todayInET();
-  const now = Date.now();
+  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}-wp`;
+  const totalMinutes = (POST_WINDOW.endHour - POST_WINDOW.startHour) * 60;
+  const offset = pseudoRandomOffsetForDate(dateStr, totalMinutes);
+  return POST_WINDOW.startHour * 60 + offset;
+}
 
-  const { hour, minute } = randomTimeInWindow(POST_WINDOW);
-  const fireAt = zonedTimeToUtc(year, month, day, hour, minute, 'America/New_York');
-  const delay = fireAt.getTime() - now;
-  if (delay <= 0) return; // window already passed today — covered again tomorrow
+function currentMinuteOfDayET() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit',
+  }).formatToParts(new Date()).reduce((acc, p) => { if (p.type !== 'literal') acc[p.type] = p.value; return acc; }, {});
+  const hour = parts.hour === '24' ? 0 : +parts.hour;
+  return hour * 60 + +parts.minute;
+}
 
-  scheduledTimeout = setTimeout(() => {
-    postRandomToolBlogArticle().catch(err => console.error('❌ Scheduled tool-promo WordPress post error:', err.message));
-  }, delay);
-  console.log(`📅 Tool-promo WordPress post scheduled for ${fireAt.toISOString()} (${hour}:${String(minute).padStart(2, '0')} ET)`);
+async function hasPostedToday() {
+  const { year, month, day } = todayInET();
+  const startOfDayUtc = zonedTimeToUtc(year, month, day, 0, 0, 'America/New_York');
+  const { rows } = await pool.query(
+    `SELECT 1 FROM wordpress_posts WHERE tool_slug IS NOT NULL AND posted_at >= $1 LIMIT 1`,
+    [startOfDayUtc]
+  );
+  return rows.length > 0;
+}
+
+const POLL_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+let pollerInterval = null;
+
+async function checkAndPostIfDue() {
+  try {
+    if (currentMinuteOfDayET() < todaysTargetMinuteOfDay()) return; // not due yet
+    if (await hasPostedToday()) return; // already covered today
+    console.log('📝 Tool-promo WordPress post due — posting now');
+    await postRandomToolBlogArticle();
+  } catch (err) {
+    console.error('❌ Tool-promo WordPress poller error:', err.message);
+  }
 }
 
 function startToolPromoScheduler() {
-  scheduleTodaysPost(); // cover the rest of today right away
-  if (dailyPlannerJob) dailyPlannerJob.stop();
-  dailyPlannerJob = cron.schedule('15 0 * * *', scheduleTodaysPost, { timezone: 'America/New_York' });
-  console.log('📝 Tool-promo WordPress scheduler started (1 random post/day, 9am-8pm ET)');
+  checkAndPostIfDue(); // catch up immediately if already due and not posted
+  if (pollerInterval) clearInterval(pollerInterval);
+  pollerInterval = setInterval(checkAndPostIfDue, POLL_INTERVAL_MS);
+  console.log('📝 Tool-promo WordPress scheduler started (1 post/day, 9am-8pm ET, restart-safe poller every 15min)');
 }
 
 function stopToolPromoScheduler() {
-  if (scheduledTimeout) { clearTimeout(scheduledTimeout); scheduledTimeout = null; }
-  if (dailyPlannerJob) { dailyPlannerJob.stop(); dailyPlannerJob = null; }
+  if (pollerInterval) { clearInterval(pollerInterval); pollerInterval = null; }
 }
 
 module.exports = {

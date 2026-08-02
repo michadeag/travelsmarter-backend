@@ -1,5 +1,4 @@
 const axios = require('axios');
-const cron = require('node-cron');
 const pool = require('../config/database');
 const twitterService = require('./twitterService');
 
@@ -50,7 +49,6 @@ const POST_WINDOWS = [
   { startHour: 17, endHour: 19 }, // evening wind-down
 ];
 
-let scheduledTimeouts = [];
 let sitemapCache = { urls: [], fetchedAt: 0 };
 const SITEMAP_CACHE_MS = 6 * 60 * 60 * 1000; // 6 hours
 
@@ -75,12 +73,6 @@ function todayInET() {
     timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
   }).formatToParts(new Date()).reduce((acc, p) => { if (p.type !== 'literal') acc[p.type] = p.value; return acc; }, {});
   return { year: +parts.year, month: +parts.month, day: +parts.day };
-}
-
-function randomTimeInWindow({ startHour, endHour }) {
-  const totalMinutes = (endHour - startHour) * 60;
-  const offset = Math.floor(Math.random() * totalMinutes);
-  return { hour: startHour + Math.floor(offset / 60), minute: offset % 60 };
 }
 
 // ─── SITEMAP → CANDIDATE TOOL PAGE URLS ──────────────────────────────────────
@@ -213,50 +205,83 @@ async function postRandomToolTweet() {
   return { success: true, url, tweetId: result.tweetId };
 }
 
-// ─── DAILY RANDOM SCHEDULER ───────────────────────────────────────────────────
+// ─── RESTART-RESILIENT DAILY POLLER ────────────────────────────────────────
+// Previously: one random setTimeout per window, scheduled hours ahead. This
+// platform redeploys on every git push (dozens/day during active dev),
+// which wipes any in-memory timer — every restart re-rolled a fresh random
+// time into the shrinking remaining window, so a window could go
+// indefinitely without ever actually firing (same bug already found and
+// fixed for toolPromoBloggerService.js's identical pattern). Fix: today's
+// target minute for each window is derived deterministically from a hash
+// of the date + window index (not stored in memory, so a restart
+// recomputes the same target instead of losing it), checked every 15
+// minutes against a DB-backed "already posted in this window today" query.
 
-function clearScheduledTimeouts() {
-  scheduledTimeouts.forEach(t => clearTimeout(t));
-  scheduledTimeouts = [];
+function pseudoRandomOffsetForDate(seed, totalMinutes) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  return hash % totalMinutes;
 }
 
-// Picks one random time inside each of the 3 windows for "today" (ET) and
-// schedules a one-off setTimeout for each window whose time hasn't already
-// passed. Called once on boot (covering the rest of today) and once daily
-// just after midnight ET (covering the full next day).
-function scheduleTodaysPosts() {
-  clearScheduledTimeouts();
+function todaysTargetMinuteForWindow(windowIndex) {
   const { year, month, day } = todayInET();
-  const now = Date.now();
+  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}-w${windowIndex}`;
+  const window = POST_WINDOWS[windowIndex];
+  const totalMinutes = (window.endHour - window.startHour) * 60;
+  const offset = pseudoRandomOffsetForDate(dateStr, totalMinutes);
+  return window.startHour * 60 + offset;
+}
 
-  for (const window of POST_WINDOWS) {
-    const { hour, minute } = randomTimeInWindow(window);
-    const fireAt = zonedTimeToUtc(year, month, day, hour, minute, 'America/New_York');
-    const delay = fireAt.getTime() - now;
-    if (delay <= 0) continue; // window already passed today — skip, covered again tomorrow
+function currentMinuteOfDayET() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit',
+  }).formatToParts(new Date()).reduce((acc, p) => { if (p.type !== 'literal') acc[p.type] = p.value; return acc; }, {});
+  const hour = parts.hour === '24' ? 0 : +parts.hour;
+  return hour * 60 + +parts.minute;
+}
 
-    const timeout = setTimeout(() => {
-      postRandomToolTweet().catch(err => console.error('❌ Scheduled tool-promo tweet error:', err.message));
-    }, delay);
-    scheduledTimeouts.push(timeout);
-    console.log(`📅 Tool-promo tweet scheduled for ${fireAt.toISOString()} (${hour}:${String(minute).padStart(2, '0')} ET)`);
+async function hasPostedInWindowToday(windowIndex) {
+  const { year, month, day } = todayInET();
+  const window = POST_WINDOWS[windowIndex];
+  const windowStartUtc = zonedTimeToUtc(year, month, day, window.startHour, 0, 'America/New_York');
+  const windowEndUtc = zonedTimeToUtc(year, month, day, window.endHour, 0, 'America/New_York');
+  const { rows } = await pool.query(
+    `SELECT 1 FROM twitter_posts WHERE tool_slug IS NOT NULL AND posted_at >= $1 AND posted_at < $2 LIMIT 1`,
+    [windowStartUtc, windowEndUtc]
+  );
+  return rows.length > 0;
+}
+
+const POLL_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+let pollerInterval = null;
+
+async function checkAndPostIfDue() {
+  try {
+    const current = currentMinuteOfDayET();
+    for (let i = 0; i < POST_WINDOWS.length; i++) {
+      if (current < todaysTargetMinuteForWindow(i)) continue; // not due yet
+      if (await hasPostedInWindowToday(i)) continue; // already covered
+      console.log(`🐦 Tool-promo tweet due for window ${i} — posting now`);
+      await postRandomToolTweet();
+      break; // one post per tick is enough — the next tick catches any other due window
+    }
+  } catch (err) {
+    console.error('❌ Tool-promo tweet poller error:', err.message);
   }
 }
 
-let dailyPlannerJob = null;
+let pollerStarted = false;
 
 function startToolPromoScheduler() {
-  scheduleTodaysPosts(); // cover the remainder of today right away
-  if (dailyPlannerJob) dailyPlannerJob.stop();
-  // Re-plan just after midnight ET every day, in the correct timezone
-  // regardless of the server's own local time or DST shifts.
-  dailyPlannerJob = cron.schedule('5 0 * * *', scheduleTodaysPosts, { timezone: 'America/New_York' });
-  console.log('🐦 Tool-promo Twitter scheduler started (3 random posts/day in US peak windows)');
+  checkAndPostIfDue(); // catch up immediately if a window is already due
+  if (pollerStarted) clearInterval(pollerInterval);
+  pollerInterval = setInterval(checkAndPostIfDue, POLL_INTERVAL_MS);
+  pollerStarted = true;
+  console.log('🐦 Tool-promo Twitter scheduler started (3 posts/day in US peak windows, restart-safe poller every 15min)');
 }
 
 function stopToolPromoScheduler() {
-  clearScheduledTimeouts();
-  if (dailyPlannerJob) { dailyPlannerJob.stop(); dailyPlannerJob = null; }
+  if (pollerStarted) { clearInterval(pollerInterval); pollerInterval = null; pollerStarted = false; }
 }
 
 module.exports = {
