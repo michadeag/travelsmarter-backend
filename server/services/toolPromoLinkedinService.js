@@ -8,22 +8,32 @@ const {
   urlMatchesToolSlug,
 } = require('./toolPromoTwitterService');
 
-// Posts 1x/day to LinkedIn — a short professional post about a random
-// free-tool page, with a backlink. Distinct from linkedinService.js's own
-// generic topic-based scheduler (8am/5pm ET, TOPICS-driven) — this is
+// Drafts 1x/day — a short professional post about a random free-tool page,
+// with a backlink — for manual review and posting. Distinct from
+// linkedinService.js's own generic topic-based generator (TOPICS-driven,
+// same manual copy → linkedin.com → "mark as posted" workflow) — this is
 // tool-page promotion specifically, content-driven by the live sitemap
 // rather than a hardcoded list, so newly added tools are picked up
-// automatically with no code change. Reuses linkedinService.postToLinkedIn()
-// directly rather than re-implementing the API call, so it shares the same
-// proven-working auth/author-URN resolution.
+// automatically with no code change.
 //
-// Scheduling uses a fixed daily cron time (like linkedinService's own
-// scheduler, which has 26 successful posts as of this writing) rather than
-// a randomized-delay setTimeout — the latter pattern was found and fixed
-// three times over in the Blogger/Twitter/WordPress tool-promo services
-// (a long-lived setTimeout doesn't survive a process restart, and this
-// platform redeploys on every git push). A fixed cron expression has no
-// such problem: it's re-evaluated fresh against the current time on every
+// Originally called linkedinService.postToLinkedIn() to auto-publish
+// directly, like the Blogger/Twitter/WordPress tool-promo services do for
+// their platforms. Switched to draft-only after LinkedIn's API rejected
+// every real attempt across both the versioned Posts API and the legacy
+// UGC Posts API with a different error each time (stale API version,
+// then a URN-format mismatch, then an opaque "Data Processing
+// Exception") — and it turned out the account's existing LinkedIn
+// presence had always been built by generating content here and posting
+// it manually, meaning the API path had likely never actually worked for
+// this app's LinkedIn access tier. Draft mode matches what's actually
+// proven to work.
+//
+// Scheduling uses a fixed daily cron time rather than a randomized-delay
+// setTimeout — the latter pattern was found and fixed three times over in
+// the Blogger/Twitter/WordPress tool-promo services (a long-lived
+// setTimeout doesn't survive a process restart, and this platform
+// redeploys on every git push). A fixed cron expression has no such
+// problem: it's re-evaluated fresh against the current time on every
 // tick, not computed once and stored.
 
 const SITE_ORIGIN = 'https://travelsmarterapp.com';
@@ -183,27 +193,32 @@ async function postRandomToolLinkedinPost() {
 
   const toolSlug = urlMatchesToolSlug(new URL(url).pathname);
 
-  let postId;
+  // Saves as a draft rather than calling linkedinService.postToLinkedIn()
+  // directly — LinkedIn's API rejected every attempt across both the
+  // versioned Posts API and the legacy UGC Posts API with a different
+  // error each time (stale-version 426/403, then a URN-format mismatch,
+  // then an opaque "Data Processing Exception"), and the user confirmed
+  // their existing 26 LinkedIn posts were all published manually anyway —
+  // the API path has likely never actually worked for this app's access
+  // tier. Draft mode matches that already-proven manual workflow: this row
+  // shows up in the admin LinkedIn tab's "Generierte Posts" list (same
+  // copy → paste on linkedin.com → "mark as posted" flow used for the
+  // generic topic-based posts) instead of silently failing.
+  let dbId = null;
   try {
-    postId = await linkedinService.postToLinkedIn(text);
-  } catch (error) {
-    const detail = describeError(error);
-    console.error('❌ Failed to publish tool-promo LinkedIn post:', detail);
-    return { success: false, message: `LinkedIn API error: ${detail}. Try reconnecting your LinkedIn account in the LinkedIn tab.` };
-  }
-
-  try {
-    await pool.query(
-      `INSERT INTO linkedin_posts (body, category, included_cta, linkedin_post_id, status, posted_at, tool_slug, tool_url)
-       VALUES ($1, 'tool-promo', true, $2, 'posted', NOW(), $3, $4)`,
-      [text, postId, toolSlug, url]
+    const r = await pool.query(
+      `INSERT INTO linkedin_posts (body, category, included_cta, status, posted_at, tool_slug, tool_url)
+       VALUES ($1, 'tool-promo', true, 'draft', NOW(), $2, $3) RETURNING id`,
+      [text, toolSlug, url]
     );
+    dbId = r.rows[0].id;
   } catch (error) {
-    console.error('❌ Failed to record tool-promo LinkedIn post metadata:', error.message);
+    console.error('❌ Failed to save tool-promo LinkedIn draft:', error.message);
+    return { success: false, message: `Failed to save draft: ${error.message}` };
   }
 
-  console.log(`✅ Posted tool-promo LinkedIn post for ${url}`);
-  return { success: true, url, postId, preview: text.slice(0, 120) + '…' };
+  console.log(`✅ Drafted tool-promo LinkedIn post for ${url}`);
+  return { success: true, url, dbId, preview: text.slice(0, 120) + '…' };
 }
 
 // ─── FIXED-TIME DAILY SCHEDULER ─────────────────────────────────────────────

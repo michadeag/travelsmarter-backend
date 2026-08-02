@@ -225,7 +225,7 @@ exports.getToolPromoLinkedinStats = async (req, res) => {
     `);
 
     const { rows: recent } = await pool.query(`
-      SELECT tool_slug, tool_url, linkedin_post_id, posted_at
+      SELECT tool_slug, tool_url, linkedin_post_id, status, posted_at
       FROM linkedin_posts
       WHERE tool_slug IS NOT NULL
       ORDER BY posted_at DESC
