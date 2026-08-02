@@ -1,5 +1,4 @@
 const axios = require('axios');
-const cron = require('node-cron');
 const Anthropic = require('@anthropic-ai/sdk');
 const pool = require('../config/database');
 const bloggerService = require('./bloggerService');
@@ -58,12 +57,6 @@ function todayInET() {
     timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
   }).formatToParts(new Date()).reduce((acc, p) => { if (p.type !== 'literal') acc[p.type] = p.value; return acc; }, {});
   return { year: +parts.year, month: +parts.month, day: +parts.day };
-}
-
-function randomTimeInWindow({ startHour, endHour }) {
-  const totalMinutes = (endHour - startHour) * 60;
-  const offset = Math.floor(Math.random() * totalMinutes);
-  return { hour: startHour + Math.floor(offset / 60), minute: offset % 60 };
 }
 
 // ─── PICK A TOOL PAGE ─────────────────────────────────────────────────────
@@ -244,37 +237,78 @@ async function postRandomToolBlogArticle() {
   return { success: true, url, bloggerUrl: published.url, title: article.title };
 }
 
-// ─── DAILY RANDOM SCHEDULER ─────────────────────────────────────────────────
+// ─── RESTART-RESILIENT DAILY POLLER ────────────────────────────────────────
+// A single long-lived setTimeout scheduled hours into the future does not
+// survive a process restart — this platform redeploys on every git push
+// (dozens per day during active development), which wipes any in-memory
+// timer and forces a fresh random re-roll into a shrinking remaining
+// window, so it can go a long time without ever actually firing. That's
+// the same class of bug already fixed once today for the og:image queue
+// (see toolOgImageService.js's history) — the fix there was a DB-backed
+// queue drained by a short recurring interval instead of a fire-and-forget
+// timer; the fix here is the same idea: a deterministic (not stored)
+// per-day target time, checked by a short poller instead of relied on to
+// survive as a live timer.
 
-let scheduledTimeout = null;
-let dailyPlannerJob = null;
+// Derives today's target minute-of-day from a hash of the date string, so
+// every restart recomputes the *same* target for today instead of losing
+// it — "random-looking" per day, but stable and restart-safe rather than
+// truly random and stored in memory.
+function pseudoRandomOffsetForDate(dateStr, totalMinutes) {
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) hash = (hash * 31 + dateStr.charCodeAt(i)) >>> 0;
+  return hash % totalMinutes;
+}
 
-function scheduleTodaysPost() {
-  if (scheduledTimeout) { clearTimeout(scheduledTimeout); scheduledTimeout = null; }
+function todaysTargetMinuteOfDay() {
   const { year, month, day } = todayInET();
-  const now = Date.now();
+  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const totalMinutes = (POST_WINDOW.endHour - POST_WINDOW.startHour) * 60;
+  const offset = pseudoRandomOffsetForDate(dateStr, totalMinutes);
+  return POST_WINDOW.startHour * 60 + offset;
+}
 
-  const { hour, minute } = randomTimeInWindow(POST_WINDOW);
-  const fireAt = zonedTimeToUtc(year, month, day, hour, minute, 'America/New_York');
-  const delay = fireAt.getTime() - now;
-  if (delay <= 0) return; // window already passed today — covered again tomorrow
+function currentMinuteOfDayET() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit',
+  }).formatToParts(new Date()).reduce((acc, p) => { if (p.type !== 'literal') acc[p.type] = p.value; return acc; }, {});
+  const hour = parts.hour === '24' ? 0 : +parts.hour;
+  return hour * 60 + +parts.minute;
+}
 
-  scheduledTimeout = setTimeout(() => {
-    postRandomToolBlogArticle().catch(err => console.error('❌ Scheduled tool-promo blog post error:', err.message));
-  }, delay);
-  console.log(`📅 Tool-promo blog post scheduled for ${fireAt.toISOString()} (${hour}:${String(minute).padStart(2, '0')} ET)`);
+async function hasPostedToday() {
+  const { year, month, day } = todayInET();
+  const startOfDayUtc = zonedTimeToUtc(year, month, day, 0, 0, 'America/New_York');
+  const { rows } = await pool.query(
+    `SELECT 1 FROM blogger_posts WHERE tool_slug IS NOT NULL AND posted_at >= $1 LIMIT 1`,
+    [startOfDayUtc]
+  );
+  return rows.length > 0;
+}
+
+const POLL_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+let pollerInterval = null;
+
+async function checkAndPostIfDue() {
+  try {
+    if (currentMinuteOfDayET() < todaysTargetMinuteOfDay()) return; // not due yet today
+    if (await hasPostedToday()) return; // already covered today
+    console.log('📰 Tool-promo blog post due — posting now');
+    await postRandomToolBlogArticle();
+  } catch (err) {
+    console.error('❌ Tool-promo blog poller error:', err.message);
+  }
 }
 
 function startToolPromoScheduler() {
-  scheduleTodaysPost(); // cover the rest of today right away
-  if (dailyPlannerJob) dailyPlannerJob.stop();
-  dailyPlannerJob = cron.schedule('10 0 * * *', scheduleTodaysPost, { timezone: 'America/New_York' });
-  console.log('📰 Tool-promo Blogger scheduler started (1 random post/day, 9am-8pm ET)');
+  checkAndPostIfDue(); // cover today immediately if already past the target and not yet posted
+  if (pollerInterval) clearInterval(pollerInterval);
+  pollerInterval = setInterval(checkAndPostIfDue, POLL_INTERVAL_MS);
+  console.log('📰 Tool-promo Blogger scheduler started (1 post/day, 9am-8pm ET, restart-safe poller every 15min)');
 }
 
 function stopToolPromoScheduler() {
-  if (scheduledTimeout) { clearTimeout(scheduledTimeout); scheduledTimeout = null; }
-  if (dailyPlannerJob) { dailyPlannerJob.stop(); dailyPlannerJob = null; }
+  if (pollerInterval) { clearInterval(pollerInterval); pollerInterval = null; }
 }
 
 module.exports = {
