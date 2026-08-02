@@ -241,8 +241,18 @@ Only output valid JSON, nothing else.`;
     // requested. Different request/response shape entirely (no
     // LinkedIn-Version header, nested specificContent/visibility fields).
     try {
+      // /v2/ugcPosts validates author against urn:li:company:\d+|urn:li:member:-?\d+
+      // — a DIFFERENT format than /rest/posts' urn:li:person:/urn:li:organization:
+      // above (confirmed live: LinkedIn rejected urn:li:person:63257385 with
+      // exactly that regex in the error). Re-derive from the numeric id
+      // rather than reusing personAuthor.
+      const idMatch = authorUrn.match(/urn:li:(?:person|member|organization|company):(-?\d+)/);
+      const numericId = idMatch ? idMatch[1] : authorUrn;
+      const ugcAuthor = orgId ? `urn:li:company:${numericId}` : `urn:li:member:${numericId}`;
+      console.log(`💼 LinkedIn: ugcAuthor=${ugcAuthor} (derived from authorUrn=${authorUrn})`);
+
       const ugcBody = {
-        author: personAuthor,
+        author: ugcAuthor,
         lifecycleState: 'PUBLISHED',
         specificContent: {
           'com.linkedin.ugc.ShareContent': {
