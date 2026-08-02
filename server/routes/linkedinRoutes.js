@@ -279,4 +279,22 @@ router.post('/fetch-urn', protectWithAdminFallback, async (req, res) => {
   }
 });
 
+// Publish a post promoting a random free-tool page right now (the same
+// content/logic the 1x/day tool-promo scheduler uses) — for manual
+// testing/triggering. Distinct from /post-article, which posts a generic
+// TOPICS-driven article.
+router.post('/post-tool-promo', protectWithAdminFallback, async (req, res) => {
+  try {
+    const toolPromoLinkedinService = require('../services/toolPromoLinkedinService');
+    const result = await toolPromoLinkedinService.postRandomToolLinkedinPost();
+    if (result.success) {
+      res.json({ success: true, message: 'Tool-promo LinkedIn post published', url: result.url, postId: result.postId, preview: result.preview });
+    } else {
+      res.status(400).json({ success: false, message: result.message || 'Failed to publish tool-promo LinkedIn post' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error publishing tool-promo LinkedIn post', error: err.message });
+  }
+});
+
 module.exports = router;

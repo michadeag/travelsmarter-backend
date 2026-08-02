@@ -1350,6 +1350,13 @@ async function initializeApp() {
 
       CREATE INDEX IF NOT EXISTS idx_linkedin_posts_posted_at ON linkedin_posts(posted_at DESC);
 
+      -- tool_slug/tool_url mark a row as a tool-promo post (vs. the generic
+      -- topic-based posts above) — same convention as blogger_posts/
+      -- wordpress_posts/twitter_posts, so the admin stats query can filter
+      -- on "WHERE tool_slug IS NOT NULL" the same way.
+      ALTER TABLE linkedin_posts ADD COLUMN IF NOT EXISTS tool_slug VARCHAR(100);
+      ALTER TABLE linkedin_posts ADD COLUMN IF NOT EXISTS tool_url TEXT;
+
       -- Pinterest posts log
       CREATE TABLE IF NOT EXISTS pinterest_posts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1859,6 +1866,12 @@ async function initializeApp() {
           linkedinService.startScheduler();
           console.log('✅ LinkedIn auto-posting scheduler started');
         }
+        // Free-tool-page promo scheduler — independent of the generic
+        // TOPICS-based autoPosting toggle above, same shape as the
+        // Blogger/WordPress/Twitter tool-promo schedulers: 1 post/day, one
+        // per free-tool page, cycling through the live sitemap.
+        const toolPromoLinkedinService = require('./services/toolPromoLinkedinService');
+        toolPromoLinkedinService.startToolPromoScheduler();
       } else {
         console.log('ℹ️ LinkedIn not configured — add credentials in Settings');
       }

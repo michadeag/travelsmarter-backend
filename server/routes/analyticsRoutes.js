@@ -18,6 +18,7 @@ const {
   getToolPromoTwitterStats,
   getToolPromoBloggerStats,
   getToolPromoWordpressStats,
+  getToolPromoLinkedinStats,
   getLeadsSummary,
   getTopFreeToolLeads,
   getRecentLeads,
@@ -45,6 +46,7 @@ router.get('/free-tools/top', verifyAdminToken, getTopFreeToolPages);
 router.get('/free-tools/twitter-posts', verifyAdminToken, getToolPromoTwitterStats);
 router.get('/free-tools/blogger-posts', verifyAdminToken, getToolPromoBloggerStats);
 router.get('/free-tools/wordpress-posts', verifyAdminToken, getToolPromoWordpressStats);
+router.get('/free-tools/linkedin-posts', verifyAdminToken, getToolPromoLinkedinStats);
 
 // Lead-capture reporting (tool_leads — actual email captures with a
 // converted_to_user_id link to real signups, as opposed to the anonymous
