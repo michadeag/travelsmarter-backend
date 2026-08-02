@@ -230,8 +230,42 @@ Only output valid JSON, nothing else.`;
         console.warn(`💼 LinkedIn version ${version} failed (${err.response?.status} — ${JSON.stringify(err.response?.data)}), trying next`);
       }
     }
-    console.error(`💼 LinkedIn: all versions ${versionsToTry.join(', ')} failed — last error: ${lastErr?.response?.status} — ${JSON.stringify(lastErr?.response?.data)}`);
-    throw lastErr || new Error('No active LinkedIn API version found in range 202502–202506');
+    console.warn(`💼 LinkedIn: all /rest/posts versions ${versionsToTry.join(', ')} failed (last: ${lastErr?.response?.status} — ${JSON.stringify(lastErr?.response?.data)}) — falling back to /v2/ugcPosts`);
+
+    // Fall back to the older, unversioned UGC Posts API. "Share on
+    // LinkedIn" (the only product this app has — see the Developer
+    // Portal's Products tab) is the product tier historically built around
+    // this endpoint and w_member_social, predating the newer versioned
+    // /rest/posts Posts API above, which can require separate product
+    // access this app may not have regardless of which LinkedIn-Version is
+    // requested. Different request/response shape entirely (no
+    // LinkedIn-Version header, nested specificContent/visibility fields).
+    try {
+      const ugcBody = {
+        author: personAuthor,
+        lifecycleState: 'PUBLISHED',
+        specificContent: {
+          'com.linkedin.ugc.ShareContent': {
+            shareCommentary: { text },
+            shareMediaCategory: 'NONE',
+          },
+        },
+        visibility: {
+          'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',
+        },
+      };
+      console.log(`💼 LinkedIn: POST /v2/ugcPosts author=${authorUrn}`);
+      const response = await axios.post('https://api.linkedin.com/v2/ugcPosts', ugcBody, { headers });
+      console.log('💼 LinkedIn: /v2/ugcPosts success');
+      return response.headers['x-restli-id'] || response.data?.id || null;
+    } catch (ugcErr) {
+      console.error(`💼 LinkedIn: /v2/ugcPosts also failed: ${ugcErr.response?.status} — ${JSON.stringify(ugcErr.response?.data)}`);
+      // Prefer whichever error body actually has content — /v2/ugcPosts
+      // has historically returned more descriptive messages than the bare
+      // {"message":"","status":403} seen from /rest/posts.
+      const ugcHasDetail = ugcErr.response?.data && Object.keys(ugcErr.response.data).some(k => ugcErr.response.data[k]);
+      throw ugcHasDetail ? ugcErr : (lastErr || ugcErr);
+    }
   }
 
   async createAndPost() {
