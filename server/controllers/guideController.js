@@ -1,6 +1,8 @@
 const pool = require('../config/database');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const emailService = require('../services/emailService');
+const githubService = require('../services/githubService');
+const { renderGuidePage, renderBundlePage } = require('../services/guidePageRenderer');
 
 // PDF travel guides ("100 Best Restaurants in Germany" etc.) — content is
 // manually researched and written outside this app, then uploaded here as a
@@ -137,8 +139,68 @@ exports.updateGuide = async (req, res) => {
   }
 };
 
+// Commits the guide's own landing page, and regenerates the country's
+// bundle page if there are now enough published guides to make the $29
+// bundle a genuinely better deal than buying separately (same guard the
+// old manual scripts/generate-guide-bundle-page.js had — refuse to
+// publish a "bundle" that costs more than its parts). Called from
+// togglePublish so a guide going live and its page existing happen in
+// the same step, instead of requiring a manual script run + git push
+// afterward. Failures here are non-fatal to the publish action itself —
+// the DB flip already succeeded — callers should surface the returned
+// warnings rather than fail the whole request.
+async function publishGuidePages(guideId) {
+  const warnings = [];
+  let guidePageCommitted = false;
+  let bundlePageCommitted = false;
+
+  const guideResult = await pool.query(
+    `SELECT slug, title, subtitle, country_slug, country_name, category, price_cents, free_items
+     FROM guides WHERE id = $1 AND published = true`,
+    [guideId]
+  );
+  if (guideResult.rows.length === 0) return { warnings: ['Guide not found or not published'], guidePageCommitted, bundlePageCommitted };
+  const guide = guideResult.rows[0];
+
+  try {
+    const html = renderGuidePage(guide, BUNDLE_PRICE_CENTS);
+    await githubService.commitFile(`guide-${guide.slug}.html`, html, `Publish guide: ${guide.title}`);
+    guidePageCommitted = true;
+  } catch (err) {
+    warnings.push(`Guide page not published: ${err.message}`);
+  }
+
+  try {
+    const countryGuides = await pool.query(
+      `SELECT slug, title, subtitle, category, price_cents, free_items, country_name
+       FROM guides WHERE country_slug = $1 AND published = true ORDER BY category ASC, title ASC`,
+      [guide.country_slug]
+    );
+    const singleTotalCents = countryGuides.rows.reduce((sum, g) => sum + g.price_cents, 0);
+    if (BUNDLE_PRICE_CENTS >= singleTotalCents) {
+      warnings.push(`Bundle page skipped: $${(BUNDLE_PRICE_CENTS / 100).toFixed(2)} bundle isn't cheaper than the ${countryGuides.rows.length} guide(s) bought separately ($${(singleTotalCents / 100).toFixed(2)}) yet — publish more ${guide.country_name} guides first.`);
+    } else {
+      const bundleHtml = renderBundlePage({
+        countrySlug: guide.country_slug,
+        countryName: guide.country_name,
+        guides: countryGuides.rows,
+        bundlePriceCents: BUNDLE_PRICE_CENTS,
+      });
+      await githubService.commitFile(`guides-bundle-${guide.country_slug}.html`, bundleHtml, `Update ${guide.country_name} guide bundle page`);
+      bundlePageCommitted = true;
+    }
+  } catch (err) {
+    warnings.push(`Bundle page not updated: ${err.message}`);
+  }
+
+  return { warnings, guidePageCommitted, bundlePageCommitted };
+}
+
 // @desc Flip published on/off. A guide needs a PDF uploaded before it can
 //   be published — otherwise a paying customer would get an empty email.
+//   Publishing also commits the guide's landing page (and updates the
+//   country bundle page, if warranted) directly to the frontend repo via
+//   GitHub's API — see publishGuidePages() above.
 // @route POST /api/guides/admin/:id/publish
 // @access Admin
 exports.togglePublish = async (req, res) => {
@@ -159,7 +221,17 @@ exports.togglePublish = async (req, res) => {
       [!!published, id]
     );
     if (result.rows.length === 0) return res.status(404).json({ success: false, error: 'Guide not found' });
-    res.status(200).json({ success: true, guide: result.rows[0] });
+
+    let pages = null;
+    if (published) {
+      try {
+        pages = await publishGuidePages(id);
+      } catch (err) {
+        pages = { warnings: [`Page generation failed: ${err.message}`], guidePageCommitted: false, bundlePageCommitted: false };
+      }
+    }
+
+    res.status(200).json({ success: true, guide: result.rows[0], pages });
   } catch (error) {
     console.error('togglePublish error:', error);
     res.status(500).json({ success: false, error: error.message });
