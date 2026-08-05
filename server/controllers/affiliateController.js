@@ -22,6 +22,10 @@ const SEED_PARTNERS = [
   { slug: 'the-fork', name: 'The Fork', category: 'dining', fallback_url: 'https://www.thefork.com' },
   { slug: 'charles-schwab', name: 'Charles Schwab', category: 'money', fallback_url: 'https://www.schwab.com' },
   { slug: 'priority-pass', name: 'Priority Pass', category: 'lounge_access', fallback_url: 'https://www.prioritypass.com' },
+  // Programs for the free-tool ("traffic bait") pages + video descriptions:
+  { slug: 'saily', name: 'Saily', category: 'esim', fallback_url: 'https://saily.com' },
+  { slug: 'getyourguide', name: 'GetYourGuide', category: 'attractions', fallback_url: 'https://www.getyourguide.com' },
+  { slug: 'viator', name: 'Viator', category: 'attractions', fallback_url: 'https://www.viator.com' },
 ];
 
 async function seedAffiliatePartners() {
