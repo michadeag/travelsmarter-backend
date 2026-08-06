@@ -440,6 +440,9 @@ app.get('/og-images/:filename', async (req, res) => {
     if (!imageData) return res.status(404).send('Not found');
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Cache-Control', 'public, max-age=604800'); // 7 days — these rarely change
+    // Override helmet's default CORP (same-origin): these images are meant
+    // to be embedded cross-origin (admin dashboard, link previews, etc.)
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.send(imageData);
   } catch (err) {
     console.error('og-images serve error:', err.message);
