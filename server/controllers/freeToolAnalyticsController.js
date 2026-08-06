@@ -364,8 +364,8 @@ exports.getRecentLeads = async (req, res) => {
 // @access Admin
 exports.deleteLead = async (req, res) => {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (!Number.isInteger(id)) {
+    const id = String(req.params.id);
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
       return res.status(400).json({ success: false, error: 'invalid id' });
     }
     const { rows } = await pool.query(
