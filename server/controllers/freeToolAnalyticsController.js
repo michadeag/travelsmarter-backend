@@ -342,7 +342,7 @@ exports.getRecentLeads = async (req, res) => {
   try {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
     const { rows } = await pool.query(
-      `SELECT email, first_name, tool_slug, source_page, created_at,
+      `SELECT id, email, first_name, tool_slug, source_page, created_at,
               (converted_to_user_id IS NOT NULL) AS converted
        FROM tool_leads
        ORDER BY created_at DESC
@@ -352,6 +352,32 @@ exports.getRecentLeads = async (req, res) => {
     res.json({ success: true, data: rows });
   } catch (error) {
     console.error('getRecentLeads error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc Permanently delete a single lead by id — for manually removing
+//   test signups that have a syntactically valid email (own/dev tests)
+//   and therefore aren't caught by the invalid-leads cleanup.
+//   Cascades to tool_lead_scheduled_emails, cancelling its drip emails.
+// @route DELETE /api/analytics/free-tools/leads/:id
+// @access Admin
+exports.deleteLead = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ success: false, error: 'invalid id' });
+    }
+    const { rows } = await pool.query(
+      `DELETE FROM tool_leads WHERE id = $1 RETURNING id, email`,
+      [id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Lead not found' });
+    }
+    res.json({ success: true, deleted: rows[0] });
+  } catch (error) {
+    console.error('deleteLead error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 };
