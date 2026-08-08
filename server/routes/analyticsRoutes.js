@@ -25,7 +25,9 @@ const {
   getInvalidLeads,
   deleteInvalidLeads,
   deleteLead,
-  getBundleConversionStats
+  getBundleConversionStats,
+  trackToolCalculate,
+  getFunnelStats
 } = require('../controllers/freeToolAnalyticsController');
 
 // All analytics routes require admin authentication
@@ -41,6 +43,8 @@ router.get('/pageviews', protectWithAdminFallback, getPageviews);
 // Free-tool pageview tracking (POST is public, beacon from every free-tool
 // page; GET endpoints power the admin "Free Tools" analytics tab)
 router.post('/free-tools/track', trackFreeToolPageview);
+router.post('/free-tools/track-calc', trackToolCalculate);
+router.get('/free-tools/funnel', verifyAdminToken, getFunnelStats);
 router.get('/free-tools/daily', verifyAdminToken, getDailyPageviews);
 router.get('/free-tools/summary', verifyAdminToken, getFreeToolsSummary);
 router.get('/free-tools/top', verifyAdminToken, getTopFreeToolPages);

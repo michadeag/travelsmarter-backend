@@ -66,6 +66,67 @@ exports.trackFreeToolPageview = async (req, res) => {
   }
 };
 
+// @desc Track one successful on-page tool calculation (middle funnel step).
+// @route POST /api/analytics/free-tools/track-calc
+// @access Public (beacon from every tool page)
+exports.trackToolCalculate = async (req, res) => {
+  try {
+    const { path: rawPath } = req.body;
+    if (!rawPath || typeof rawPath !== 'string' || rawPath.length > 300) {
+      return res.status(200).json({ success: true, tracked: false });
+    }
+    const toolSlug = deriveToolSlug(rawPath);
+    if (!toolSlug) {
+      return res.status(200).json({ success: true, tracked: false });
+    }
+    await pool.query(
+      'INSERT INTO free_tool_calc_events (page_path, tool_slug) VALUES ($1, $2)',
+      [rawPath.slice(0, 300), toolSlug]
+    );
+    res.status(200).json({ success: true, tracked: true });
+  } catch (error) {
+    console.error('trackToolCalculate error:', error.message);
+    res.status(200).json({ success: true, tracked: false });
+  }
+};
+
+// @desc Funnel per tool over the last N days: views -> calculations -> leads,
+//   with conversion rates — the on-site equivalent of the GA4 event funnel.
+// @route GET /api/analytics/free-tools/funnel?days=30
+// @access Admin
+exports.getFunnelStats = async (req, res) => {
+  try {
+    const days = Math.min(180, Math.max(1, parseInt(req.query.days, 10) || 30));
+    const [views, calcs, leads] = await Promise.all([
+      pool.query(
+        `SELECT tool_slug, COUNT(*)::int AS n FROM free_tool_page_views
+         WHERE viewed_at >= NOW() - ($1 || ' days')::interval GROUP BY tool_slug`, [days]),
+      pool.query(
+        `SELECT tool_slug, COUNT(*)::int AS n FROM free_tool_calc_events
+         WHERE created_at >= NOW() - ($1 || ' days')::interval GROUP BY tool_slug`, [days]),
+      pool.query(
+        `SELECT tool_slug, source_page, COUNT(*)::int AS n FROM tool_leads
+         WHERE created_at >= NOW() - ($1 || ' days')::interval GROUP BY tool_slug, source_page`, [days]),
+    ]);
+    const byTool = {};
+    const get = s => (byTool[s] = byTool[s] || { tool_slug: s, views: 0, calcs: 0, leads: 0 });
+    views.rows.forEach(r => { get(r.tool_slug).views += r.n; });
+    calcs.rows.forEach(r => { get(r.tool_slug).calcs += r.n; });
+    leads.rows.forEach(r => {
+      const attributed = attributeLeadToTool({ tool_slug: r.tool_slug, source_page: r.source_page }) || r.tool_slug;
+      get(attributed).leads += r.n;
+    });
+    const tools = Object.values(byTool).sort((a, b) => b.views - a.views);
+    const total = tools.reduce((t, r) => ({
+      views: t.views + r.views, calcs: t.calcs + r.calcs, leads: t.leads + r.leads,
+    }), { views: 0, calcs: 0, leads: 0 });
+    res.json({ success: true, days, total, tools });
+  } catch (error) {
+    console.error('getFunnelStats error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 // @desc Daily pageview totals across all free-tool pages, for a chart.
 // @route GET /api/analytics/free-tools/daily?days=30
 // @access Admin

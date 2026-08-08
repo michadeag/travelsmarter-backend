@@ -2010,6 +2010,20 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_free_tool_page_views_page_path ON free_tool_page_views(page_path);
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
 
+    // Middle step of the tool-page funnel (view -> CALCULATE -> lead):
+    // one row per successful on-page tool calculation. Together with
+    // free_tool_page_views and tool_leads this powers the admin funnel view.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS free_tool_calc_events (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        page_path VARCHAR(300) NOT NULL,
+        tool_slug VARCHAR(100) NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_free_tool_calc_events_created_at ON free_tool_calc_events(created_at);
+      CREATE INDEX IF NOT EXISTS idx_free_tool_calc_events_tool_slug ON free_tool_calc_events(tool_slug);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
     // Which page a tool_leads row came from (e.g. a specific country/airline
     // variant page, not just the tool as a whole), plus a per-lead
     // unsubscribe token/opt-out for the 30-day drip sequence below — leads
