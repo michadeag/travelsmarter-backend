@@ -271,8 +271,14 @@ async function initializeToolLeadSequence(leadId, leadEmail, firstName) {
     let scheduledCount = 0;
     for (const template of templatesResult.rows) {
       const scheduledAt = new Date();
-      scheduledAt.setUTCDate(scheduledAt.getUTCDate() + template.day);
-      scheduledAt.setUTCHours(15, 0, 0, 0); // 15:00 UTC — an hour after the main welcome sequence, to spread send load
+      if (template.day <= 1) {
+        // Day 1 (welcome) goes out immediately — the lead's interest peaks
+        // right after the download, not 24h later. The hourly scheduler
+        // picks it up on its next run.
+      } else {
+        scheduledAt.setUTCDate(scheduledAt.getUTCDate() + template.day - 1);
+        scheduledAt.setUTCHours(15, 0, 0, 0); // 15:00 UTC — an hour after the main welcome sequence, to spread send load
+      }
 
       try {
         await pool.query(
