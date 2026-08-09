@@ -180,14 +180,18 @@ const emailService = {
         msg.from = process.env.SENDGRID_FROM_EMAIL || 'michael@reesin.com';
       }
 
-      console.log(`📧 Sending email: ${msg.subject} to ${msg.to}`);
+      console.log(`📧 Sending email: ${msg.subject} to ${msg.to} (from: ${typeof msg.from === 'object' ? msg.from.email : msg.from})`);
       await sgMail.send(msg);
       console.log(`✉️ Email sent successfully to ${msg.to}`);
       return { success: true };
     } catch (error) {
       console.error(`❌ Failed to send email to ${msg.to}`);
       console.error(`Error message: ${error.message}`);
-      console.error(`Full error:`, error);
+      // The actual reason (unverified sender, plan limits, …) lives in the
+      // response body — dump it fully instead of '[Array]'.
+      if (error.response && error.response.body) {
+        console.error('SendGrid error detail:', JSON.stringify(error.response.body));
+      }
       return { success: false, error: error.message };
     }
   },
