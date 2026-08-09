@@ -2358,9 +2358,11 @@ app.listen(PORT, () => {
 ╚════════════════════════════════════════╝
   `);
 
-  // Email sequence scheduler - runs every hour to send pending emails
-  console.log('📧 Email sequence scheduler started (runs every hour)');
-  setInterval(async () => {
+  // Email sequence scheduler - runs every hour to send pending emails.
+  // Also runs once ~2 minutes after boot: a plain hourly interval means
+  // every deploy/restart delays overdue emails by up to a full hour.
+  console.log('📧 Email sequence scheduler started (runs every hour + once shortly after boot)');
+  const runEmailSchedulers = async () => {
     try {
       await emailSequenceService.sendPendingEmails();
     } catch (error) {
@@ -2376,7 +2378,9 @@ app.listen(PORT, () => {
     } catch (error) {
       console.error('❌ Error in Trip Brief Buyer email scheduler:', error);
     }
-  }, 60 * 60 * 1000);
+  };
+  setTimeout(runEmailSchedulers, 2 * 60 * 1000);
+  setInterval(runEmailSchedulers, 60 * 60 * 1000);
 
   // Tool OG image queue drainer - runs frequently since fire-and-forget
   // generation does not reliably survive past the triggering HTTP request
