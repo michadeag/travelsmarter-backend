@@ -139,14 +139,11 @@ exports.requeueFailedLeadEmails = async (req, res) => {
       `UPDATE tool_lead_scheduled_emails SET status = 'pending'
        WHERE status = 'failed' RETURNING id`
     );
-    // Send immediately instead of waiting up to an hour for the next
-    // scheduler tick — the admin is watching right now.
-    let sent = 0;
-    if (rows.length > 0) {
-      const result = await require('../services/toolLeadEmailSequence').sendPendingLeadEmails();
-      sent = result.sent || 0;
-    }
-    res.json({ success: true, requeued: rows.length, sent });
+    // Always run the sender immediately — this makes the button double as
+    // a manual "send everything due now" trigger instead of waiting up to
+    // an hour for the next scheduler tick.
+    const result = await require('../services/toolLeadEmailSequence').sendPendingLeadEmails();
+    res.json({ success: true, requeued: rows.length, sent: result.sent || 0 });
   } catch (error) {
     console.error('requeueFailedLeadEmails error:', error.message);
     res.status(500).json({ success: false, error: error.message });
