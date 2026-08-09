@@ -127,6 +127,25 @@ exports.getFunnelStats = async (req, res) => {
   }
 };
 
+// @desc Requeue failed lead-sequence emails for another delivery attempt —
+//   e.g. after fixing a SendGrid account/plan problem that caused a batch
+//   of 403s. Sets failed rows back to pending; the hourly scheduler (or
+//   the post-boot run) picks them up again.
+// @route POST /api/analytics/free-tools/requeue-failed-lead-emails
+// @access Admin
+exports.requeueFailedLeadEmails = async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `UPDATE tool_lead_scheduled_emails SET status = 'pending'
+       WHERE status = 'failed' RETURNING id`
+    );
+    res.json({ success: true, requeued: rows.length });
+  } catch (error) {
+    console.error('requeueFailedLeadEmails error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 // @desc Daily pageview totals across all free-tool pages, for a chart.
 // @route GET /api/analytics/free-tools/daily?days=30
 // @access Admin

@@ -27,7 +27,8 @@ const {
   deleteLead,
   getBundleConversionStats,
   trackToolCalculate,
-  getFunnelStats
+  getFunnelStats,
+  requeueFailedLeadEmails
 } = require('../controllers/freeToolAnalyticsController');
 
 // All analytics routes require admin authentication
@@ -62,6 +63,7 @@ router.get('/free-tools/leads-recent', verifyAdminToken, getRecentLeads);
 router.get('/free-tools/invalid-leads', verifyAdminToken, getInvalidLeads);
 router.delete('/free-tools/invalid-leads', verifyAdminToken, deleteInvalidLeads);
 router.delete('/free-tools/leads/:id', verifyAdminToken, deleteLead);
+router.post('/free-tools/requeue-failed-lead-emails', verifyAdminToken, requeueFailedLeadEmails);
 
 // Health & Safety single-tool-PDF vs category-bundle-PDF conversion
 // comparison — see categoryBundleController.js and the BUNDLE_ROLLOUT_DATE
