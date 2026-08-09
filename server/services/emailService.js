@@ -1,7 +1,23 @@
 const sgMail = require('@sendgrid/mail');
 
-// Initialize SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Initialize SendGrid from the environment if present. The authoritative
+// source is the admin-settings table — server.js calls refreshEmailConfig()
+// with the DB values at startup, and settingsController calls it again
+// whenever the key or sender address is saved in the dashboard.
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+function refreshEmailConfig({ apiKey, senderEmail } = {}) {
+  if (apiKey) {
+    sgMail.setApiKey(apiKey);
+    process.env.SENDGRID_API_KEY = apiKey; // keeps existing SET/NOT-SET logs truthful
+    console.log('🔑 SendGrid API key loaded from admin settings');
+  }
+  if (senderEmail) {
+    process.env.SENDGRID_FROM_EMAIL = senderEmail;
+  }
+}
 
 function wrap(body) {
   const appUrl = process.env.FRONTEND_URL || 'https://travelsmarterapp.com';
@@ -263,4 +279,5 @@ const emailService = {
   }
 };
 
+emailService.refreshEmailConfig = refreshEmailConfig;
 module.exports = emailService;

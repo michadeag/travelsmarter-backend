@@ -2226,6 +2226,24 @@ async function initializeApp() {
       console.warn('⚠️ Error updating Feature Spotlight templates:', err.message);
     });
 
+    // Load SendGrid credentials from the admin-settings table — the
+    // dashboard saves them to the DB, but @sendgrid/mail needs them set
+    // on the client. Without this, every send fails silently with an
+    // unset API key even though the dashboard shows a key as saved.
+    try {
+      const emailService = require('./services/emailService');
+      const { rows: emailCfg } = await pool.query(
+        `SELECT key, value FROM settings WHERE key IN ('sendgrid_api_key', 'sender_email')`
+      );
+      const cfg = Object.fromEntries(emailCfg.map(r => [r.key, r.value]));
+      emailService.refreshEmailConfig({ apiKey: cfg.sendgrid_api_key, senderEmail: cfg.sender_email });
+      if (!cfg.sendgrid_api_key && !process.env.SENDGRID_API_KEY) {
+        console.warn('⚠️ No SendGrid API key in settings or environment — emails will NOT send');
+      }
+    } catch (err) {
+      console.warn('⚠️ Error loading email config from settings:', err.message);
+    }
+
     // Seed the free-tool-leads 30-day drip sequence, then sync from code
     await toolLeadEmailSequence.seedToolLeadSequence().catch(err => {
       console.warn('⚠️ Error seeding Free Tool Leads templates:', err.message);

@@ -164,6 +164,19 @@ class SettingsController {
         updatedSettings.push(result.rows[0]);
       }
 
+      // Apply email config immediately — no server restart needed after
+      // saving a new SendGrid key or sender address in the dashboard.
+      if (settings.sendgrid_api_key || settings.sender_email) {
+        try {
+          require('../services/emailService').refreshEmailConfig({
+            apiKey: settings.sendgrid_api_key,
+            senderEmail: settings.sender_email,
+          });
+        } catch (e) {
+          console.warn('⚠️ Could not refresh email config:', e.message);
+        }
+      }
+
       res.status(200).json({
         success: true,
         data: updatedSettings,
