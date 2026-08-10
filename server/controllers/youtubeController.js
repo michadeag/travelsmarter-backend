@@ -16,6 +16,32 @@ function relevantTips(title, description, n = 4) {
   return (top.length ? top : scored.sort(() => Math.random() - 0.5).slice(0, n)).map(t => t.tip);
 }
 
+// @desc Daily rotating comment-marketing topic: one free tool per day
+//   (deterministic day-of-year rotation, same idea as the video pipeline)
+//   plus ready-made YouTube search queries for it.
+// @route GET /api/youtube/daily-topic
+exports.dailyTopic = (req, res) => {
+  const dayOfYear = Math.floor((Date.now() - Date.UTC(new Date().getUTCFullYear(), 0, 0)) / 86400000);
+  const tool = TOOLS[dayOfYear % TOOLS.length];
+  const base = tool.name
+    .replace(/Checker|Calculator|Generator|Converter/gi, '')
+    .replace(/&.*$/, '')
+    .trim();
+  res.json({
+    success: true,
+    data: {
+      tool: tool.name,
+      hook: tool.hook,
+      tip: tool.tip,
+      queries: [
+        `${base} travel tips`,
+        `${base} mistakes`,
+        `travel hacks ${base.toLowerCase()}`,
+      ],
+    },
+  });
+};
+
 exports.searchVideos = async (req, res) => {
   try {
     const { q } = req.query;
