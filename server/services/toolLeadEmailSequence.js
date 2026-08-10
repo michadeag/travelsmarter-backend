@@ -423,4 +423,5 @@ module.exports = {
   updateToolLeadTemplates,
   initializeToolLeadSequence,
   sendPendingLeadEmails,
+  TOOLS, // fact pool, reused by the YouTube comment assistant
 };

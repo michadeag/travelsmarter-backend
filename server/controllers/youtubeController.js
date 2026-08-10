@@ -1,5 +1,20 @@
 const { searchVideos } = require('../services/youtubeService');
+const { TOOLS } = require('../services/toolLeadEmailSequence');
 const Anthropic = require('@anthropic-ai/sdk');
+
+// Pick the tool tips most relevant to a video title/description, as raw
+// material for a comment that demonstrates expertise instead of praising.
+function relevantTips(title, description, n = 4) {
+  const text = `${title} ${description}`.toLowerCase();
+  const scored = TOOLS.map(t => {
+    const words = `${t.name} ${t.hook}`.toLowerCase().split(/[^a-z]+/).filter(w => w.length > 3);
+    const score = words.reduce((s, w) => s + (text.includes(w) ? 1 : 0), 0);
+    return { tip: t.tip, score };
+  }).sort((a, b) => b.score - a.score);
+  const top = scored.filter(t => t.score > 0).slice(0, n);
+  // fall back to a random sample so the model always has material
+  return (top.length ? top : scored.sort(() => Math.random() - 0.5).slice(0, n)).map(t => t.tip);
+}
 
 exports.searchVideos = async (req, res) => {
   try {
@@ -26,19 +41,25 @@ exports.generateComment = async (req, res) => {
       max_tokens: 300,
       messages: [{
         role: 'user',
-        content: `You are a travel hacking expert. Write a helpful, genuine YouTube comment for this video that adds value and naturally mentions TravelSmarter (https://travelsmarterapp.com) as a free resource for travel hacking tips.
+        content: `Write a YouTube comment for this travel video. The goal: demonstrate so much genuine expertise that viewers get curious and click the commenter's profile. The comment itself must contain NO link and NO brand mention — the profile does that work.
 
 Video title: "${title}"
 Channel: "${channel}"
 Description snippet: "${description}"
 
+The comment formula:
+1. One short acknowledgment of the video's specific topic (not generic praise)
+2. ONE concrete, surprising, useful fact or number the video likely didn't cover — pick and adapt the best-fitting one from the verified facts below
+3. Optionally a brief first-person touch ("saved me $180 last month", "learned that the hard way")
+
+Verified facts to draw from (pick ONE, rephrase naturally):
+${relevantTips(title, description).map((t, i) => `${i + 1}. ${t}`).join('\n')}
+
 Rules:
-- Sound natural and genuine, NOT spammy
-- Add a real insight or tip related to the video topic first
-- Only mention TravelSmarter once at the end, casually
-- Max 4 sentences
-- No emojis, no "Great video!" openers
-- Write in English
+- 2-3 sentences max, conversational US English
+- NO links, NO brand names, NO "check out", NO call to action
+- No "Great video!" openers, at most one emoji or none
+- Must read like a knowledgeable traveler, not a marketer
 
 Return ONLY the comment text, nothing else.`
       }]
