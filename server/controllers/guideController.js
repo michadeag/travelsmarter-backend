@@ -163,29 +163,51 @@ async function publishGuidePages(guideId) {
   if (guideResult.rows.length === 0) return { warnings: ['Guide not found or not published'], guidePageCommitted, bundlePageCommitted };
   const guide = guideResult.rows[0];
 
+  // Every published guide for this country, in a stable order. Used both to
+  // (re)generate each guide's own page — so its "More <country> guides"
+  // cross-links stay current when siblings are added — and to build the
+  // bundle page. country_slug is selected too so each row is a complete guide
+  // object renderGuidePage can render.
+  let countryGuides = null;
   try {
-    const html = renderGuidePage(guide, BUNDLE_PRICE_CENTS);
-    await githubService.commitFile(`guide-${guide.slug}.html`, html, `Publish guide: ${guide.title}`);
-    guidePageCommitted = true;
+    countryGuides = (await pool.query(
+      `SELECT slug, title, subtitle, country_slug, country_name, category, price_cents, free_items
+       FROM guides WHERE country_slug = $1 AND published = true ORDER BY category ASC, title ASC`,
+      [guide.country_slug]
+    )).rows;
   } catch (err) {
-    warnings.push(`Guide page not published: ${err.message}`);
+    warnings.push(`Could not load ${guide.country_name} guides: ${err.message}`);
+  }
+
+  // Regenerate a page for every country guide, each with the *other* guides as
+  // its siblings. commitFile skips writes whose content is unchanged, so only
+  // pages whose sibling list actually shifted get a fresh commit. Falls back to
+  // just this guide's page (no siblings) if the country query failed.
+  const pagesToRender = countryGuides || [guide];
+  for (const g of pagesToRender) {
+    const siblings = countryGuides ? countryGuides.filter(x => x.slug !== g.slug) : [];
+    const isMain = g.slug === guide.slug;
+    try {
+      const html = renderGuidePage(g, BUNDLE_PRICE_CENTS, siblings);
+      const msg = isMain ? `Publish guide: ${g.title}` : `Update ${g.title} guide page (cross-links)`;
+      await githubService.commitFile(`guide-${g.slug}.html`, html, msg);
+      if (isMain) guidePageCommitted = true;
+    } catch (err) {
+      warnings.push(`Guide page ${g.slug} not published: ${err.message}`);
+    }
   }
 
   try {
-    const countryGuides = await pool.query(
-      `SELECT slug, title, subtitle, category, price_cents, free_items, country_name
-       FROM guides WHERE country_slug = $1 AND published = true ORDER BY category ASC, title ASC`,
-      [guide.country_slug]
-    );
-    const singleTotalCents = countryGuides.rows.reduce((sum, g) => sum + g.price_cents, 0);
+    if (!countryGuides) throw new Error('country guides unavailable');
+    const singleTotalCents = countryGuides.reduce((sum, g) => sum + g.price_cents, 0);
     if (BUNDLE_PRICE_CENTS >= singleTotalCents) {
-      warnings.push(`Bundle page skipped: $${(BUNDLE_PRICE_CENTS / 100).toFixed(2)} bundle isn't cheaper than the ${countryGuides.rows.length} guide(s) bought separately ($${(singleTotalCents / 100).toFixed(2)}) yet — publish more ${guide.country_name} guides first.`);
+      warnings.push(`Bundle page skipped: $${(BUNDLE_PRICE_CENTS / 100).toFixed(2)} bundle isn't cheaper than the ${countryGuides.length} guide(s) bought separately ($${(singleTotalCents / 100).toFixed(2)}) yet — publish more ${guide.country_name} guides first.`);
     } else {
-      const featuredSlugs = await selectFeaturedSlugs(countryGuides.rows);
+      const featuredSlugs = await selectFeaturedSlugs(countryGuides);
       const bundleHtml = renderBundlePage({
         countrySlug: guide.country_slug,
         countryName: guide.country_name,
-        guides: countryGuides.rows,
+        guides: countryGuides,
         bundlePriceCents: BUNDLE_PRICE_CENTS,
         featuredSlugs,
       });

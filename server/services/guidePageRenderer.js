@@ -16,7 +16,7 @@ function faqJsonLd(faqs) {
   }, null, 2);
 }
 
-function renderGuidePage(guide, bundlePriceCents) {
+function renderGuidePage(guide, bundlePriceCents, siblings = []) {
   const priceUSD = (guide.price_cents / 100).toFixed(2);
   const bundleUSD = (bundlePriceCents / 100).toFixed(2);
   const freeItems = guide.free_items || [];
@@ -40,6 +40,21 @@ function renderGuidePage(guide, bundlePriceCents) {
                 <h3>${f.q}</h3>
                 <p>${f.a}</p>
             </div>`).join('\n');
+
+  // Cross-links to every other published guide for this country — good for
+  // internal SEO and for nudging the bundle. Titles/subtitles only, never the
+  // PDF. Empty (section omitted) when this is the country's only guide.
+  const siblingsHtml = (siblings && siblings.length) ? `
+        <div class="card">
+            <h2 style="font-size:1.15em; color:#1a2744; margin-bottom:6px;">More ${guide.country_name} guides</h2>
+            <p style="color:#6b7280; font-size:13.5px; margin-bottom:14px;">Every ${guide.country_name} guide is in the bundle — or grab any one on its own.</p>
+            <div class="more-guides">
+${siblings.map(s => `                <a class="more-guide-row" href="guide-${s.slug}.html">
+                    <span class="more-guide-title">${s.title}</span>${s.subtitle ? `
+                    <span class="more-guide-sub">${s.subtitle}</span>` : ''}
+                </a>`).join('\n')}
+            </div>
+        </div>` : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -137,6 +152,12 @@ function renderGuidePage(guide, bundlePriceCents) {
             text-align:center; margin-top:16px; font-size:13px; color:#c7d2fe;
         }
         .bundle-cta a { color:white; font-weight:700; text-decoration:underline; }
+        .more-guides { display:flex; flex-direction:column; }
+        .more-guide-row { display:block; padding:12px 0; border-bottom:1px solid #f3f4f6; text-decoration:none; }
+        .more-guide-row:last-child { border-bottom:none; }
+        .more-guide-title { display:block; color:#1a2744; font-weight:700; font-size:15px; }
+        .more-guide-sub { display:block; color:#6b7280; font-size:13.5px; margin-top:2px; }
+        .more-guide-row:hover .more-guide-title { color:#ff6b4a; }
         .content-block h2 { font-size:1.3em; color:#1a2744; margin-bottom:12px; }
         .faq-item { margin-bottom:18px; }
         .faq-item h3 { font-size:1.02em; color:#1a2744; margin-bottom:6px; }
@@ -176,6 +197,8 @@ function renderGuidePage(guide, bundlePriceCents) {
                 Want every ${guide.country_name} guide? <a href="guides-bundle-${guide.country_slug}.html">Get the bundle for $${bundleUSD} →</a>
             </div>
         </div>
+
+        ${siblingsHtml}
 
         <div class="card content-block">
             <h2>Frequently asked questions</h2>

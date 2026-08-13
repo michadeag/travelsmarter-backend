@@ -39,12 +39,22 @@ async function commitFile(filePath, content, message) {
 
   const url = `${API_BASE}/repos/${repo}/contents/${filePath}`;
   let sha;
+  let existingContent = null;
   try {
     const existing = await axios.get(url, { headers: headers(token) });
     sha = existing.data.sha;
+    if (existing.data.content && existing.data.encoding === 'base64') {
+      existingContent = Buffer.from(existing.data.content, 'base64').toString('utf8');
+    }
   } catch (err) {
     if (err.response?.status !== 404) throw err;
     sha = undefined;
+  }
+
+  // Nothing changed — skip the write so a publish that regenerates every
+  // country page doesn't produce a churn of identical commits.
+  if (existingContent !== null && existingContent === content) {
+    return { committed: false, unchanged: true };
   }
 
   await axios.put(url, {
@@ -53,6 +63,8 @@ async function commitFile(filePath, content, message) {
     branch: 'main',
     ...(sha ? { sha } : {}),
   }, { headers: headers(token) });
+
+  return { committed: true, unchanged: false };
 }
 
 module.exports = { commitFile, getSettings };
