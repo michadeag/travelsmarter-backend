@@ -3,6 +3,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const emailService = require('../services/emailService');
 const githubService = require('../services/githubService');
 const { renderGuidePage, renderBundlePage } = require('../services/guidePageRenderer');
+const { selectFeaturedSlugs } = require('../services/guideBundleCuration');
 
 // PDF travel guides ("100 Best Restaurants in Germany" etc.) — content is
 // manually researched and written outside this app, then uploaded here as a
@@ -180,11 +181,13 @@ async function publishGuidePages(guideId) {
     if (BUNDLE_PRICE_CENTS >= singleTotalCents) {
       warnings.push(`Bundle page skipped: $${(BUNDLE_PRICE_CENTS / 100).toFixed(2)} bundle isn't cheaper than the ${countryGuides.rows.length} guide(s) bought separately ($${(singleTotalCents / 100).toFixed(2)}) yet — publish more ${guide.country_name} guides first.`);
     } else {
+      const featuredSlugs = await selectFeaturedSlugs(countryGuides.rows);
       const bundleHtml = renderBundlePage({
         countrySlug: guide.country_slug,
         countryName: guide.country_name,
         guides: countryGuides.rows,
         bundlePriceCents: BUNDLE_PRICE_CENTS,
+        featuredSlugs,
       });
       await githubService.commitFile(`guides-bundle-${guide.country_slug}.html`, bundleHtml, `Update ${guide.country_name} guide bundle page`);
       bundlePageCommitted = true;

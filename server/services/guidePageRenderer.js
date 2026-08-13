@@ -239,12 +239,23 @@ ${faqHtml}
 }
 
 function renderBundlePage(data) {
-  const { countrySlug, countryName, guides, bundlePriceCents } = data;
+  const { countrySlug, countryName, guides, bundlePriceCents, featuredSlugs } = data;
   const bundleUSD = (bundlePriceCents / 100).toFixed(2);
   const singleTotal = guides.reduce((sum, g) => sum + g.price_cents, 0) / 100;
   const savings = (singleTotal - bundlePriceCents / 100).toFixed(2);
 
-  const guideListHtml = guides.map(g => `
+  // Split into featured (spotlight, shown with description) and the rest
+  // (listed compactly as "also included"). featuredSlugs is the curated 3–9
+  // chosen upstream; if it's missing or empty, feature everything so the page
+  // still renders. Every guide stays in the bundle either way — this only
+  // decides the layout.
+  const orderedFeatured = (featuredSlugs && featuredSlugs.length ? featuredSlugs : guides.map(g => g.slug));
+  const featuredSet = new Set(orderedFeatured);
+  const bySlug = Object.fromEntries(guides.map(g => [g.slug, g]));
+  const featured = orderedFeatured.map(s => bySlug[s]).filter(Boolean);
+  const rest = guides.filter(g => !featuredSet.has(g.slug));
+
+  const guideListHtml = featured.map(g => `
                 <div class="guide-row">
                     <div>
                         <strong>${g.title}</strong>
@@ -252,6 +263,14 @@ function renderBundlePage(data) {
                     </div>
                     <span class="guide-price">$${(g.price_cents / 100).toFixed(2)}</span>
                 </div>`).join('\n');
+
+  const alsoIncludedHtml = rest.length ? `
+            <div class="also-included">
+                <p class="also-included-label">Also included</p>
+                <ul class="also-list">
+${rest.map(g => `                    <li>${g.title}</li>`).join('\n')}
+                </ul>
+            </div>` : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -315,6 +334,11 @@ function renderBundlePage(data) {
         .guide-row strong { color:#1a2744; }
         .guide-row p { color:#6b7280; font-size:13.5px; margin-top:2px; }
         .guide-price { flex-shrink:0; color:#9ca3af; font-weight:700; text-decoration:line-through; }
+        .included-sub { color:#6b7280; font-size:13.5px; margin-bottom:14px; }
+        .also-included { margin-top:18px; padding-top:16px; border-top:1px solid #f3f4f6; }
+        .also-included-label { font-weight:700; color:#1a2744; font-size:14px; margin-bottom:10px; }
+        .also-list { list-style:none; display:flex; flex-wrap:wrap; gap:8px; }
+        .also-list li { background:#f0f4ff; color:#1a2744; font-size:13px; padding:5px 12px; border-radius:14px; }
         .paywall-card { background:linear-gradient(135deg,#1a2744 0%,#2d3f6b 100%); color:white; text-align:center; }
         .paywall-card h2 { font-size:1.3em; margin-bottom:8px; }
         .paywall-card p { color:#c7d2fe; margin-bottom:20px; font-size:14px; }
@@ -351,8 +375,9 @@ function renderBundlePage(data) {
 
     <div class="container">
         <div class="card">
-            <h2 style="font-size:1.15em; color:#1a2744; margin-bottom:8px;">What's included (${guides.length} guide${guides.length !== 1 ? 's' : ''})</h2>
-${guideListHtml}
+            <h2 style="font-size:1.15em; color:#1a2744; margin-bottom:4px;">What's included (${guides.length} guide${guides.length !== 1 ? 's' : ''})</h2>
+            <p class="included-sub">All ${guides.length} guide${guides.length !== 1 ? 's are' : ' is'} in the bundle${rest.length ? ' — highlights first, the rest listed below' : ''}.</p>
+${guideListHtml}${alsoIncludedHtml}
         </div>
 
         <div class="card paywall-card">
