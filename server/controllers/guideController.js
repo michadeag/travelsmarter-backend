@@ -133,7 +133,21 @@ exports.updateGuide = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Guide not found' });
     }
-    res.status(200).json({ success: true, guide: result.rows[0] });
+
+    // If the guide is already live, regenerate its page (and the bundle +
+    // sibling cross-links) right away, so an edit — new preview items, title,
+    // price — shows up without a manual unpublish/publish round-trip.
+    // commitFile skips unchanged files, so a no-op edit commits nothing.
+    let pages = null;
+    if (result.rows[0].published) {
+      try {
+        pages = await publishGuidePages(id);
+      } catch (err) {
+        pages = { warnings: [`Page regeneration failed: ${err.message}`], guidePageCommitted: false, bundlePageCommitted: false };
+      }
+    }
+
+    res.status(200).json({ success: true, guide: result.rows[0], pages });
   } catch (error) {
     console.error('updateGuide error:', error);
     res.status(500).json({ success: false, error: error.message });
