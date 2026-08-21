@@ -47,8 +47,8 @@ exports.searchVideos = async (req, res) => {
     const { q } = req.query;
     if (!q) return res.status(400).json({ success: false, message: 'Query required' });
 
-    const videos = await searchVideos(q, 10);
-    res.json({ success: true, data: videos });
+    const { videos, windowDays } = await searchVideos(q, 10);
+    res.json({ success: true, data: videos, windowDays });
   } catch (err) {
     console.error('YouTube search error:', err.message);
     res.status(500).json({ success: false, message: err.message });
