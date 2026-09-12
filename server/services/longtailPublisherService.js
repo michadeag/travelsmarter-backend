@@ -3,7 +3,14 @@ const pool = require('../config/database');
 const githubService = require('./githubService');
 const { generateLongtailContent } = require('./longtailContentService');
 const { renderLongtailPage } = require('./longtailPageRenderer');
-const { TEMPLATES, COUNTRIES, slugify } = require('./longtailTopicCatalog');
+const { TEMPLATES, COUNTRIES, TOOLS, slugify } = require('./longtailTopicCatalog');
+
+// Duplicated from guideController.js (SINGLE_PRICE_CENTS / BUNDLE_PRICE_CENTS)
+// rather than imported, same reasoning as elsewhere in this file — this is
+// only needed to decide whether the bundle page actually exists for a
+// country (guideController.js skips publishing it if $29 isn't cheaper than
+// the guides bought separately) before linking to it.
+const GUIDE_BUNDLE_PRICE_CENTS = 2900;
 
 // Publishes 1-2 new long-tail Q&A pages/day, fully automatically: picks
 // the next (template, country) pair not yet published, generates content,
@@ -89,10 +96,43 @@ async function appendToSitemap(newSlugs) {
   await githubService.commitFile('sitemap.xml', updated, `Add ${newSlugs.length} long-tail page(s) to sitemap`);
 }
 
+// Decides what to pitch on a long-tail page for this country: an existing
+// PDF guide (or the bundle, if it's actually cheaper than buying the guides
+// separately — same $29 threshold guideController.js uses to decide whether
+// to publish the bundle page at all) takes priority since it's a real,
+// already-paid-for product; otherwise falls back to the template's closest-
+// matching free tool, or a generic hub link if no tool is a good fit.
+async function buildPitch(template, country) {
+  const { rows: guideRows } = await pool.query(
+    `SELECT slug, title, price_cents FROM guides WHERE country_slug = $1 AND published = true ORDER BY title`,
+    [country.slug]
+  );
+
+  if (guideRows.length > 0) {
+    const singleTotalCents = guideRows.reduce((sum, g) => sum + g.price_cents, 0);
+    const bundleAvailable = guideRows.length > 1 && GUIDE_BUNDLE_PRICE_CENTS < singleTotalCents;
+    return {
+      type: 'guides',
+      countryName: country.name,
+      countrySlug: country.slug,
+      count: guideRows.length,
+      featured: guideRows.slice(0, 3).map(g => ({ slug: g.slug, title: g.title })),
+      bundleAvailable,
+    };
+  }
+
+  if (template.toolSlug && TOOLS[template.toolSlug]) {
+    return { type: 'tool', slug: template.toolSlug, ...TOOLS[template.toolSlug] };
+  }
+
+  return { type: 'hub' };
+}
+
 async function publishOne(template, country) {
   const slug = pageSlugFor(template.key, country.slug);
   const content = await generateLongtailContent(template, country);
   const title = template.question(country);
+  const pitch = await buildPitch(template, country);
 
   const { rows: siblingRows } = await pool.query(
     `SELECT country_slug, country_name FROM longtail_pages WHERE template_key = $1`,
@@ -108,7 +148,7 @@ async function publishOne(template, country) {
 
   const html = renderLongtailPage({
     title, question: content.question, countryName: country.name,
-    content, slug, templateKey: template.key, countrySlug: country.slug,
+    content, slug, templateKey: template.key, countrySlug: country.slug, pitch,
   }, siblings);
 
   await githubService.commitFile(`${slug}.html`, html, `Publish long-tail page: ${title}`);

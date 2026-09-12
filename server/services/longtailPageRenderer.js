@@ -19,8 +19,56 @@ function faqJsonLd(faqs) {
   }, null, 2);
 }
 
+// Builds the product-pitch card: an existing PDF guide/bundle for this
+// country if one exists (checked at publish time in
+// longtailPublisherService.js), otherwise the template's best-matching free
+// tool, otherwise a generic link to the free-tools hub. Kept topically
+// relevant rather than a blanket app pitch on every page.
+function renderPitchCard(pitch, countryName) {
+  if (!pitch || pitch.type === 'hub') {
+    return `        <div class="card pitch-card">
+            <p class="pitch-eyebrow">Planning this trip?</p>
+            <p>Explore more free tools built for exactly this kind of question.</p>
+            <a class="pitch-cta" href="free-travel-tools.html">See all free travel tools →</a>
+        </div>`;
+  }
+
+  if (pitch.type === 'tool') {
+    return `        <div class="card pitch-card">
+            <p class="pitch-eyebrow">Planning this trip?</p>
+            <p>${pitch.icon} Check our free <strong>${pitch.name}</strong> before you go.</p>
+            <a class="pitch-cta" href="${pitch.slug}.html">Try the ${pitch.name} →</a>
+        </div>`;
+  }
+
+  // pitch.type === 'guides'
+  if (pitch.count === 1) {
+    const g = pitch.featured[0];
+    return `        <div class="card pitch-card">
+            <p class="pitch-eyebrow">Planning this trip?</p>
+            <p>📖 Our <strong>${g.title}</strong> guide covers this and more — an offline-ready PDF for ${countryName}.</p>
+            <a class="pitch-cta" href="guide-${g.slug}.html">Get the guide →</a>
+        </div>`;
+  }
+
+  if (pitch.bundleAvailable) {
+    return `        <div class="card pitch-card">
+            <p class="pitch-eyebrow">Planning this trip?</p>
+            <p>📖 We publish PDF guides for ${countryName} — get all ${pitch.count} in one bundle, ready offline.</p>
+            <a class="pitch-cta" href="guides-bundle-${pitch.countrySlug}.html">Get the ${countryName} bundle →</a>
+        </div>`;
+  }
+
+  const g = pitch.featured[0];
+  return `        <div class="card pitch-card">
+            <p class="pitch-eyebrow">Planning this trip?</p>
+            <p>📖 We publish PDF guides for ${countryName}, including <strong>${g.title}</strong> — offline-ready for this trip.</p>
+            <a class="pitch-cta" href="guide-${g.slug}.html">Get the guide →</a>
+        </div>`;
+}
+
 function renderLongtailPage(page, allCountriesForTemplate) {
-  const { title, question, countryName, content, slug, templateKey } = page;
+  const { title, question, countryName, content, slug, templateKey, pitch } = page;
   const { answer, context, tip, faqs } = content;
 
   const faqHtml = faqs.map(f => `            <div class="faq-item">
@@ -99,6 +147,11 @@ function renderLongtailPage(page, allCountriesForTemplate) {
         .card p { color:#4b5563; font-size:15px; margin-bottom:14px; }
         .card p:last-child { margin-bottom:0; }
         .tip-box { background:#fff7ed; border-left:4px solid #ff6b4a; padding:14px 18px; border-radius:6px; font-size:14px; color:#7c2d12; }
+        .pitch-card { background:#f0f4ff; border:1px solid #dbe4ff; }
+        .pitch-eyebrow { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#667eea; margin-bottom:8px; }
+        .pitch-card p:not(.pitch-eyebrow) { color:#1f2937; }
+        .pitch-cta { display:inline-block; margin-top:6px; color:#ff6b4a; font-weight:700; text-decoration:none; }
+        .pitch-cta:hover { text-decoration:underline; }
         label { display:block; font-weight:600; font-size:13px; margin-bottom:6px; color:#374151; }
         select { width:100%; padding:10px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; }
         .content-block h2 { font-size:1.25em; color:#1a2744; margin-bottom:12px; }
@@ -125,6 +178,8 @@ function renderLongtailPage(page, allCountriesForTemplate) {
             <p>${context}</p>
             ${tip ? `<div class="tip-box">💡 ${tip}</div>` : ''}
         </div>
+
+${renderPitchCard(pitch, countryName)}
 
         <div class="card">
             <label for="country-switch">Ask about a different country</label>
