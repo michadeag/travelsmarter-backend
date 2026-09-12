@@ -126,17 +126,20 @@ async function publishDailyBatch() {
   const candidates = await pickNextCandidates(PAGES_PER_DAY);
   if (candidates.length === 0) {
     console.log('📄 Long-tail pipeline: catalog exhausted, nothing left to publish');
-    return { published: [] };
+    return { published: [], errors: [] };
   }
 
   const published = [];
+  const errors = [];
   for (const { template, country } of candidates) {
     try {
       const slug = await publishOne(template, country);
       published.push(slug);
       console.log(`✅ Long-tail page published: ${slug}`);
     } catch (err) {
-      console.error(`❌ Long-tail page failed (${template.key}/${country.slug}):`, err.message);
+      const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      console.error(`❌ Long-tail page failed (${template.key}/${country.slug}):`, detail);
+      errors.push({ candidate: `${template.key}/${country.slug}`, error: detail });
     }
   }
 
@@ -144,11 +147,13 @@ async function publishDailyBatch() {
     try {
       await appendToSitemap(published);
     } catch (err) {
-      console.error('❌ Long-tail sitemap update failed:', err.message);
+      const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      console.error('❌ Long-tail sitemap update failed:', detail);
+      errors.push({ candidate: 'sitemap.xml', error: detail });
     }
   }
 
-  return { published };
+  return { published, errors };
 }
 
 let schedulerJob = null;
