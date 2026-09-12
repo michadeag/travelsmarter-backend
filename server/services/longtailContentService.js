@@ -42,12 +42,19 @@ Respond with ONLY valid JSON (no markdown fences, no commentary before or after)
 
   const anthropic = await getAnthropicClient();
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-5',
+    model: 'claude-sonnet-4-6', // matches every other content-generation service in this codebase — see commit message for why
     max_tokens: 1200,
     messages: [{ role: 'user', content: prompt }],
   });
 
-  const raw = response.content[0].text.trim()
+  // Find the first text block rather than assuming content[0] is text —
+  // some responses can lead with a non-text block (e.g. thinking), which
+  // silently broke this exact naive content[0].text access on first
+  // live run.
+  const textBlock = response.content.find(b => b.type === 'text');
+  if (!textBlock) throw new Error('Model response contained no text block');
+
+  const raw = textBlock.text.trim()
     .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
 
   let parsed;
