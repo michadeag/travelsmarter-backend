@@ -162,6 +162,7 @@ const bloggerRoutes = require('./routes/bloggerRoutes');
 const toolImageRoutes = require('./routes/toolImageRoutes');
 const toolOgImageService = require('./services/toolOgImageService');
 const guideRoutes = require('./routes/guideRoutes');
+const longtailRoutes = require('./routes/longtailRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
 
 // Import controllers
@@ -427,6 +428,7 @@ app.use('/api/quora', quoraRoutes);
 app.use('/api/blogger', bloggerRoutes);
 app.use('/api/tool-images', toolImageRoutes);
 app.use('/api/guides', guideRoutes);
+app.use('/api/longtail', longtailRoutes);
 app.use('/api/youtube', youtubeRoutes);
 
 // Serves a tool's og:image PNG straight from Postgres (see
@@ -1882,6 +1884,17 @@ async function initializeApp() {
       console.warn('⚠️ LinkedIn service init failed (non-blocking):', linkedinErr.message);
     }
 
+    // Long-tail Q&A page pipeline — always started (independent of any
+    // social-platform config, it only needs the GitHub token already used
+    // for guide-page publishing). If that token isn't set yet, each
+    // publish attempt just logs an error and skips — non-fatal.
+    try {
+      const longtailPublisherService = require('./services/longtailPublisherService');
+      longtailPublisherService.startLongtailScheduler();
+    } catch (longtailErr) {
+      console.warn('⚠️ Long-tail page scheduler init failed (non-blocking):', longtailErr.message);
+    }
+
     // Initialize Reddit service and auto-start scheduler if configured
     try {
       const redditConfigured = await redditService.loadSettings();
@@ -2180,6 +2193,33 @@ async function initializeApp() {
       CREATE INDEX IF NOT EXISTS idx_guide_purchases_email ON guide_purchases(email);
       CREATE INDEX IF NOT EXISTS idx_guide_purchases_session ON guide_purchases(stripe_session_id);
       CREATE INDEX IF NOT EXISTS idx_guide_purchases_status ON guide_purchases(status);
+    `).catch(err => console.warn('⚠️ Migration warning:', err.message));
+
+    // Long-tail Q&A pages — pure-content SEO pages (no interactive
+    // checker) answering one specific, stable, non-tool-topic question per
+    // country (e.g. "Does nodding mean yes in Bulgaria?"), published
+    // automatically 1-2/day by longtailPublisherService.js. template_key +
+    // country_slug uniquely identifies a page and drives the "already
+    // published" dedup check that lets the queue skip forward without
+    // repeats. body_data holds the structured content (answer/context/tip/
+    // faqs) so a page can be re-rendered without another LLM call.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS longtail_pages (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        slug VARCHAR(200) NOT NULL UNIQUE,
+        template_key VARCHAR(60) NOT NULL,
+        country_slug VARCHAR(100) NOT NULL,
+        country_name VARCHAR(100) NOT NULL,
+        question TEXT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        meta_description TEXT,
+        body_data JSONB NOT NULL,
+        status VARCHAR(30) NOT NULL DEFAULT 'published',
+        published_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_longtail_template_country ON longtail_pages(template_key, country_slug);
+      CREATE INDEX IF NOT EXISTS idx_longtail_published_at ON longtail_pages(published_at);
     `).catch(err => console.warn('⚠️ Migration warning:', err.message));
 
     // Short-form (Shorts/Reels/TikTok) video script ideas for promoting the

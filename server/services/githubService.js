@@ -67,4 +67,25 @@ async function commitFile(filePath, content, message) {
   return { committed: true, unchanged: false };
 }
 
-module.exports = { commitFile, getSettings };
+// Fetches and decodes a file's current content, or null if it doesn't
+// exist. Used by longtailPublisherService.js to read+append to
+// sitemap.xml rather than needing to hold a local copy in sync.
+async function getFileContent(filePath) {
+  const { token, repo } = await getSettings();
+  if (!token) {
+    throw new Error('GitHub token not configured — add one in the PDF Guides tab settings to enable auto-publishing pages.');
+  }
+  const url = `${API_BASE}/repos/${repo}/contents/${filePath}`;
+  try {
+    const res = await axios.get(url, { headers: headers(token) });
+    if (res.data.content && res.data.encoding === 'base64') {
+      return Buffer.from(res.data.content, 'base64').toString('utf8');
+    }
+    return null;
+  } catch (err) {
+    if (err.response?.status === 404) return null;
+    throw err;
+  }
+}
+
+module.exports = { commitFile, getSettings, getFileContent };
