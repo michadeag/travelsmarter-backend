@@ -3,7 +3,8 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const emailService = require('../services/emailService');
 const pdfService = require('../services/pdfService');
 const tripBriefEmailSequence = require('../services/tripBriefEmailSequence');
-const { computeTripBriefSections, groupSectionsByCategory, SAFE_DESTINATIONS } = require('../services/tripBriefRegistry');
+const { generateEtsyListingCopy } = require('../services/etsyListingService');
+const { computeTripBriefSections, groupSectionsByCategory, SAFE_DESTINATIONS, TOOLS } = require('../services/tripBriefRegistry');
 // SAFE_DESTINATIONS is the verified intersection of all 35 registry tools'
 // own country rosters — NOT all 54 free tools share one country list (see
 // the comment on SAFE_DESTINATIONS itself), so this is deliberately
@@ -330,6 +331,25 @@ exports.getBatchTripBriefPdf = async (req, res) => {
     res.send(pdfBuffer);
   } catch (error) {
     console.error('getBatchTripBriefPdf error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc Generate copy-paste-ready Etsy listing copy (title/description/tags)
+//   for one destination's batch PDF — admin-only, pairs with the batch-pdf
+//   download above so each listing gets genuinely SEO-optimized, non-
+//   templated copy instead of the same text reworded 33 times.
+// @route GET /api/trip-brief/admin/etsy-listing?destination=slug
+// @access Admin
+exports.getEtsyListingCopy = async (req, res) => {
+  try {
+    const { destination } = req.query;
+    if (!destination) return res.status(400).json({ success: false, error: 'destination is required' });
+    const destinationName = resolveDestination(destination).name;
+    const copy = await generateEtsyListingCopy(destinationName, TOOLS.length);
+    res.status(200).json({ success: true, ...copy });
+  } catch (error) {
+    console.error('getEtsyListingCopy error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
