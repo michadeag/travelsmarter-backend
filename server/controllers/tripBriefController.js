@@ -310,4 +310,28 @@ exports.handleTripBriefCheckoutCompleted = async (session) => {
   }
 };
 
+// @desc Generate one destination's Trip Brief PDF without payment — admin-
+//   only, for prepping a batch of generic (non-personalized) PDFs to resell
+//   on external marketplaces like Etsy, reusing the exact same content path
+//   as the public sample PDF (just not fixed to Thailand). NOT linked from
+//   anywhere public — this bypasses the $19 paywall entirely, so it must
+//   stay behind admin auth.
+// @route GET /api/trip-brief/admin/batch-pdf?destination=slug
+// @access Admin
+exports.getBatchTripBriefPdf = async (req, res) => {
+  try {
+    const { destination } = req.query;
+    if (!destination) return res.status(400).json({ success: false, error: 'destination is required' });
+    const destinationName = resolveDestination(destination).name;
+    const pdfBuffer = await generateTripBriefPdfBuffer({ destination }, destinationName, false);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="travelsmarter-trip-brief-${destination}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('getBatchTripBriefPdf error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 exports.PRICING = PRICING;
