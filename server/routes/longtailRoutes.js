@@ -45,4 +45,19 @@ router.post('/admin/publish-now', protectWithAdminFallback, async (req, res) => 
   }
 });
 
+// @desc Re-render every already-published page from stored content and
+//   re-commit it — for rolling out a renderer/template fix to live pages
+//   without waiting for new pages to naturally pick it up.
+// @route POST /api/longtail/admin/republish-all
+// @access Admin
+router.post('/admin/republish-all', protectWithAdminFallback, async (req, res) => {
+  try {
+    const result = await longtailPublisherService.republishAll();
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('longtail republish-all error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

@@ -162,6 +162,50 @@ async function publishOne(template, country) {
   return slug;
 }
 
+// Re-renders every already-published page from its stored body_data (no new
+// Anthropic call) and re-commits it — used after a renderer/template change
+// so live pages pick up the fix without waiting for new content. commitFile
+// skips unchanged files, so this is safe to run repeatedly / on demand.
+async function republishAll() {
+  const { rows } = await pool.query(
+    `SELECT slug, template_key, country_slug, country_name, question, title, body_data FROM longtail_pages`
+  );
+
+  const byTemplate = new Map();
+  for (const r of rows) {
+    if (!byTemplate.has(r.template_key)) byTemplate.set(r.template_key, []);
+    byTemplate.get(r.template_key).push(r);
+  }
+
+  const updated = [];
+  const errors = [];
+  for (const r of rows) {
+    try {
+      const template = TEMPLATES.find(t => t.key === r.template_key);
+      const country = COUNTRIES.find(c => c.slug === r.country_slug) || { slug: r.country_slug, name: r.country_name };
+      const pitch = template ? await buildPitch(template, country) : { type: 'hub' };
+
+      const siblings = byTemplate.get(r.template_key)
+        .map(s => ({ pageSlug: pageSlugFor(s.template_key, s.country_slug), countrySlug: s.country_slug, name: s.country_name }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      const html = renderLongtailPage({
+        title: r.title, question: r.question, countryName: r.country_name,
+        content: r.body_data, slug: r.slug, templateKey: r.template_key, countrySlug: r.country_slug, pitch,
+      }, siblings);
+
+      const result = await githubService.commitFile(`${r.slug}.html`, html, `Re-render long-tail page: ${r.title}`);
+      if (result.committed) updated.push(r.slug);
+    } catch (err) {
+      const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      console.error(`❌ Long-tail re-render failed (${r.slug}):`, detail);
+      errors.push({ candidate: r.slug, error: detail });
+    }
+  }
+
+  return { updated, errors };
+}
+
 async function publishDailyBatch() {
   const candidates = await pickNextCandidates(PAGES_PER_DAY);
   if (candidates.length === 0) {
@@ -214,6 +258,7 @@ module.exports = {
   publishDailyBatch,
   publishOne,
   pickNextCandidates,
+  republishAll,
   startLongtailScheduler,
   stopLongtailScheduler,
 };

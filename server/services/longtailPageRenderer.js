@@ -78,10 +78,25 @@ function renderLongtailPage(page, allCountriesForTemplate) {
 
   // allCountriesForTemplate entries carry the full page slug (e.g.
   // "nod-meaning-france"), not just the country slug — country slug alone
-  // wouldn't resolve to a valid URL for this template.
+  // wouldn't resolve to a valid URL for this template. Only rendered once a
+  // second country exists for this template — with just the page's own
+  // country in the list, the dropdown would show "Ask about a different
+  // country" with no different country to pick, which is confusing rather
+  // than useful (this pipeline publishes slowly, so a template can sit at
+  // one country for weeks before a sibling shows up).
   const countryOptions = allCountriesForTemplate.map(c =>
     `                    <option value="${c.pageSlug}"${c.countrySlug === page.countrySlug ? ' selected' : ''}>${c.name}</option>`
   ).join('\n');
+
+  const countrySwitcherHtml = allCountriesForTemplate.length > 1 ? `        <div class="card">
+            <label for="country-switch">Ask about a different country</label>
+            <select id="country-switch" onchange="if(this.value) window.location.href = this.value + '.html';">
+                <option value="">— Choose a country —</option>
+${countryOptions}
+            </select>
+        </div>
+
+` : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -181,15 +196,7 @@ function renderLongtailPage(page, allCountriesForTemplate) {
 
 ${renderPitchCard(pitch, countryName)}
 
-        <div class="card">
-            <label for="country-switch">Ask about a different country</label>
-            <select id="country-switch" onchange="if(this.value) window.location.href = this.value + '.html';">
-                <option value="">— Choose a country —</option>
-${countryOptions}
-            </select>
-        </div>
-
-        <div class="card content-block">
+${countrySwitcherHtml}        <div class="card content-block">
             <h2>Frequently asked questions</h2>
 ${faqHtml}
         </div>
